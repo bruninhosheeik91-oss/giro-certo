@@ -53,6 +53,7 @@ export interface UserVehicle {
   year: string;
   plate?: string;
   currentKm: number;
+  odometerBaselineKm?: number; // Piso de reconciliação do odômetro (nunca regride abaixo)
   fuelType: FuelType;
   fuelAverageKmPerLiter: number; // Consumo estimado km/l
   refPricePerLiter: number; // Custo de referência R$/l
@@ -73,6 +74,7 @@ export interface BaseTransaction {
   vehicleId?: string;
   shiftId?: string;
   createdAt: number;
+  updatedAt?: number;
 }
 
 export interface GainTransaction extends BaseTransaction {
@@ -244,4 +246,62 @@ export interface VehiclePartHealth {
   remainingKm: number;
   progressPercent: number;
   status: MaintenanceStatus;
+}
+
+export type MaintenanceReserveEntryType = 'deposito' | 'resgate' | 'ajuste';
+
+export interface MaintenanceReserveEntry {
+  id: string;
+  type: MaintenanceReserveEntryType;
+  amount: number; // Positivo para depósito/resgate; ajuste pode ser negativo
+  date: string; // YYYY-MM-DD
+  description?: string;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export interface FuelConsumptionCycle {
+  startDate: string;
+  startTime?: string;
+  startKm: number;
+  endDate: string;
+  endTime?: string;
+  endKm: number;
+  distanceKm: number;
+  liters: number;
+  kmPerLiter: number;
+  totalAmount: number;
+  costPerKm: number;
+}
+
+export interface OpenFuelCycle {
+  startDate: string;
+  startTime?: string;
+  startKm: number;
+  liters: number;
+  totalAmount: number;
+}
+
+export interface FuelConsumptionResult {
+  confirmedCycles: FuelConsumptionCycle[];
+  openCycle: OpenFuelCycle | null;
+  lastKmPerLiter: number;
+  averageKmPerLiter: number;
+  totalDistanceKm: number;
+  totalLiters: number;
+  totalAmount: number;
+  validCyclesCount: number;
+}
+
+export interface OdometerRecord {
+  date: string;
+  time?: string;
+  km: number;
+  source: string;
+  sourceId: string;
+}
+
+export interface OdometerReconcileResult {
+  currentKm: number;
+  anomalies: OdometerRecord[];
 }

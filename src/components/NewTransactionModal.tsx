@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { TransactionType, FuelType, MaintenanceCategory, OtherExpenseCategory } from '../types';
-import { formatBRL, formatBRLInput, parseBRLInput } from '../utils/calculations';
+import {
+  formatBRL,
+  formatBRLInput,
+  parseBRLInput,
+  parseDecimalInput,
+} from '../utils/calculations';
 import { X, PlusCircle, Fuel, Wrench, Wallet, Check, Clock, Link, Unlink } from 'lucide-react';
 
 const MAINTENANCE_CATEGORIES: MaintenanceCategory[] = [
@@ -164,7 +169,7 @@ export const NewTransactionModal: React.FC = () => {
     const clean = formatBRLInput(formatted);
     setFuelTotalStr(clean);
     const total = parseBRLInput(clean);
-    const lit = parseFloat(litersStr.replace(',', '.'));
+    const lit = parseDecimalInput(litersStr);
     if (total > 0 && lit > 0) {
       setPricePerLiterStr((total / lit).toFixed(2).replace('.', ','));
     }
@@ -172,9 +177,9 @@ export const NewTransactionModal: React.FC = () => {
 
   const handleLitersChange = (val: string) => {
     setLitersStr(val);
-    const lit = parseFloat(val.replace(',', '.'));
+    const lit = parseDecimalInput(val);
     const total = parseBRLInput(fuelTotalStr);
-    const price = parseFloat(pricePerLiterStr.replace(',', '.'));
+    const price = parseDecimalInput(pricePerLiterStr);
 
     if (lit > 0 && total > 0) {
       setPricePerLiterStr((total / lit).toFixed(2).replace('.', ','));
@@ -185,8 +190,8 @@ export const NewTransactionModal: React.FC = () => {
 
   const handlePricePerLiterChange = (val: string) => {
     setPricePerLiterStr(val);
-    const price = parseFloat(val.replace(',', '.'));
-    const lit = parseFloat(litersStr.replace(',', '.'));
+    const price = parseDecimalInput(val);
+    const lit = parseDecimalInput(litersStr);
     if (price > 0 && lit > 0) {
       setFuelTotalStr(formatBRLInput((lit * price * 100).toFixed(0)));
     }
@@ -244,10 +249,10 @@ export const NewTransactionModal: React.FC = () => {
       });
     } else if (activeType === 'abastecimento') {
       const total = parseBRLInput(fuelTotalStr);
-      const lit = parseFloat(litersStr.replace(',', '.'));
-      const price = parseFloat(pricePerLiterStr.replace(',', '.'));
+      const lit = parseDecimalInput(litersStr);
+      const price = parseDecimalInput(pricePerLiterStr);
       const selectedVeh = vehicles.find((v) => v.id === fuelVehicleId) || activeVehicle;
-      const kmEntered = parseFloat(fuelKmStr.replace(',', '.'));
+      const kmEntered = parseDecimalInput(fuelKmStr);
 
       if (total <= 0) {
         newErrors.fuelTotal = 'Informe o valor total abastecido.';
@@ -283,7 +288,7 @@ export const NewTransactionModal: React.FC = () => {
       });
     } else if (activeType === 'manutencao') {
       const selectedVeh = vehicles.find((v) => v.id === maintVehicleId) || activeVehicle;
-      const kmEntered = parseFloat(maintKmStr.replace(',', '.'));
+      const kmEntered = parseDecimalInput(maintKmStr);
 
       if (totalMaintenance <= 0) {
         newErrors.maintTotal = 'Informe o valor de peças ou mão de obra.';
@@ -314,7 +319,7 @@ export const NewTransactionModal: React.FC = () => {
         workshop: workshop.trim() || undefined,
         currentKm: kmEntered || activeVehicle.currentKm,
         nextMaintenanceKm: nextMaintenanceKmStr
-            ? parseFloat(nextMaintenanceKmStr.replace(',', '.'))
+            ? parseDecimalInput(nextMaintenanceKmStr)
             : undefined,
         nextMaintenanceDate: nextMaintenanceDate || undefined,
         date,

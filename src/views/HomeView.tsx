@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatBRL, formatHours, formatPercent } from '../utils/calculations';
+import { formatBRL, formatHours, formatPercent, parseDecimalInput } from '../utils/calculations';
 import {
   TrendingUp,
   DollarSign,
@@ -18,6 +18,26 @@ import {
   Edit2,
 } from 'lucide-react';
 
+const MONTH_NAMES = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+];
+
+const formatMonthLabel = (month: string) => {
+  const [y, m] = month.split('-');
+  return `${MONTH_NAMES[parseInt(m, 10) - 1] || m}/${y.slice(2)}`;
+};
+
 export const HomeView: React.FC = () => {
   const {
     monthSummary,
@@ -25,11 +45,12 @@ export const HomeView: React.FC = () => {
     updateUserProfile,
     activeVehicle,
     activeShift,
+    maintenanceReserveBalance,
     openNewTransactionModal,
     openVehiclesModal,
     openMaintenanceModal,
     openSimulatorsModal,
-    depositMaintenanceReserve,
+    openReserveModal,
     setActiveTab,
     selectedMonth,
     getShiftTotals,
@@ -62,7 +83,7 @@ export const HomeView: React.FC = () => {
   }
 
   const handleSaveGoal = () => {
-    const val = parseFloat(newGoalInput.replace(',', '.'));
+    const val = parseDecimalInput(newGoalInput);
     if (!isNaN(val) && val > 0) {
       updateUserProfile({ monthlyGoal: val });
     }
@@ -139,7 +160,7 @@ export const HomeView: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Lucro Real do Mês ({selectedMonth})
+              Lucro Real do Mês ({formatMonthLabel(selectedMonth)})
             </span>
           </div>
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
@@ -364,18 +385,18 @@ export const HomeView: React.FC = () => {
               Guardado no Cofrinho
             </span>
             <span className="text-sm font-bold text-teal-400 font-mono">
-              {formatBRL(userProfile.maintenanceReserveSaved || 0)}
+              {formatBRL(maintenanceReserveBalance)}
             </span>
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-1">
           <button
-            onClick={() => depositMaintenanceReserve(50)}
+            onClick={openReserveModal}
             className="w-full py-2 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Guardar +R$ 50,00 na Reserva</span>
+            <PiggyBank className="w-3.5 h-3.5" />
+            <span>Abrir Cofrinho (Guardar / Resgatar)</span>
           </button>
         </div>
       </div>

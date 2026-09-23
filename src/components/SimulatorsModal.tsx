@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { simulateRide, simulateGoal, formatBRL, formatPercent } from '../utils/calculations';
+import {
+  simulateRide,
+  simulateGoal,
+  formatBRL,
+  formatPercent,
+  parseBRLInput,
+  parseDecimalInput,
+} from '../utils/calculations';
 import { X, Calculator, Navigation, Target } from 'lucide-react';
 
 export const SimulatorsModal: React.FC = () => {
@@ -40,13 +47,13 @@ export const SimulatorsModal: React.FC = () => {
 
   // Run calculation 1 with custom user criteria
   const rideResult = simulateRide({
-    fareOffered: parseFloat(fareOffered.replace(',', '.')) || 0,
-    distanceToPickup: parseFloat(distanceToPickup.replace(',', '.')) || 0,
-    tripDistance: parseFloat(tripDistance.replace(',', '.')) || 0,
-    returnDistance: parseFloat(returnDistance.replace(',', '.')) || 0,
-    estimatedMinutes: parseFloat(estimatedMinutes.replace(',', '.')) || 1,
-    costPerKm: parseFloat(costPerKm.replace(',', '.')) || 0.28,
-    tollsAndParking: parseFloat(tollsAndParking.replace(',', '.')) || 0,
+    fareOffered: parseBRLInput(fareOffered),
+    distanceToPickup: parseDecimalInput(distanceToPickup),
+    tripDistance: parseDecimalInput(tripDistance),
+    returnDistance: parseDecimalInput(returnDistance),
+    estimatedMinutes: parseDecimalInput(estimatedMinutes) || 1,
+    costPerKm: parseDecimalInput(costPerKm) || 0.28,
+    tollsAndParking: parseBRLInput(tollsAndParking),
     criteria: {
       ...criteria,
       considerReturnDistance: considerReturn,
@@ -55,13 +62,13 @@ export const SimulatorsModal: React.FC = () => {
 
   // Run calculation 2
   const goalResult = simulateGoal({
-    targetProfit: parseFloat(targetProfit.replace(',', '.')) || 0,
+    targetProfit: parseDecimalInput(targetProfit),
     period: goalPeriod,
     workDays: parseInt(workDays, 10) || 1,
-    hoursPerDay: parseFloat(hoursPerDay.replace(',', '.')) || 1,
-    averagePerHour: parseFloat(averagePerHour.replace(',', '.')) || 35,
-    costPerKm: parseFloat(goalCostPerKm.replace(',', '.')) || 0.25,
-    reservePerKm: parseFloat(reservePerKm.replace(',', '.')) || 0.12,
+    hoursPerDay: parseDecimalInput(hoursPerDay) || 1,
+    averagePerHour: parseDecimalInput(averagePerHour) || 35,
+    costPerKm: parseDecimalInput(goalCostPerKm) || 0.25,
+    reservePerKm: parseDecimalInput(reservePerKm) || 0.12,
   });
 
   return (

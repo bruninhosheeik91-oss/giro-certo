@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserVehicle, FuelType } from '../types';
+import { parseDecimalInput } from '../utils/calculations';
 import { X, Plus, Bike, Car, Check, Trash2, Edit3, Star, AlertTriangle } from 'lucide-react';
 
 const FUEL_OPTIONS: FuelType[] = [
@@ -112,9 +113,9 @@ export const VehiclesModal: React.FC = () => {
       return;
     }
 
-    const avgKm = parseFloat(fuelAverageKmPerLiter.replace(',', '.'));
-    const refPrice = parseFloat(refPricePerLiter.replace(',', '.'));
-    const acqPrice = acquisitionPrice ? parseFloat(acquisitionPrice.replace(',', '.')) : undefined;
+    const avgKm = parseDecimalInput(fuelAverageKmPerLiter);
+    const refPrice = parseDecimalInput(refPricePerLiter);
+    const acqPrice = acquisitionPrice ? parseDecimalInput(acquisitionPrice) : undefined;
 
     const payload = {
       nickname: nickname.trim(),

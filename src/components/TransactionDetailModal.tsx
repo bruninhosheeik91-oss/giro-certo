@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 import { useApp } from '../context/AppContext';
-import { formatBRL, formatDisplayDate } from '../utils/calculations';
-import { X, Trash2, Edit2, Check } from 'lucide-react';
+import {
+  formatBRL,
+  formatBRLInput,
+  formatDisplayDate,
+  parseBRLInput,
+  parseDecimalInput,
+} from '../utils/calculations';
+import { X, Trash2, Edit2, Check, AlertTriangle } from 'lucide-react';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -13,31 +19,57 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   transaction,
   onClose,
 }) => {
-  const { deleteTransaction, updateTransaction } = useApp();
+  const { deleteTransaction, updateTransaction, vehicles, activeVehicle } = useApp();
 
   const [isEditing, setIsEditing] = useState(false);
   const [amountStr, setAmountStr] = useState('');
   const [description, setDescription] = useState('');
+  const [currentKmStr, setCurrentKmStr] = useState('');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   if (!transaction) return null;
 
+  const hasOdometer = transaction.type === 'abastecimento' || transaction.type === 'manutencao';
+  const txVehicle = vehicles.find((v) => v.id === transaction.vehicleId) || activeVehicle;
+
   const handleStartEdit = () => {
-    setAmountStr(transaction.amount.toString());
+    setAmountStr(formatBRLInput(String(Math.round(transaction.amount * 100))));
     setDescription(transaction.description || '');
+    setCurrentKmStr(
+      transaction.type === 'abastecimento' || transaction.type === 'manutencao'
+        ? (transaction.currentKm?.toString() ?? '')
+        : '',
+    );
     setIsEditing(true);
   };
 
   const handleSaveEdit = () => {
-    const newAmount = parseFloat(amountStr.replace(',', '.'));
-    if (!isNaN(newAmount) && newAmount > 0) {
+    const newAmount = parseBRLInput(amountStr);
+    if (newAmount <= 0) {
+      setIsEditing(false);
+      onClose();
+      return;
+    }
+
+    if (transaction.type === 'abastecimento' || transaction.type === 'manutencao') {
+      const updates: Partial<typeof transaction> = {
+        amount: newAmount,
+        description: description.trim() || undefined,
+      };
+      const newKm = currentKmStr ? Math.round(parseDecimalInput(currentKmStr)) : 0;
+      const baseline = txVehicle?.odometerBaselineKm ?? txVehicle?.currentKm ?? 0;
+      if (newKm > 0 && (!baseline || newKm >= baseline)) {
+        updates.currentKm = newKm;
+      }
+      updateTransaction(transaction.id, updates);
+    } else {
       updateTransaction(transaction.id, {
         amount: newAmount,
         description: description.trim() || undefined,
       });
-      setIsEditing(false);
-      onClose();
     }
+    setIsEditing(false);
+    onClose();
   };
 
   const handleDelete = () => {
@@ -84,10 +116,10 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               <div className="flex items-center justify-center gap-1">
                 <span className="text-xl font-bold text-slate-400">R$</span>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
+                  onChange={(e) => setAmountStr(formatBRLInput(e.target.value))}
                   className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-2xl font-bold font-mono text-center text-white focus:outline-none"
                   autoFocus
                 />
@@ -146,12 +178,25 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                     <span className="text-slate-200">{transaction.stationName}</span>
                   </div>
                 )}
-                {transaction.currentKm && (
+                {transaction.currentKm && !isEditing && (
                   <div className="p-3 flex items-center justify-between">
                     <span className="text-slate-400 font-medium">Odômetro (KM)</span>
                     <span className="text-slate-200 font-mono">
                       {transaction.currentKm.toLocaleString('pt-BR')} km
                     </span>
+                  </div>
+                )}
+                {hasOdometer && isEditing && (
+                  <div className="p-3 flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Odômetro (KM)</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={currentKmStr}
+                      onChange={(e) => setCurrentKmStr(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Informe o KM atual"
+                      className="w-32 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-right text-white focus:outline-none"
+                    />
                   </div>
                 )}
               </>
@@ -160,12 +205,25 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             {/* Maintenance specific */}
             {transaction.type === 'manutencao' && (
               <>
-                {transaction.currentKm && (
+                {transaction.currentKm && !isEditing && (
                   <div className="p-3 flex items-center justify-between">
                     <span className="text-slate-400 font-medium">KM na Manutenção</span>
                     <span className="text-slate-200 font-mono">
                       {transaction.currentKm.toLocaleString('pt-BR')} km
                     </span>
+                  </div>
+                )}
+                {hasOdometer && isEditing && (
+                  <div className="p-3 flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">KM na Manutenção</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={currentKmStr}
+                      onChange={(e) => setCurrentKmStr(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Informe o KM atual"
+                      className="w-32 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-right text-white focus:outline-none"
+                    />
                   </div>
                 )}
                 {transaction.nextMaintenanceKm && (
@@ -197,6 +255,16 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               )}
             </div>
           </div>
+
+          {isEditing && hasOdometer && (
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                O odômetro nunca regride abaixo do KM base do veículo (reconciliação automática
+                aplicada ao salvar).
+              </span>
+            </div>
+          )}
 
           {/* Delete Confirmation prompt */}
           {isConfirmingDelete && (

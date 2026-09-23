@@ -8,10 +8,11 @@ import {
   calculatePeriodSummary,
 } from '../utils/calculations';
 import { Award, Trophy } from 'lucide-react';
+import { FuelConsumptionView } from '../components/FuelConsumptionView';
 
 export const ReportsView: React.FC = () => {
   const { transactions, selectedMonth, registeredApps } = useApp();
-  const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual'>('mensal');
+  const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual' | 'consumo'>('mensal');
   const [periodFilter, setPeriodFilter] = useState<'hoje' | 'semana' | 'mes' | 'ano'>('mes');
 
   // Month filtered transactions
@@ -44,7 +45,7 @@ export const ReportsView: React.FC = () => {
   return (
     <div className="space-y-4 pb-2">
       {/* View Switcher Bar */}
-      <div className="grid grid-cols-3 p-1 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-semibold">
+      <div className="grid grid-cols-4 gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-semibold">
         <button
           onClick={() => setViewMode('mensal')}
           className={`py-2 px-2 rounded-xl transition-all ${
@@ -76,6 +77,17 @@ export const ReportsView: React.FC = () => {
           }`}
         >
           Comparativo Anual
+        </button>
+
+        <button
+          onClick={() => setViewMode('consumo')}
+          className={`py-2 px-2 rounded-xl transition-all ${
+            viewMode === 'consumo'
+              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-sm font-bold'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          Consumo km/L
         </button>
       </div>
 
@@ -388,6 +400,9 @@ export const ReportsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ================= 4. CONSUMO real km/L ================= */}
+      {viewMode === 'consumo' && <FuelConsumptionView />}
     </div>
   );
 };

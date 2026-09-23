@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatBRL } from '../utils/calculations';
+import { formatBRL, parseDecimalInput } from '../utils/calculations';
 import {
   Bike,
   Car,
@@ -47,11 +47,11 @@ export const ProfileView: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    const goal = parseFloat(monthlyGoalStr.replace(',', '.'));
-    const reserve = parseFloat(reservePerKmStr.replace(',', '.'));
-    const minKm = parseFloat(minProfitPerKmStr.replace(',', '.'));
-    const minHour = parseFloat(minProfitPerHourStr.replace(',', '.'));
-    const minVal = parseFloat(minAcceptableValueStr.replace(',', '.'));
+    const goal = parseDecimalInput(monthlyGoalStr);
+    const reserve = parseDecimalInput(reservePerKmStr);
+    const minKm = parseDecimalInput(minProfitPerKmStr);
+    const minHour = parseDecimalInput(minProfitPerHourStr);
+    const minVal = parseDecimalInput(minAcceptableValueStr);
 
     updateUserProfile({
       name: name.trim() || userProfile.name,

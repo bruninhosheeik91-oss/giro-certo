@@ -5,7 +5,12 @@ import { formatBRL, formatDisplayDate } from '../utils/calculations';
 import { Search, Trash2, Fuel, Wrench, PlusCircle, Wallet } from 'lucide-react';
 
 export const TransactionsView: React.FC = () => {
-  const { transactions, deleteTransaction, openNewTransactionModal } = useApp();
+  const {
+    transactions,
+    deleteTransaction,
+    openNewTransactionModal,
+    openTransactionDetail,
+  } = useApp();
   const [filterType, setFilterType] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -141,7 +146,8 @@ export const TransactionsView: React.FC = () => {
                   {dayTxs.map((t) => (
                     <div
                       key={t.id}
-                      className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group"
+                      onClick={() => openTransactionDetail(t.id)}
+                      className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-start gap-3">
                         <div
@@ -203,7 +209,10 @@ export const TransactionsView: React.FC = () => {
                         </div>
 
                         <button
-                          onClick={() => setDeleteConfirmId(t.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmId(t.id);
+                          }}
                           className="opacity-60 hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 transition-colors"
                           title="Excluir lançamento"
                         >

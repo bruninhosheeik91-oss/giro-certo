@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Car, Bike } from 'lucide-react';
+import { Car, Bike, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const {
@@ -8,16 +8,32 @@ export const Header: React.FC = () => {
     activeVehicle,
     selectedMonth,
     setSelectedMonth,
+    availableMonths,
+    goToPreviousMonth,
+    goToNextMonth,
     activeShift,
     elapsedWorkSeconds,
     setActiveTab,
   } = useApp();
 
-  const months = [
-    { value: '2026-09', label: 'Set/26' },
-    { value: '2026-08', label: 'Ago/26' },
-    { value: '2026-07', label: 'Jul/26' },
-  ];
+  const formatMonthLabel = (month: string) => {
+    const [y, m] = month.split('-');
+    const months = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
+    ];
+    return `${months[parseInt(m, 10) - 1] || m}/${y.slice(2)}`;
+  };
 
   const formatTimer = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -54,17 +70,33 @@ export const Header: React.FC = () => {
         {/* Right side controls: Month Selector, Profile Avatar */}
         <div className="flex items-center gap-2">
           {/* Month Selector */}
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="text-xs bg-slate-900 border border-slate-700/80 text-slate-200 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:border-emerald-500 transition-colors"
-          >
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-1 bg-slate-900 border border-slate-700/80 rounded-lg px-1 py-1">
+            <button
+              onClick={goToPreviousMonth}
+              className="w-5 h-5 rounded text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+              title="Mês anterior"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="text-xs bg-transparent text-slate-200 rounded-lg px-1 font-medium focus:outline-none focus:border-emerald-500 transition-colors"
+            >
+              {availableMonths.map((m) => (
+                <option key={m} value={m}>
+                  {formatMonthLabel(m)}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={goToNextMonth}
+              className="w-5 h-5 rounded text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+              title="Mês mais recente"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           {/* User Avatar */}
           <button

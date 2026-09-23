@@ -4,6 +4,11 @@ import {
   PeriodSummary,
   VehiclePartHealth,
   MaintenanceTransaction,
+  FuelTransaction,
+  MaintenanceReserveEntry,
+  FuelConsumptionResult,
+  OdometerRecord,
+  OdometerReconcileResult,
 } from '../types';
 
 /**
@@ -82,13 +87,50 @@ export function formatBRLInput(rawValue: string): string {
 }
 
 /**
- * Parse Brazilian currency string into float number
+ * Parse Brazilian currency string into a number (always in cents precision).
+ * "10" / "10,50" / "1.234,56" / "R$ 1.234,56" all map to the numeric value.
+ * A raw number input is sanitized and rounded to 2 decimal places.
+ * NaN / Infinity / empty values resolve to 0 (never leak into the domain).
  */
-export function parseBRLInput(formattedValue: string): number {
+export function parseBRLInput(formattedValue: string | number): number {
+  if (typeof formattedValue === 'number') {
+    if (isNaN(formattedValue) || !isFinite(formattedValue)) return 0;
+    return Math.round(formattedValue * 100) / 100;
+  }
   if (!formattedValue) return 0;
   const digits = formattedValue.replace(/\D/g, '');
   if (!digits) return 0;
-  return parseInt(digits, 10) / 100;
+  return Math.round(parseInt(digits, 10)) / 100;
+}
+
+/**
+ * Parse a decimal string (km, liters, rates) into a number, accepting both the
+ * pt-BR format ("1.250,50", "0,12") and the en/plain format ("1250.5", "2.5") — 
+ * which is what <input type="number"> values expose regardless of the browser locale.
+ * NaN / Infinity / empty values resolve to 0.
+ */
+export function parseDecimalInput(formattedValue: string | number): number {
+  if (typeof formattedValue === 'number') {
+    if (isNaN(formattedValue) || !isFinite(formattedValue)) return 0;
+    return Math.round(formattedValue * 100) / 100;
+  }
+  if (!formattedValue) return 0;
+
+  let normalized: string;
+  if (formattedValue.includes(',')) {
+    // pt-BR: dots are thousand separators, comma is decimal
+    normalized = formattedValue.replace(/\./g, '').replace(/,/g, '.');
+  } else if (formattedValue.split('.').length > 2) {
+    // multiple dots without comma -> pt-BR thousand separators ("1.250")
+    normalized = formattedValue.replace(/\./g, '');
+  } else {
+    // single dot (or none) -> plain/en decimal
+    normalized = formattedValue;
+  }
+
+  const n = parseFloat(normalized);
+  if (isNaN(n) || !isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
 }
 
 /**
@@ -394,9 +436,9 @@ export function calculateVehiclePartsHealth(
     let status: 'Em dia' | 'Atenção' | 'Troca próxima' | 'Atrasada' = 'Em dia';
     if (remaining <= 0) {
       status = 'Atrasada';
-    } else if (remaining <= 300) {
+    } else if (remaining <= item.interval * 0.15 || remaining <= 500) {
       status = 'Troca próxima';
-    } else if (remaining <= 800) {
+    } else if (remaining <= item.interval * 0.35 || remaining <= 1200) {
       status = 'Atenção';
     }
 
@@ -434,6 +476,151 @@ export function calculateShiftTotals(
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const isPositiveNumber = (n: unknown): n is number => typeof n === 'number' && isFinite(n) && n > 0;
+
+/**
+ * Real fuel consumption (tank-to-tank method).
+ * A cycle starts at a full tank and closes at the NEXT full tank: distance = odómetro final - inicial;
+ * liters = sum of refuels between them (partials + the closing full tank).
+ * Chronologically ordered; never mixes vehicles; ignores records without liters/odometer;
+ * rejects cycles whose final odometer is not greater than the initial; division by zero safe.
+ */
+export function calculateFuelConsumption(
+  fuelTransactions: FuelTransaction[],
+  vehicleId?: string,
+): FuelConsumptionResult {
+  const filtered = vehicleId
+    ? fuelTransactions.filter((t) => t.type === 'abastecimento' && t.vehicleId === vehicleId)
+    : fuelTransactions.filter((t) => t.type === 'abastecimento');
+
+  const sorted = [...filtered].sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      (a.time || '').localeCompare(b.time || '') ||
+      (a.createdAt || 0) - (b.createdAt || 0),
+  );
+
+  const confirmed: FuelConsumptionResult['confirmedCycles'] = [];
+  let open: { date: string; time?: string; km: number; liters: number; amount: number } | null = null;
+
+  for (const t of sorted) {
+    const liters = isPositiveNumber(t.liters) ? t.liters : 0;
+    const km = isPositiveNumber(t.currentKm) ? t.currentKm : 0;
+    const amount = Math.max(0, t.amount || 0);
+
+    if (!t.fullTank || !isPositiveNumber(t.liters) || !isPositiveNumber(t.currentKm)) {
+      if (open) {
+        open.liters += liters;
+        open.amount += amount;
+      }
+      continue;
+    }
+
+    if (open) {
+      if (km > open.km) {
+        const distanceKm = km - open.km;
+        const litersTotal = open.liters + liters;
+        confirmed.push({
+          startDate: open.date,
+          startTime: open.time,
+          startKm: open.km,
+          endDate: t.date,
+          endTime: t.time,
+          endKm: km,
+          distanceKm: round2(distanceKm),
+          liters: round2(litersTotal),
+          kmPerLiter: round2(distanceKm / litersTotal),
+          totalAmount: round2(open.amount + amount),
+          costPerKm: round2((open.amount + amount) / distanceKm),
+        });
+      }
+      // invalid cycle (odómetro não avançou) is silently dropped
+    }
+
+    open = { date: t.date, time: t.time, km, liters: 0, amount: 0 };
+  }
+
+  const lastCycle = confirmed[confirmed.length - 1];
+  const averageKmPerLiter =
+    confirmed.length > 0
+      ? round2(confirmed.reduce((sum, c) => sum + c.kmPerLiter, 0) / confirmed.length)
+      : 0;
+
+  return {
+    confirmedCycles: confirmed,
+    openCycle: open
+      ? {
+          startDate: open.date,
+          startTime: open.time,
+          startKm: open.km,
+          liters: open.liters,
+          totalAmount: open.amount,
+        }
+      : null,
+    lastKmPerLiter: lastCycle ? lastCycle.kmPerLiter : 0,
+    averageKmPerLiter,
+    totalDistanceKm: round2(confirmed.reduce((sum, c) => sum + c.distanceKm, 0)),
+    totalLiters: round2(confirmed.reduce((sum, c) => sum + c.liters, 0)),
+    totalAmount: round2(confirmed.reduce((sum, c) => sum + c.totalAmount, 0)),
+    validCyclesCount: confirmed.length,
+  };
+}
+
+/**
+ * Cofrinho de manutenção: saldo derivado do ledger.
+ * saldo = depósitos + ajustes - resgates (ajuste pode ser negativo).
+ * Valores sempre arredondados em centavos.
+ */
+export function calculateReserveBalance(entries: MaintenanceReserveEntry[]): number {
+  let balance = 0;
+  for (const e of entries) {
+    if (e.type === 'deposito') balance += Math.max(0, e.amount);
+    else if (e.type === 'resgate') balance -= Math.max(0, e.amount);
+    else balance += e.amount;
+  }
+  return round2(balance);
+}
+
+/**
+ * Reconciliação idempotente do odômetro de um veículo.
+ * currentKm = maior quilometragem cronologicamente válida (nunca regressa abaixo do valor inicial).
+ * Registros com km inferior ao atual no momento da leitura são reportados como anomalias (não abaixam o valor).
+ */
+export function reconcileVehicleOdometer(
+  records: OdometerRecord[],
+  initialKm: number,
+): OdometerReconcileResult {
+  const initial = isFinite(initialKm) && initialKm > 0 ? initialKm : 0;
+  const sorted = records
+    .filter((r) => typeof r.km === 'number' && isFinite(r.km))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        (a.time || '').localeCompare(b.time || '') ||
+        a.sourceId.localeCompare(b.sourceId),
+    );
+
+  let running = initial;
+  const anomalies: OdometerRecord[] = [];
+
+  for (const r of sorted) {
+    if (r.km < running) {
+      anomalies.push(r);
+    } else {
+      running = r.km;
+    }
+  }
+
+  return { currentKm: running, anomalies };
+}
+
+/**
+ * Human-readable label for an open fuel cycle ("Aguardando próximo tanque cheio")
+ */
+export function openFuelCycleLabel(openCycle: FuelConsumptionResult['openCycle']): string {
+  if (!openCycle) return '';
+  return `Aguardando próximo tanque cheio (início em ${openCycle.startKm.toLocaleString('pt-BR')} km)`;
+}
 
 /**
  * Ride/Delivery Simulator

@@ -8,6 +8,8 @@ import {
   TransactionType,
   PeriodSummary,
   ActiveShiftState,
+  MaintenanceReserveEntry,
+  OdometerRecord,
 } from '../types';
 import {
   INITIAL_TRANSACTIONS,
@@ -16,7 +18,13 @@ import {
   INITIAL_VEHICLES,
   INITIAL_REGISTERED_APPS,
 } from '../data/mockData';
-import { calculatePeriodSummary, calculateShiftTotals } from '../utils/calculations';
+import {
+  calculatePeriodSummary,
+  calculateShiftTotals,
+  calculateReserveBalance,
+  reconcileVehicleOdometer,
+  formatBRL,
+} from '../utils/calculations';
 
 export type TransactionInput = {
   type: TransactionType;
@@ -39,6 +47,11 @@ interface AppContextType {
   addTransaction: (tx: TransactionInput) => void;
   updateTransaction: (id: string, updated: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
+
+  // Transaction detail/edit modal
+  selectedTransaction: Transaction | null;
+  openTransactionDetail: (id: string) => void;
+  closeTransactionDetail: () => void;
 
   // Vehicles
   vehicles: UserVehicle[];
@@ -71,9 +84,16 @@ interface AppContextType {
   // Profile & Settings
   userProfile: UserProfile;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
-  depositMaintenanceReserve: (amount: number) => void;
+  depositMaintenanceReserve: (amount: number, description?: string) => void;
+  withdrawMaintenanceReserve: (amount: number, description?: string) => boolean;
+  adjustMaintenanceReserve: (amount: number, description?: string) => void;
+  maintenanceReserveLedger: MaintenanceReserveEntry[];
+  maintenanceReserveBalance: number;
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
+  availableMonths: string[];
+  goToPreviousMonth: () => void;
+  goToNextMonth: () => void;
 
   // Calculations & Summaries
   monthSummary: PeriodSummary;
@@ -102,6 +122,10 @@ interface AppContextType {
   openAppsModal: () => void;
   closeAppsModal: () => void;
 
+  isReserveModalOpen: boolean;
+  openReserveModal: () => void;
+  closeReserveModal: () => void;
+
   // Feedback Toast
   toastMessage: string | null;
   showToast: (msg: string) => void;
@@ -115,6 +139,8 @@ const LOCAL_STORAGE_PROFILE_KEY = 'rota_financeira_profile_v2';
 const LOCAL_STORAGE_VEHICLES_KEY = 'rota_financeira_vehicles_v2';
 const LOCAL_STORAGE_APPS_KEY = 'rota_financeira_apps_v2';
 const LOCAL_STORAGE_ACTIVE_SHIFT_KEY = 'rota_financeira_active_shift_v2';
+const LOCAL_STORAGE_MONTH_KEY = 'rota_financeira_selected_month_v2';
+const LOCAL_STORAGE_RESERVE_KEY = 'rota_financeira_reserve_ledger_v2';
 
 const CANONICAL_VEHICLE_ID = 'veh-factor-150';
 const LEGACY_VEHICLE_ID = 'veh-fazer-250';
@@ -145,7 +171,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeTab, setActiveTab] = useState<
     'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil'
   >('inicio');
-  const [selectedMonth, setSelectedMonth] = useState<string>('2026-09');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_MONTH_KEY);
+      if (saved && /^\d{4}-\d{2}$/.test(saved)) return saved;
+    } catch (e) {
+      console.error(e);
+    }
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  });
 
   // Vehicles state
   const [vehicles, setVehicles] = useState<UserVehicle[]>(() => {
@@ -155,19 +190,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const parsed: UserVehicle[] = JSON.parse(saved);
         const hasFactor = parsed.some((v) => v.model?.includes('Factor 150'));
         if (!hasFactor) {
-          return INITIAL_VEHICLES;
+          return INITIAL_VEHICLES.map((v) => ({
+            ...v,
+            odometerBaselineKm: v.odometerBaselineKm ?? v.currentKm,
+          }));
         }
         return parsed.map((v) => {
-          if (v.isActive && v.model?.includes('Factor 150') && v.currentKm < 42118) {
-            return { ...v, currentKm: 42118 };
+          const baseline = v.odometerBaselineKm ?? v.currentKm;
+          const base: UserVehicle = {
+            ...v,
+            odometerBaselineKm: baseline,
+          };
+          if (base.isActive && base.model?.includes('Factor 150') && base.currentKm < 42118) {
+            return {
+              ...base,
+              currentKm: 42118,
+              odometerBaselineKm: Math.max(baseline, 42118),
+            };
           }
-          return v;
+          return base;
         });
       }
     } catch (e) {
       console.error(e);
     }
-    return INITIAL_VEHICLES;
+    return INITIAL_VEHICLES.map((v) => ({
+      ...v,
+      odometerBaselineKm: v.odometerBaselineKm ?? v.currentKm,
+    }));
   });
 
   const activeVehicle = useMemo(() => {
@@ -249,6 +299,58 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [isSimulatorsModalOpen, setIsSimulatorsModalOpen] = useState(false);
   const [isAppsModalOpen, setIsAppsModalOpen] = useState(false);
+  const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
+
+  // Transaction detail modal
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
+  const selectedTransaction = useMemo(
+    () => transactions.find((t) => t.id === selectedTransactionId) || null,
+    [transactions, selectedTransactionId],
+  );
+
+  // Cofrinho de manutenção: ledger (Fase 2)
+  const [maintenanceReserveLedger, setMaintenanceReserveLedger] = useState<
+    MaintenanceReserveEntry[]
+  >(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_RESERVE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    // Migração idempotente do valor escalar legado (profile.maintenanceReserveSaved)
+    try {
+      const savedProfile = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
+      const parsedProfile = savedProfile ? JSON.parse(savedProfile) : null;
+      const legacy = Number(parsedProfile?.maintenanceReserveSaved) || 0;
+      const initial = legacy > 0 ? legacy : Number(INITIAL_USER_PROFILE.maintenanceReserveSaved) || 0;
+      if (initial > 0) {
+        return [
+          {
+            id: `reserve-migrated`,
+            type: 'deposito' as const,
+            amount: Math.round(initial * 100) / 100,
+            date: new Date().toISOString().split('T')[0],
+            description: 'Saldo inicial migrado do perfil',
+            createdAt: Date.now(),
+          },
+        ];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+
+  const maintenanceReserveBalance = useMemo(() => {
+    if (maintenanceReserveLedger.length > 0) {
+      return calculateReserveBalance(maintenanceReserveLedger);
+    }
+    return Math.round(Number(userProfile.maintenanceReserveSaved || 0) * 100) / 100;
+  }, [maintenanceReserveLedger, userProfile.maintenanceReserveSaved]);
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -313,6 +415,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [activeShift]);
 
+  useEffect(() => {
+    try {
+      if (selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth)) {
+        localStorage.setItem(LOCAL_STORAGE_MONTH_KEY, selectedMonth);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_RESERVE_KEY, JSON.stringify(maintenanceReserveLedger));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [maintenanceReserveLedger]);
+
   // Real-time ticker for shift timings
   const [elapsedShiftSeconds, setElapsedShiftSeconds] = useState(0);
   const [elapsedWorkSeconds, setElapsedWorkSeconds] = useState(0);
@@ -351,6 +471,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newVeh: UserVehicle = {
       ...vehData,
       id: newId,
+      odometerBaselineKm: vehData.currentKm,
     };
     setVehicles((prev) => {
       if (newVeh.isActive) {
@@ -365,7 +486,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setVehicles((prev) =>
       prev.map((v) => {
         if (v.id === id) {
-          return { ...v, ...updates };
+          // Leitura manual do odômetro também eleva o piso de reconciliação (nunca regride)
+          const raisedKm =
+            typeof updates.currentKm === 'number' && updates.currentKm > v.currentKm;
+          return {
+            ...v,
+            ...updates,
+            odometerBaselineKm: raisedKm
+              ? Math.max(v.odometerBaselineKm ?? v.currentKm, updates.currentKm as number)
+              : v.odometerBaselineKm,
+          };
         }
         if (updates.isActive && v.id !== id) {
           return { ...v, isActive: false };
@@ -597,28 +727,96 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateTransaction = (id: string, updated: Partial<Transaction>) => {
     setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? ({ ...t, ...updated } as Transaction) : t)),
+      prev.map((t) =>
+        t.id === id
+          ? ({ ...t, ...updated, id, updatedAt: Date.now() } as Transaction)
+          : t,
+      ),
     );
     showToast('Lançamento atualizado.');
   };
 
   const deleteTransaction = (id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
+    if (selectedTransactionId === id) setSelectedTransactionId(null);
     showToast('Lançamento excluído.');
   };
+
+  // Transaction detail modal
+  const openTransactionDetail = (id: string) => setSelectedTransactionId(id);
+  const closeTransactionDetail = () => setSelectedTransactionId(null);
 
   const updateUserProfile = (updates: Partial<UserProfile>) => {
     setUserProfile((prev) => ({ ...prev, ...updates }));
     showToast('Perfil atualizado com sucesso.');
   };
 
-  const depositMaintenanceReserve = (amount: number) => {
-    if (amount <= 0) return;
-    setUserProfile((prev) => ({
+  const depositMaintenanceReserve = (amount: number, description?: string) => {
+    const amt = Math.round((Number(amount) || 0) * 100) / 100;
+    if (amt <= 0) {
+      showToast('Informe um valor positivo para guardar.');
+      return;
+    }
+    setMaintenanceReserveLedger((prev) => [
       ...prev,
-      maintenanceReserveSaved: (prev.maintenanceReserveSaved || 0) + amount,
-    }));
-    showToast(`R$ ${amount.toFixed(2).replace('.', ',')} guardado na reserva de manutenção!`);
+      {
+        id: `reserve-${Date.now()}`,
+        type: 'deposito' as const,
+        amount: amt,
+        date: new Date().toISOString().split('T')[0],
+        description,
+        createdAt: Date.now(),
+      },
+    ]);
+    showToast(`${formatBRL(amt)} guardado na reserva de manutenção!`);
+  };
+
+  const withdrawMaintenanceReserve = (amount: number, description?: string): boolean => {
+    const amt = Math.round((Number(amount) || 0) * 100) / 100;
+    if (amt <= 0) {
+      showToast('Informe um valor positivo para resgatar.');
+      return false;
+    }
+    const currentBalance = maintenanceReserveBalance;
+    if (amt > currentBalance) {
+      showToast(`Saldo insuficiente: ${formatBRL(currentBalance)} disponível no cofrinho.`);
+      return false;
+    }
+    setMaintenanceReserveLedger((prev) => [
+      ...prev,
+      {
+        id: `reserve-${Date.now()}`,
+        type: 'resgate' as const,
+        amount: amt,
+        date: new Date().toISOString().split('T')[0],
+        description,
+        createdAt: Date.now(),
+      },
+    ]);
+    showToast(`${formatBRL(amt)} resgatados da reserva de manutenção.`);
+    return true;
+  };
+
+  const adjustMaintenanceReserve = (amount: number, description?: string) => {
+    const amt = Math.round((Number(amount) || 0) * 100) / 100;
+    if (!isFinite(amt) || amt === 0) {
+      showToast('Informe um ajuste diferente de zero.');
+      return;
+    }
+    setMaintenanceReserveLedger((prev) => [
+      ...prev,
+      {
+        id: `reserve-${Date.now()}`,
+        type: 'ajuste' as const,
+        amount: amt,
+        date: new Date().toISOString().split('T')[0],
+        description,
+        createdAt: Date.now(),
+      },
+    ]);
+    showToast(
+      `Cofrinho de manutenção ${amt > 0 ? 'ajustado para cima' : 'ajustado para baixo'}.`,
+    );
   };
 
   // Modal handlers
@@ -639,6 +837,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const openAppsModal = () => setIsAppsModalOpen(true);
   const closeAppsModal = () => setIsAppsModalOpen(false);
+
+  const openReserveModal = () => setIsReserveModalOpen(true);
+  const closeReserveModal = () => setIsReserveModalOpen(false);
 
   // Month filtered data
   const monthTransactions = useMemo(() => {
@@ -702,6 +903,86 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return calculateShiftTotals(transactions, shiftId);
   };
 
+  // Meses disponíveis derivados dos dados + mês atual (pt-BR, ordenados do mais novo para o mais antigo)
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    for (const t of transactions) {
+      if (t.date && typeof t.date === 'string' && t.date.length >= 7) {
+        months.add(t.date.slice(0, 7));
+      }
+    }
+    for (const s of shifts) {
+      if (s.date && typeof s.date === 'string' && s.date.length >= 7) {
+        months.add(s.date.slice(0, 7));
+      }
+    }
+    const now = new Date();
+    months.add(`${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`);
+    return Array.from(months).sort((a, b) => b.localeCompare(a));
+  }, [transactions, shifts]);
+
+  const goToPreviousMonth = () => {
+    setSelectedMonth((current) => {
+      const idx = availableMonths.indexOf(current);
+      if (idx < 0) return current;
+      const prev = availableMonths[Math.min(availableMonths.length - 1, idx + 1)];
+      return prev ?? current;
+    });
+  };
+
+  const goToNextMonth = () => {
+    setSelectedMonth((current) => {
+      const idx = availableMonths.indexOf(current);
+      if (idx <= 0) return current;
+      return availableMonths[idx - 1] ?? current;
+    });
+  };
+
+  // Reconciliação idempotente do odômetro: maior leitura cronologicamente válida, nunca abaixo do piso inicial.
+  useEffect(() => {
+    setVehicles((prevVehicles) =>
+      prevVehicles.map((v) => {
+        const baseline = v.odometerBaselineKm ?? v.currentKm;
+        const records: OdometerRecord[] = [];
+
+        for (const t of transactions) {
+          if (t.vehicleId !== v.id) continue;
+          if (t.type === 'abastecimento' && typeof t.currentKm === 'number' && t.currentKm > 0) {
+            records.push({ date: t.date, time: t.time, km: t.currentKm, source: 'abastecimento', sourceId: t.id });
+          }
+          if (t.type === 'manutencao' && typeof t.currentKm === 'number' && t.currentKm > 0) {
+            records.push({ date: t.date, time: t.time, km: t.currentKm, source: 'manutencao', sourceId: t.id });
+          }
+        }
+        for (const s of shifts) {
+          if (s.vehicleId !== v.id) continue;
+          if (typeof s.startKm === 'number' && s.startKm > 0) {
+            records.push({ date: s.date, time: s.startTime, km: s.startKm, source: 'jornada-inicio', sourceId: s.id });
+          }
+          if (typeof s.endKm === 'number' && s.endKm > 0) {
+            records.push({ date: s.date, time: s.endTime, km: s.endKm, source: 'jornada-fim', sourceId: s.id });
+          }
+        }
+        if (activeShift && activeShift.vehicleId === v.id && activeShift.startKm > 0) {
+          records.push({
+            date: activeShift.date,
+            time: activeShift.startTime,
+            km: activeShift.startKm,
+            source: 'jornada-ativa',
+            sourceId: activeShift.shiftId,
+          });
+        }
+
+        const reconciled = reconcileVehicleOdometer(records, baseline);
+        const nextKm = Math.max(baseline, reconciled.currentKm);
+        if (nextKm !== v.currentKm) {
+          return { ...v, currentKm: nextKm };
+        }
+        return v;
+      }),
+    );
+  }, [transactions, shifts, activeShift]);
+
   return (
     <AppContext.Provider
       value={{
@@ -711,6 +992,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addTransaction,
         updateTransaction,
         deleteTransaction,
+        selectedTransaction,
+        openTransactionDetail,
+        closeTransactionDetail,
         vehicles,
         activeVehicle,
         addVehicle,
@@ -736,8 +1020,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         userProfile,
         updateUserProfile,
         depositMaintenanceReserve,
+        withdrawMaintenanceReserve,
+        adjustMaintenanceReserve,
+        maintenanceReserveLedger,
+        maintenanceReserveBalance,
         selectedMonth,
         setSelectedMonth,
+        availableMonths,
+        goToPreviousMonth,
+        goToNextMonth,
         monthSummary,
         todaySummary,
         prevMonthSummary,
@@ -757,6 +1048,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isAppsModalOpen,
         openAppsModal,
         closeAppsModal,
+        isReserveModalOpen,
+        openReserveModal,
+        closeReserveModal,
         toastMessage,
         showToast,
       }}

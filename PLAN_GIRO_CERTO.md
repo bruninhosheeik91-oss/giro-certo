@@ -49,11 +49,17 @@ sem testes, backend ou banco. Persistência: `localStorage` (6 chaves `rota_fina
 - Preservar arquitetura que permita **futuramente** um plugin Android nativo de leitura autorizada de notificações — **em standby, não implementar agora**.
 - **Não instalar Capacitor durante as Fases 0, 1 ou 2.** Apenas manter a base compatível.
 
-### 5. LANÇAMENTOS AVULSOS E JORNADAS — ⚠️ REGRA PENDENTE
-> Mensagem com a decisão 5 chegou truncada ("Regra definitiva…"). **Necessário constar antes da Fase 1.**
-> Contexto da auditoria a considerar na redação: o modal diz que lançamento "avulso" não soma no ganho acumulado,
-> mas o `AppContext` soma mesmo assim (infla o acumulado da jornada); exclusão de lançamento vinculado não decrementa
-> o acumulado; jornada encerrada guarda `accumulatedGain/Expense` no histórico.
+### 5. LANÇAMENTOS AVULSOS E JORNADAS — ✔ REGRA DEFINIDA
+> **Acumulado da jornada é sempre DERIVADO do histórico**: `accumulatedGain`/`accumulatedExpense` da jornada são
+> recalculados pela soma dos lançamentos **vinculados** (`shiftId`), nunca armazenados/adivinhados.
+> Regras:
+> - O acumulado é a soma das transações com `shiftId` === jornada ativa.
+> - Lançamento **avulso** (sem `shiftId` ou sem jornada ativa) **não** entra no acumulado de jornada alguma.
+> - Excluir um lançamento vinculado → o acumulado é recalculado (sempre coerente).
+> - Alimentar/alterar lançamento vinculado → recalcula automaticamente.
+> - Jornada encerrada exibe valores derivados do mesmo cálculo (fonte única = transações).
+> - O campo persistido `accumulatedGain/Expense` deixa de ser a fonte de verdade (toleramos dados legados,
+>   mas o valor mostrado vem sempre da soma das transações vinculadas).
 
 ---
 
@@ -80,29 +86,35 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 
 ### FASE 1 — Correção de dados e bugs de domínio
 **Objetivo**: dados simulados fiéis às decisões 2 e 3; corrigir contradições.
-- [ ] Veículo oficial: renovar `INITIAL_VEHICLES` (Moto do Dia a Dia / Yamaha / Factor 150 / 2024 / 42.118 km) com ID canônico.
-- [ ] Migrar `veh-fazer-250` → ID canônico em todas as transações/jornadas; reconciliação idempotente no `AppContext` ao carregar localStorage. **[Decisão 3]**
-- [ ] Reserva: implementar fórmula oficial (km de jornadas concluídas × `reservePerKm`); jornadas ativa/excluída/alterada sob as regras da **Decisão 2**; não descontar reserva duas vezes do lucro.
-- [ ] Mocks de reserva: alinhar para **exatamente R$ 200,16** sem valor artificial, ou documentar matematicamente o ajuste (2026-09: 1.668 km × 0,12).
-- [ ] Corrigir `createdAt` dos mocks (epoch 2024 → datas 2026-09).
-- [ ] Jornada: `endKm`/`startKm` com decimais (`parseFloat`), não `parseInt`.
-- [ ] Manutenção preventiva: `calculateVehiclePartsHealth` passará a consumir as transações de manutenção (não km fixo 24.000).
-- [ ] Unificar stats de aplicativo (ReportsView/charts) na função única `calculatePeriodSummary`.
-- [ ] Alinhar lançamentos avulsos/jornadas conforme **Decisão 5** (pendente).
-- **Verificável**: tela Início mostra reserva sugerida R$ 200,16 no mês mockado; nenhuma referência a `veh-fazer-250` no código; odômetro coerente (42.118 km).
+- [x] Veículo oficial: renovar `INITIAL_VEHICLES` (Moto do Dia a Dia / Yamaha / Factor 150 / 2024 / 42.118 km) com ID canônico.
+- [x] Migrar `veh-fazer-250` → ID canônico em todas as transações/jornadas; reconciliação idempotente no `AppContext` ao carregar localStorage. **[Decisão 3]**
+- [x] Reserva: implementar fórmula oficial (km de jornadas concluídas × `reservePerKm`); jornadas ativa/excluída/alterada sob as regras da **Decisão 2**; não descontar reserva duas vezes do lucro.
+- [x] Mocks de reserva: alinhar para **exatamente R$ 200,16** sem valor artificial (2026-09: 1.668 km × 0,12, corrente de odômetro 40.450 → 42.118).
+- [x] Corrigir `createdAt` dos mocks (epoch 2024 → datas 2026-09).
+- [x] Jornada: `endKm`/`startKm` com decimais (`parseFloat`), não `parseInt`.
+- [x] Manutenção preventiva: `calculateVehiclePartsHealth` passará a consumir as transações de manutenção (não km fixo 24.000).
+- [x] Unificar stats de aplicativo (ReportsView/charts) na função única `calculatePeriodSummary`.
+- [x] Alinhar lançamentos avulsos/jornadas conforme **Decisão 5** (acumulado derivado via `getShiftTotals`).
+- **Verificável**: tela Início mostra reserva sugerida R$ 200,16 no mês mockado; nenhuma referência a `veh-fazer-250` no código; odômetro coerente (42.118 km). ✔ lint + build passando.
 
 ### FASE 2 — Funcionalidades essenciais apontadas pela auditoria
 **Objetivo**: fechar lacunas de produto que bloqueiam o uso real diário.
-- [ ] **Consumo real km/l**: módulo a partir dos abastecimentos + odômetro (campo já existe; cálculo não).
-- [ ] **Edição de lançamento**: ativar `TransactionDetailModal` (órfão) roteirizado pela lista.
-- [ ] **Cofrinho de reserva**: depositar E resgatar; separar "reserva sugerida" (lucro disponível) de "reserva guardada".
-- [ ] **Seleção de mês dinâmica** no Header (hoje fixa Set/26, Ago/26, Jul/26).
-- [ ] **Deleção segura**: rollback do odômetro ao excluir lançamento que o alterou.
-- [ ] Validações harmonizadas de entrada monetária (`parseBRLInput` vs `parseFloat.replace(',','.')`).
-- **Verificável**: fluxos de abastecimento→consumo, edição de lançamento, cofrinho completos.
+- [x] **Consumo real km/l**: módulo tanque-cheio→tanque-cheio em Relatórios (aba "Consumo km/L") usando `calculateFuelConsumption`; ciclos confirmados + ciclo aberto + custo/km.
+- [x] **Edição de lançamento**: `TransactionDetailModal` ativado pela lista (clique no cartão) e montado em `App.tsx`; edição de valor/descrição e odômetro (com piso do `odometerBaselineKm`).
+- [x] **Cofrinho de reserva**: modal com depósito, resgate (valida saldo) e histórico do `maintenanceReserveLedger`; saldo derivado (`calculateReserveBalance`), separado da reserva sugerida (lucro disponível).
+- [x] **Seleção de mês dinâmica** no Header (`availableMonths` + setas `goToPreviousMonth`/`goToNextMonth`).
+- [x] **Deleção segura**: rollback do odômetro ao excluir/editar lançamento via efeito de reconciliação idempotente (`reconcileVehicleOdometer`) — nunca regride abaixo do piso.
+- [x] Validações harmonizadas de entrada monetária: `parseBRLInput`/`formatBRLInput` (campos BRL) e `parseDecimalInput` (km, litros, taxas) nos modais/simuladores/perfil.
+- [x] **Testes Vitest + RTL**: configurados (Vitest 5 + jsdom + Testing Library); 18 testes cobrindo `calculations.ts` (BRL, consumo, shift totals, reserva, odômetro, simulador de corrida).
+- **Verificável**: fluxos de abastecimento→consumo, edição de lançamento e cofrinho completos. ✔ `npm test`, `npm run lint` e `npm run build` passando.
 
 ### FASE 3 — PWA + Capacitor (Android)
 > ✔ Decisão 4: React/Vite responsivo + PWA + Capacitor; Android Studio para build/publicação.
+> **Identidade visual**: na fase Capacitor, gerar o launcher icon, adaptive icon, foreground, background,
+> round icon e o ícone da Play Store (512×512) a partir do arquivo de maior qualidade em
+> `public/branding/giro-certo-icon-original.png` (1254×1254 — original do cliente, mantido intacto).
+> Derivados já gerados: `public/favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` (180),
+> `public/icons/icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`.
 - [ ] Manifest web app + ícones + **service worker** (offline-first para dados locais até a Fase 4).
 - [ ] Instalar Capacitor (@capacitor/core, cli, android) — **somente nesta fase**. **[Decisão 4]**
 - [ ] Configuração Android (`npx cap add android`), minSDK/tema, splash, ícones.
@@ -121,7 +133,8 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 - **Verificável**: fluxo de login; dados sincronizam entre dois dispositivos; RLS bloqueia leitura cruzada.
 
 ### FASE 5 — Testes, qualidade e release
-- [ ] **Vitest + React Testing Library**: começar por `calculations.ts` (funções puras — maior risco de regressão); depois formulários/modais.
+- [x] **Vitest + React Testing Library**: configurado (Vitest 5 + jsdom + `@testing-library/react`); iniciado por `calculations.ts` (funções puras — maior risco de regressão).
+- [ ] Ampliar cobertura: formulários/modais (RTL) e fluxos de jornaada/relatório/reserva.
 - [ ] E2E (Playwright) para fluxos principais: lançamento, jornada, relatório, reserva.
 - [ ] Code-splitting com `React.lazy` para derrubar chunk de 533 kB (meta < 200 kB gzip por rota).
 - [ ] Acessibilidade e dados de teste (Android Studio/Firebase Test Lab se aplicável).
@@ -137,7 +150,7 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 | 2 | Reserva | km de jornadas concluídas × taxa; regras de ativa/excluída/alterada; meta R$ 200,16 (ou doc matemática) | 1 |
 | 3 | Veículo | Factor 150 "Moto do Dia a Dia" (2024, 42.118 km); matar `veh-fazer-250`; migração idempotente | 1 |
 | 4 | Mobile | PWA + Capacitor (Android); Android Studio; sem RN/Expo; plugin notificações em standby | 3 |
-| 5 | Avulsos/jornadas | **⚠️ PENDENTE** (mensagem truncada) | 1 |
+| 5 | Avulsos/jornadas | Acumulado sempre **derivado** das transações vinculadas; avulso não soma; excluir/alimentar recalcula | 1 |
 
 ---
 
