@@ -255,6 +255,10 @@ export const PayablesModal: React.FC = () => {
       setFormError('Informe nome, valor e primeiro vencimento.');
       return;
     }
+    if (form.type === 'conta_recorrente' && form.endDate && form.endDate < form.firstDueDate) {
+      setFormError('A data final não pode ser anterior ao primeiro vencimento.');
+      return;
+    }
     if (
       initialPaidInstallments !== undefined &&
       totalInstallments !== undefined &&
@@ -288,7 +292,8 @@ export const PayablesModal: React.FC = () => {
       const scheduleChanged =
         current.installmentAmount !== amount ||
         current.firstDueDate !== form.firstDueDate ||
-        current.totalInstallments !== totalInstallments;
+        current.totalInstallments !== totalInstallments ||
+        current.endDate !== payload.endDate;
       if (hasPaid && scheduleChanged && !confirmFutureEdit) {
         setConfirmFutureEdit(true);
         return;
@@ -735,6 +740,8 @@ export const PayablesModal: React.FC = () => {
       .filter((installment) => installment.commitmentId === selectedCommitment.id)
       .sort((a, b) => a.number - b.number);
     const progress = calculateCommitmentProgress(selectedCommitment, related, transactions);
+    const isOpenEndedRecurring =
+      selectedCommitment.type === 'conta_recorrente' && !selectedCommitment.endDate;
     const firstOpenIndex = related.findIndex(
       (installment) => !isInstallmentPaid(installment, transactions),
     );
@@ -765,26 +772,38 @@ export const PayablesModal: React.FC = () => {
           <div className="flex items-end justify-between">
             <div>
               <p className="text-2xl font-extrabold text-white font-mono">
-                {progress.paidInstallments} de {progress.totalInstallments || related.length}
+                {isOpenEndedRecurring
+                  ? progress.paidInstallments
+                  : `${progress.paidInstallments} de ${progress.totalInstallments || related.length}`}
               </p>
-              <span className="text-[10px] text-slate-400">parcelas pagas</span>
+              <span className="text-[10px] text-slate-400">
+                {isOpenEndedRecurring ? 'pagamentos registrados' : 'parcelas pagas'}
+              </span>
             </div>
             <span className="text-sm font-bold text-emerald-400 font-mono">
-              {progress.progressPercent.toFixed(0)}%
+              {isOpenEndedRecurring
+                ? 'Recorrência contínua'
+                : `${progress.progressPercent.toFixed(0)}%`}
             </span>
           </div>
-          <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
-              style={{ width: `${Math.min(100, progress.progressPercent)}%` }}
-            />
-          </div>
+          {!isOpenEndedRecurring && (
+            <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
+                style={{ width: `${Math.min(100, progress.progressPercent)}%` }}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
-            <div className="col-span-2 p-2.5 rounded-xl bg-slate-950/60 flex items-center justify-between gap-3">
-              <span className="text-[9px] uppercase text-slate-500">Total previsto</span>
-              <strong className="text-white font-mono">{formatBRL(progress.totalExpected)}</strong>
-            </div>
+            {!isOpenEndedRecurring && (
+              <div className="col-span-2 p-2.5 rounded-xl bg-slate-950/60 flex items-center justify-between gap-3">
+                <span className="text-[9px] uppercase text-slate-500">Total previsto</span>
+                <strong className="text-white font-mono">
+                  {formatBRL(progress.totalExpected)}
+                </strong>
+              </div>
+            )}
             <div className="p-2.5 rounded-xl bg-slate-950/60">
               <span className="text-[9px] uppercase text-slate-500 block">Total pago</span>
               <strong className="text-emerald-400 font-mono">
@@ -806,9 +825,11 @@ export const PayablesModal: React.FC = () => {
             <div className="p-2.5 rounded-xl bg-slate-950/60">
               <span className="text-[9px] uppercase text-slate-500 block">Previsão de término</span>
               <strong className="text-slate-200">
-                {progress.projectedEndDate
-                  ? formatDisplayDate(progress.projectedEndDate)
-                  : 'Sem prazo final'}
+                {isOpenEndedRecurring
+                  ? 'Sem prazo final'
+                  : progress.projectedEndDate
+                    ? formatDisplayDate(progress.projectedEndDate)
+                    : 'Sem prazo final'}
               </strong>
             </div>
           </div>
@@ -850,7 +871,11 @@ export const PayablesModal: React.FC = () => {
               <CalendarDays className="w-4 h-4 text-blue-400" />
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Parcelas</h3>
             </div>
-            <span className="text-[10px] text-slate-500">{related.length} registradas</span>
+            <span className="text-[10px] text-slate-500">
+              {isOpenEndedRecurring
+                ? `${related.length} próximas geradas`
+                : `${related.length} registradas`}
+            </span>
           </div>
 
           <div className="divide-y divide-slate-800/70">

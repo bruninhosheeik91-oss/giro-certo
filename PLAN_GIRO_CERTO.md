@@ -127,6 +127,7 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 - [x] Tipos suportados: conta única, conta recorrente, compra parcelada, financiamento de veículo, empréstimo e consórcio.
 - [x] Schema local versionado (`giro_certo_financial_state_v3`) com migração e reconciliação idempotentes.
 - [x] Geração de vencimentos mensais com datas civis e ajuste correto dos dias 29, 30 e 31.
+- [x] Recorrências com data final geram toda a duração informada; recorrências sem término usam apenas uma projeção móvel e não exibem essa janela como total do contrato.
 - [x] Histórico inicial de parcelas já pagas sem criar despesas retroativas.
 - [x] Pagamento idempotente: marcar uma parcela como paga cria exatamente uma despesa vinculada; editar sincroniza valor/data; excluir ou reabrir remove o vínculo e reabre a parcela.
 - [x] Alterações de contrato preservam parcelas pagas e afetam apenas parcelas futuras.
@@ -134,7 +135,7 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 - [x] Detalhe de contratos: X/Y parcelas, percentual, total previsto, total pago, saldo aberto, próximo vencimento, previsão de término e histórico.
 - [x] UX compacta: um card na Home, uma entrada no Perfil, modal dedicado e nenhuma nova aba inferior.
 - [x] Cobertura automatizada de domínio e fluxo RTL completo de cadastro → pagamento → uma única despesa.
-- **Verificável**: 34 testes passando; `npm run lint` e `npm run build` verdes. Issue #1.
+- **Verificável**: 37 testes passando; `npm run lint` e `npm run build` verdes. Issue #1.
 
 ### FASE 3 — PWA + Capacitor (Android)
 

@@ -31,7 +31,6 @@ import {
   formatBRL,
 } from '../utils/calculations';
 import {
-  addMonthsClamped,
   calculatePayablesSummary,
   generatePayableSchedule,
   isInstallmentPaid,
@@ -39,6 +38,7 @@ import {
   migrateFinancialState,
   reconcileFinancialState,
   removeTransactionWithFinancialReconciliation,
+  resolveScheduleThroughMonth,
   reopenInstallment,
   settleInstallment,
 } from '../utils/payables';
@@ -503,12 +503,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [transactions]);
 
   useEffect(() => {
-    const throughMonth = addMonthsClamped(`${selectedMonth}-01`, 12).slice(0, 7);
     setFinancialState((previous) => {
       const knownIds = new Set(previous.installments.map((installment) => installment.id));
       const missing = previous.commitments
         .filter((commitment) => commitment.type === 'conta_recorrente')
-        .flatMap((commitment) => generatePayableSchedule(commitment, throughMonth))
+        .flatMap((commitment) =>
+          generatePayableSchedule(
+            commitment,
+            resolveScheduleThroughMonth(commitment, selectedMonth),
+          ),
+        )
         .filter((installment) => !knownIds.has(installment.id));
       if (missing.length === 0) return previous;
       return reconcileFinancialState(
@@ -871,7 +875,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       status: 'ativo',
       createdAt: now,
     };
-    const throughMonth = addMonthsClamped(`${selectedMonth}-01`, 12).slice(0, 7);
+    const throughMonth = resolveScheduleThroughMonth(commitment, selectedMonth);
     const installments = generatePayableSchedule(
       commitment,
       throughMonth,
@@ -943,7 +947,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
 
-    const throughMonth = addMonthsClamped(`${selectedMonth}-01`, 12).slice(0, 7);
+    const throughMonth = resolveScheduleThroughMonth(nextCommitment, selectedMonth);
     const rebuilt = mergeCommitmentSchedule(nextCommitment, related, transactions, throughMonth);
     setFinancialState((previous) =>
       reconcileFinancialState(

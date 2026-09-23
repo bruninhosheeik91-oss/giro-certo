@@ -9,6 +9,7 @@ import {
   migrateFinancialState,
   reconcileFinancialState,
   removeTransactionWithFinancialReconciliation,
+  resolveScheduleThroughMonth,
   reopenInstallment,
   settleInstallment,
 } from './payables';
@@ -67,6 +68,32 @@ describe('payables schedule', () => {
       '2026-08-10',
       '2026-09-10',
     ]);
+  });
+
+  it('uses the full end date for a three-year recurring account', () => {
+    const commitment = makeCommitment({
+      type: 'conta_recorrente',
+      totalInstallments: undefined,
+      firstDueDate: '2026-10-02',
+      endDate: '2029-09-02',
+    });
+    const throughMonth = resolveScheduleThroughMonth(commitment, '2026-09');
+    const installments = generatePayableSchedule(commitment, throughMonth, 0, 1);
+
+    expect(throughMonth).toBe('2029-09');
+    expect(installments).toHaveLength(36);
+    expect(installments.at(-1)?.dueDate).toBe('2029-09-02');
+  });
+
+  it('keeps an open-ended recurrence on a rolling projection window', () => {
+    const commitment = makeCommitment({
+      type: 'conta_recorrente',
+      totalInstallments: undefined,
+      firstDueDate: '2026-10-02',
+      endDate: undefined,
+    });
+
+    expect(resolveScheduleThroughMonth(commitment, '2026-09')).toBe('2027-09');
   });
 
   it('imports explicitly informed historical installments without creating transactions', () => {

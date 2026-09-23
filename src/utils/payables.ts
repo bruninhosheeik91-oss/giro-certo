@@ -56,6 +56,19 @@ export function addMonthsClamped(date: string, offset: number): string {
   return formatCivilDate(year, month, day);
 }
 
+export function resolveScheduleThroughMonth(
+  commitment: FinancialCommitment,
+  selectedMonth: string,
+  rollingMonths = 12,
+): string {
+  const rollingThroughMonth = addMonthsClamped(`${selectedMonth}-01`, rollingMonths).slice(0, 7);
+  if (commitment.type !== 'conta_recorrente' || !commitment.endDate) {
+    return rollingThroughMonth;
+  }
+
+  return parseCivilDate(commitment.endDate) ? commitment.endDate.slice(0, 7) : rollingThroughMonth;
+}
+
 const monthDistance = (fromDate: string, throughMonth: string) => {
   const from = parseCivilDate(fromDate);
   const match = /^(\d{4})-(\d{2})$/.exec(throughMonth);
