@@ -4,8 +4,8 @@ import { ANNUAL_SUMMARY_MOCK } from '../data/mockData';
 import {
   formatBRL,
   formatPercent,
-  safeDivide,
   filterTransactionsByPeriod,
+  calculatePeriodSummary,
 } from '../utils/calculations';
 import { Award, Trophy } from 'lucide-react';
 
@@ -25,42 +25,21 @@ export const ReportsView: React.FC = () => {
     );
   }, [transactions, periodFilter, selectedMonth]);
 
-  // App breakdown calculation
+  // Unified period summary (app stats sourced from single calculation function)
+  const periodSummary = useMemo(() => {
+    return calculatePeriodSummary(filteredTxs, [], 5400, 0.12);
+  }, [filteredTxs]);
+
+  // App color lookup (presentation-only; totals come from periodSummary.appStats)
   const appStats = useMemo(() => {
-    const map: Record<string, { total: number; rides: number; color?: string }> = {};
-    let totalGross = 0;
-
-    for (const t of filteredTxs) {
-      if (t.type === 'ganho') {
-        const appName = t.app || 'Outro';
-        if (!map[appName]) {
-          const registered = registeredApps.find(
-            (a) => a.name.toLowerCase() === appName.toLowerCase(),
-          );
-          map[appName] = {
-            total: 0,
-            rides: 0,
-            color: registered?.color || '#000000',
-          };
-        }
-        map[appName].total += t.amount;
-        map[appName].rides += t.ridesCount || 1;
-        totalGross += t.amount;
-      }
-    }
-
-    const list = Object.entries(map).map(([name, data]) => ({
-      name,
-      total: data.total,
-      rides: data.rides,
-      percentage: totalGross > 0 ? (data.total / totalGross) * 100 : 0,
-      avgPerRide: safeDivide(data.total, data.rides),
-      color: data.color || '#64748B',
-    }));
-
-    list.sort((a, b) => b.total - a.total);
-    return { list, totalGross };
-  }, [filteredTxs, registeredApps]);
+    const colorFor = (name: string) => {
+      const registered = registeredApps.find(
+        (a) => a.name.toLowerCase() === name.toLowerCase(),
+      );
+      return registered?.color || '#64748B';
+    };
+    return periodSummary.appStats.map((s) => ({ ...s, color: colorFor(s.name) }));
+  }, [periodSummary, registeredApps]);
 
   return (
     <div className="space-y-4 pb-2">
@@ -135,7 +114,7 @@ export const ReportsView: React.FC = () => {
                   Faturamento Bruto
                 </span>
                 <span className="text-sm font-bold text-emerald-400 font-mono">
-                  {formatBRL(appStats.totalGross)}
+                  {formatBRL(periodSummary.ganhoBruto)}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
@@ -202,7 +181,7 @@ export const ReportsView: React.FC = () => {
       {viewMode === 'apps' && (
         <div className="space-y-4 animate-in fade-in">
           {/* Best App Award Banner */}
-          {appStats.list.length > 0 && (
+          {appStats.length > 0 && (
             <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/30 flex items-center justify-between shadow-md">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -213,14 +192,14 @@ export const ReportsView: React.FC = () => {
                     App Mais Rentável do Mês
                   </span>
                   <h3 className="text-base font-extrabold text-white">
-                    {appStats.list[0].name} ({formatPercent(appStats.list[0].percentage)})
+                    {appStats[0].name} ({formatPercent(appStats[0].percentage)})
                   </h3>
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-xs text-slate-400 block">Total ganho</span>
                 <span className="text-sm font-bold text-emerald-400 font-mono">
-                  {formatBRL(appStats.list[0].total)}
+                  {formatBRL(appStats[0].total)}
                 </span>
               </div>
             </div>
@@ -233,12 +212,12 @@ export const ReportsView: React.FC = () => {
                 Desempenho por Plataforma
               </h3>
               <span className="text-xs text-slate-400 font-mono">
-                Total: {formatBRL(appStats.totalGross)}
+                Total: {formatBRL(periodSummary.ganhoBruto)}
               </span>
             </div>
 
             <div className="space-y-3">
-              {appStats.list.map((app) => (
+              {appStats.map((app) => (
                 <div
                   key={app.name}
                   className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2 hover:border-slate-700 transition-all"

@@ -222,6 +222,13 @@ export interface PeriodSummary {
     total: number;
     percentage: number;
   };
+  appStats: Array<{
+    name: string;
+    total: number;
+    rides: number;
+    percentage: number;
+    avgPerRide: number;
+  }>;
 }
 
 export type TimeFilter = 'hoje' | 'semana' | 'mes' | 'ano' | 'personalizado';

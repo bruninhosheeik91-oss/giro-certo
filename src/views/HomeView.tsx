@@ -32,6 +32,7 @@ export const HomeView: React.FC = () => {
     depositMaintenanceReserve,
     setActiveTab,
     selectedMonth,
+    getShiftTotals,
   } = useApp();
 
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -125,7 +126,7 @@ export const HomeView: React.FC = () => {
               </p>
               <p className="text-[11px] text-slate-300 font-mono">
                 Início: {activeShift.startTime} • Ganho acumulado:{' '}
-                {formatBRL(activeShift.accumulatedGain)}
+                {formatBRL(getShiftTotals(activeShift.shiftId).gain)}
               </p>
             </div>
           </div>

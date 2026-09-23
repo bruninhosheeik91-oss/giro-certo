@@ -16,7 +16,7 @@ import {
   INITIAL_VEHICLES,
   INITIAL_REGISTERED_APPS,
 } from '../data/mockData';
-import { calculatePeriodSummary } from '../utils/calculations';
+import { calculatePeriodSummary, calculateShiftTotals } from '../utils/calculations';
 
 export type TransactionInput = {
   type: TransactionType;
@@ -66,6 +66,7 @@ interface AppContextType {
   elapsedShiftSeconds: number; // Total corrido
   elapsedWorkSeconds: number; // Efetivamente trabalhado
   elapsedPausedSeconds: number; // Pausado
+  getShiftTotals: (shiftId: string) => { gain: number; expense: number };
 
   // Profile & Settings
   userProfile: UserProfile;
@@ -115,6 +116,31 @@ const LOCAL_STORAGE_VEHICLES_KEY = 'rota_financeira_vehicles_v2';
 const LOCAL_STORAGE_APPS_KEY = 'rota_financeira_apps_v2';
 const LOCAL_STORAGE_ACTIVE_SHIFT_KEY = 'rota_financeira_active_shift_v2';
 
+const CANONICAL_VEHICLE_ID = 'veh-factor-150';
+const LEGACY_VEHICLE_ID = 'veh-fazer-250';
+const CANONICAL_VEHICLE_NAME = 'Moto do Dia a Dia';
+
+function reconcileTransactions(list: Transaction[]): Transaction[] {
+  return list.map((t) =>
+    t.vehicleId === LEGACY_VEHICLE_ID ? { ...t, vehicleId: CANONICAL_VEHICLE_ID } : t,
+  );
+}
+
+function reconcileShifts(list: Shift[]): Shift[] {
+  return list.map((s) =>
+    s.vehicleId === LEGACY_VEHICLE_ID
+      ? { ...s, vehicleId: CANONICAL_VEHICLE_ID, vehicleName: CANONICAL_VEHICLE_NAME }
+      : s,
+  );
+}
+
+function reconcileActiveShift(state: ActiveShiftState): ActiveShiftState {
+  if (state.vehicleId === LEGACY_VEHICLE_ID) {
+    return { ...state, vehicleId: CANONICAL_VEHICLE_ID, vehicleName: CANONICAL_VEHICLE_NAME };
+  }
+  return state;
+}
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<
     'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil'
@@ -163,7 +189,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_TX_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) return reconcileTransactions(JSON.parse(saved));
     } catch (e) {
       console.error(e);
     }
@@ -174,7 +200,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [shifts, setShifts] = useState<Shift[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_SHIFTS_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) return reconcileShifts(JSON.parse(saved));
     } catch (e) {
       console.error(e);
     }
@@ -206,7 +232,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeShift, setActiveShift] = useState<ActiveShiftState | null>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_ACTIVE_SHIFT_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: ActiveShiftState = JSON.parse(saved);
+        return reconcileActiveShift(parsed);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -492,6 +521,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const totalPauseMinutes = Math.round(elapsedPausedSeconds / 60);
     const totalKm = Math.max(0, endKm - activeShift.startKm);
 
+    const shiftedTxs = transactions.filter((t) => t.shiftId === activeShift.shiftId);
+    const accumulatedGain = shiftedTxs
+      .filter((t) => t.type === 'ganho')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const accumulatedExpense = shiftedTxs
+      .filter((t) => t.type !== 'ganho')
+      .reduce((sum, t) => sum + t.amount, 0);
+
     // Update vehicle km if greater
     const currentVeh = vehicles.find((v) => v.id === activeShift.vehicleId) || activeVehicle;
     if (endKm > (currentVeh.currentKm || 0)) {
@@ -511,8 +548,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       totalPauseMinutes,
       totalWorkHours,
       totalElapsedHours,
-      accumulatedGain: activeShift.accumulatedGain,
-      accumulatedExpense: activeShift.accumulatedExpense,
+      accumulatedGain,
+      accumulatedExpense,
       status: 'completed',
       notes: notes || activeShift.notes,
       activeApps: activeShift.activeApps,
@@ -543,19 +580,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id,
       createdAt: Date.now(),
     } as Transaction;
-
-    // If shift is active and tx is associated, accumulate into current shift
-    if (activeShift && (!fullTx.shiftId || fullTx.shiftId === activeShift.shiftId)) {
-      if (fullTx.type === 'ganho') {
-        setActiveShift((prev) =>
-          prev ? { ...prev, accumulatedGain: prev.accumulatedGain + fullTx.amount } : null,
-        );
-      } else {
-        setActiveShift((prev) =>
-          prev ? { ...prev, accumulatedExpense: prev.accumulatedExpense + fullTx.amount } : null,
-        );
-      }
-    }
 
     // If transaction updates vehicle km, sync with vehicle
     if ('currentKm' in fullTx) {
@@ -673,6 +697,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   }, [transactions, shifts, userProfile.monthlyGoal, userProfile.maintenanceReservePerKm]);
 
+  // Derived shift totals (Decision 5: accumulated is always derived from linked transactions)
+  const getShiftTotals = (shiftId: string): { gain: number; expense: number } => {
+    return calculateShiftTotals(transactions, shiftId);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -703,6 +732,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         elapsedShiftSeconds,
         elapsedWorkSeconds,
         elapsedPausedSeconds,
+        getShiftTotals,
         userProfile,
         updateUserProfile,
         depositMaintenanceReserve,

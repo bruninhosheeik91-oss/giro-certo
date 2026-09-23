@@ -247,7 +247,7 @@ export const NewTransactionModal: React.FC = () => {
       const lit = parseFloat(litersStr.replace(',', '.'));
       const price = parseFloat(pricePerLiterStr.replace(',', '.'));
       const selectedVeh = vehicles.find((v) => v.id === fuelVehicleId) || activeVehicle;
-      const kmEntered = parseInt(fuelKmStr, 10);
+      const kmEntered = parseFloat(fuelKmStr.replace(',', '.'));
 
       if (total <= 0) {
         newErrors.fuelTotal = 'Informe o valor total abastecido.';
@@ -283,7 +283,7 @@ export const NewTransactionModal: React.FC = () => {
       });
     } else if (activeType === 'manutencao') {
       const selectedVeh = vehicles.find((v) => v.id === maintVehicleId) || activeVehicle;
-      const kmEntered = parseInt(maintKmStr, 10);
+      const kmEntered = parseFloat(maintKmStr.replace(',', '.'));
 
       if (totalMaintenance <= 0) {
         newErrors.maintTotal = 'Informe o valor de peças ou mão de obra.';
@@ -313,7 +313,9 @@ export const NewTransactionModal: React.FC = () => {
         amount: totalMaintenance,
         workshop: workshop.trim() || undefined,
         currentKm: kmEntered || activeVehicle.currentKm,
-        nextMaintenanceKm: nextMaintenanceKmStr ? parseInt(nextMaintenanceKmStr, 10) : undefined,
+        nextMaintenanceKm: nextMaintenanceKmStr
+            ? parseFloat(nextMaintenanceKmStr.replace(',', '.'))
+            : undefined,
         nextMaintenanceDate: nextMaintenanceDate || undefined,
         date,
         time,

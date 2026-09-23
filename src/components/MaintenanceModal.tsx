@@ -16,15 +16,14 @@ export const MaintenanceModal: React.FC = () => {
 
   if (!isMaintenanceModalOpen) return null;
 
-  const currentKm = activeVehicle.currentKm || 24850;
-  const partsHealth = calculateVehiclePartsHealth(currentKm);
-
-  // Month & Year maintenance costs
-  const [currentYear] = selectedMonth.split('-');
+  const currentKm = activeVehicle.currentKm || 42118;
   const maintenanceTransactions = transactions.filter(
     (t): t is MaintenanceTransaction => t.type === 'manutencao',
   );
+  const partsHealth = calculateVehiclePartsHealth(currentKm, maintenanceTransactions);
 
+  // Month & Year maintenance costs
+  const [currentYear] = selectedMonth.split('-');
   const monthCost = maintenanceTransactions
     .filter((t) => t.date.startsWith(selectedMonth))
     .reduce((acc, t) => acc + t.amount, 0);

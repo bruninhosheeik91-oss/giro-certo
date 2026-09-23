@@ -18,6 +18,7 @@ export const ShiftView: React.FC = () => {
     activeVehicle,
     registeredApps,
     openNewTransactionModal,
+    getShiftTotals,
   } = useApp();
 
   // Start shift form state
@@ -59,7 +60,7 @@ export const ShiftView: React.FC = () => {
     e.preventDefault();
     setStartError(null);
 
-    const km = parseInt(startKmInput, 10);
+    const km = parseFloat(startKmInput);
     if (isNaN(km) || km <= 0) {
       setStartError('Informe uma quilometragem inicial válida.');
       return;
@@ -93,7 +94,7 @@ export const ShiftView: React.FC = () => {
     e.preventDefault();
     setEndError(null);
 
-    const endKm = parseInt(endKmInput, 10);
+    const endKm = parseFloat(endKmInput);
     if (isNaN(endKm) || !activeShift || endKm < activeShift.startKm) {
       setEndError(
         `A quilometragem final não pode ser menor que a inicial (${activeShift?.startKm.toLocaleString('pt-BR')} km).`,
@@ -105,10 +106,11 @@ export const ShiftView: React.FC = () => {
     setIsEndModalOpen(false);
   };
 
-  // Real-time calculations for ongoing shift
+  // Real-time calculations for ongoing shift (Decision 5: derived from linked transactions)
+  const activeTotals = activeShift ? getShiftTotals(activeShift.shiftId) : { gain: 0, expense: 0 };
   const currentWorkHoursDecimal = Math.max(0.01, elapsedWorkSeconds / 3600);
-  const currentGain = activeShift?.accumulatedGain || 0;
-  const currentExpense = activeShift?.accumulatedExpense || 0;
+  const currentGain = activeTotals.gain;
+  const currentExpense = activeTotals.expense;
   const currentPerHour = safeDivide(currentGain, currentWorkHoursDecimal);
 
   return (
@@ -172,7 +174,7 @@ export const ShiftView: React.FC = () => {
                   required
                   value={startKmInput}
                   onChange={(e) => setStartKmInput(e.target.value)}
-                  placeholder="Ex: 24850"
+                  placeholder="Ex: 42118"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">
@@ -465,8 +467,9 @@ export const ShiftView: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {shifts.map((s) => {
-              const netProfit = (s.accumulatedGain || 0) - (s.accumulatedExpense || 0);
-              const perHour = safeDivide(s.accumulatedGain || 0, s.totalWorkHours);
+              const totals = getShiftTotals(s.id);
+              const netProfit = totals.gain - totals.expense;
+              const perHour = safeDivide(totals.gain, s.totalWorkHours);
 
               return (
                 <div
@@ -485,13 +488,13 @@ export const ShiftView: React.FC = () => {
                       </div>
                       <p className="text-xs text-slate-400">
                         Veículo:{' '}
-                        <strong className="text-slate-300">{s.vehicleName || 'Fazer 250'}</strong>
+                        <strong className="text-slate-300">{s.vehicleName || 'Moto do Dia a Dia'}</strong>
                       </p>
                     </div>
 
                     <div className="text-right">
                       <span className="text-sm font-extrabold text-emerald-400 font-mono block">
-                        {formatBRL(s.accumulatedGain || 0)}
+                        {formatBRL(totals.gain)}
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">
                         Líquido: {formatBRL(netProfit)}

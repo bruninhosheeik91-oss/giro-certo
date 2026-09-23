@@ -1,4 +1,10 @@
-import { Transaction, Shift, PeriodSummary, VehiclePartHealth } from '../types';
+import {
+  Transaction,
+  Shift,
+  PeriodSummary,
+  VehiclePartHealth,
+  MaintenanceTransaction,
+} from '../types';
 
 /**
  * Format currency to Brazilian Real (R$)
@@ -134,7 +140,7 @@ export function calculatePeriodSummary(
   let manutencao = 0;
   let outrasDespesas = 0;
 
-  const appTotals: Record<string, number> = {};
+  const appTotals: Record<string, { total: number; rides: number }> = {};
   const dayGains: Record<string, { gain: number; expense: number }> = {};
 
   for (const t of transactions) {
@@ -147,7 +153,11 @@ export function calculatePeriodSummary(
       ganhoBruto += t.amount;
       dayGains[day].gain += t.amount;
       const appKey = t.app || 'Outro';
-      appTotals[appKey] = (appTotals[appKey] || 0) + t.amount;
+      const prev = appTotals[appKey] || { total: 0, rides: 0 };
+      appTotals[appKey] = {
+        total: prev.total + t.amount,
+        rides: prev.rides + (t.ridesCount || 1),
+      };
     } else {
       dayGains[day].expense += t.amount;
       if (t.type === 'abastecimento') {
@@ -170,17 +180,6 @@ export function calculatePeriodSummary(
   for (const shift of shifts) {
     horasTrabalhadas += shift.totalWorkHours || 0;
     quilometrosRodados += Math.max(0, (shift.endKm || 0) - (shift.startKm || 0));
-  }
-
-  // Fallback to odometer difference if no shifts logged
-  if (quilometrosRodados === 0 && transactions.length > 0) {
-    const kms = transactions
-      .map((t) => (t.type === 'abastecimento' || t.type === 'manutencao' ? t.currentKm : null))
-      .filter((k): k is number => typeof k === 'number' && k > 0)
-      .sort((a, b) => a - b);
-    if (kms.length >= 2) {
-      quilometrosRodados = kms[kms.length - 1] - kms[0];
-    }
   }
 
   // Reserva de Manutenção calculada por quilometragem (não é despesa paga, é poupança recomendada)
@@ -216,9 +215,9 @@ export function calculatePeriodSummary(
   let highestAppTotal = 0;
   let bestAppName = 'Uber';
 
-  for (const [app, total] of Object.entries(appTotals)) {
-    if (total > highestAppTotal) {
-      highestAppTotal = total;
+  for (const [app, data] of Object.entries(appTotals)) {
+    if (data.total > highestAppTotal) {
+      highestAppTotal = data.total;
       bestAppName = app;
     }
   }
@@ -230,6 +229,17 @@ export function calculatePeriodSummary(
       percentage: ganhoBruto > 0 ? (highestAppTotal / ganhoBruto) * 100 : 0,
     };
   }
+
+  // Per-app breakdown (unified source for Reports/Home charts)
+  const appStats = Object.entries(appTotals)
+    .map(([name, data]) => ({
+      name,
+      total: data.total,
+      rides: data.rides,
+      percentage: ganhoBruto > 0 ? (data.total / ganhoBruto) * 100 : 0,
+      avgPerRide: safeDivide(data.total, data.rides),
+    }))
+    .sort((a, b) => b.total - a.total);
 
   return {
     ganhoBruto,
@@ -253,6 +263,7 @@ export function calculatePeriodSummary(
     metaRestante,
     melhorDia,
     appMaisLucrativo,
+    appStats,
   };
 }
 
@@ -338,36 +349,61 @@ export function formatDisplayDate(dateStr: string): string {
 /**
  * Calculate maintenance parts health for motorcycle/vehicle
  */
-export function calculateVehiclePartsHealth(currentKm: number): VehiclePartHealth[] {
-  // Intervals based on common motorcycle standards (e.g. 250cc)
+export function calculateVehiclePartsHealth(
+  currentKm: number,
+  maintenanceTransactions: MaintenanceTransaction[] = [],
+): VehiclePartHealth[] {
   const definitions = [
-    { key: 'oleo' as const, label: 'Óleo e Filtro', interval: 3000, last: 24000 },
-    { key: 'pneu_dianteiro' as const, label: 'Pneu Dianteiro', interval: 18000, last: 18000 },
-    { key: 'pneu_traseiro' as const, label: 'Pneu Traseiro', interval: 12000, last: 17300 },
-    { key: 'relacao' as const, label: 'Kit Relação (Transmissão)', interval: 20000, last: 6500 },
-    { key: 'freios' as const, label: 'Pastilhas de Freio', interval: 10000, last: 18000 },
-    { key: 'revisao' as const, label: 'Revisão Preventiva Geral', interval: 10000, last: 20000 },
+    { key: 'oleo' as const, label: 'Óleo e Filtro', interval: 3000, last: 41450 },
+    { key: 'pneu_dianteiro' as const, label: 'Pneu Dianteiro', interval: 18000, last: 28000 },
+    { key: 'pneu_traseiro' as const, label: 'Pneu Traseiro', interval: 12000, last: 30000 },
+    { key: 'relacao' as const, label: 'Kit Relação (Transmissão)', interval: 20000, last: 15000 },
+    { key: 'freios' as const, label: 'Pastilhas de Freio', interval: 10000, last: 33000 },
+    { key: 'revisao' as const, label: 'Revisão Preventiva Geral', interval: 10000, last: 38000 },
   ];
 
+  const categoryByPart: Record<string, string[]> = {
+    oleo: ['Troca de óleo', 'Filtro'],
+    pneu_dianteiro: ['Pneu dianteiro'],
+    pneu_traseiro: ['Pneu traseiro'],
+    relacao: ['Relação'],
+    freios: ['Freios'],
+    revisao: ['Revisão', 'Suspensão', 'Motor', 'Elétrica'],
+  };
+
+  const byCategory = (partKey: string, fallback: number): number => {
+    const cats = categoryByPart[partKey] || [];
+    const matches = maintenanceTransactions
+      .filter((t) => cats.includes(t.category))
+      .sort((a, b) => {
+        const ka = a.currentKm || 0;
+        const kb = b.currentKm || 0;
+        return ka - kb;
+      });
+    const latest = matches.length > 0 ? matches[matches.length - 1] : null;
+    return latest ? latest.currentKm : fallback;
+  };
+
   return definitions.map((item) => {
-    const nextChange = item.last + item.interval;
+    const last = byCategory(item.key, item.last);
+    const nextChange = last + item.interval;
     const remaining = nextChange - currentKm;
-    const elapsed = Math.max(0, currentKm - item.last);
+    const elapsed = Math.max(0, currentKm - last);
     const progressPercent = Math.min(100, Math.max(0, (elapsed / item.interval) * 100));
 
     let status: 'Em dia' | 'Atenção' | 'Troca próxima' | 'Atrasada' = 'Em dia';
     if (remaining <= 0) {
       status = 'Atrasada';
-    } else if (remaining <= item.interval * 0.15 || remaining <= 500) {
+    } else if (remaining <= 300) {
       status = 'Troca próxima';
-    } else if (remaining <= item.interval * 0.35 || remaining <= 1200) {
+    } else if (remaining <= 800) {
       status = 'Atenção';
     }
 
     return {
       partKey: item.key,
       label: item.label,
-      lastChangeKm: item.last,
+      lastChangeKm: last,
       nextChangeKm: nextChange,
       intervalKm: item.interval,
       remainingKm: remaining,
@@ -376,6 +412,28 @@ export function calculateVehiclePartsHealth(currentKm: number): VehiclePartHealt
     };
   });
 }
+
+/**
+ * Derived totals of a shift from its linked transactions (Decision 5 - single source of truth)
+ */
+export function calculateShiftTotals(
+  transactions: Transaction[],
+  shiftId: string,
+): { gain: number; expense: number } {
+  let gain = 0;
+  let expense = 0;
+  for (const t of transactions) {
+    if (t.shiftId !== shiftId) continue;
+    if (t.type === 'ganho') {
+      gain += t.amount;
+    } else {
+      expense += Math.max(0, t.amount);
+    }
+  }
+  return { gain: round2(gain), expense: round2(expense) };
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * Ride/Delivery Simulator
