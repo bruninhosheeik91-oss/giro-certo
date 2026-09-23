@@ -1,0 +1,6 @@
+{
+  "name": "Giro Certo",
+  "description": "Aplicativo para motoristas e entregadores de aplicativo controlarem ganhos, despesas, jornadas de trabalho e lucro real.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
