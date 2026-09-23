@@ -11,6 +11,7 @@ import {
   Check,
   Edit2,
   Sliders,
+  WalletCards,
 } from 'lucide-react';
 
 export const ProfileView: React.FC = () => {
@@ -22,6 +23,8 @@ export const ProfileView: React.FC = () => {
     registeredApps,
     openVehiclesModal,
     openAppsModal,
+    openPayablesModal,
+    payablesSummary,
   } = useApp();
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -323,6 +326,35 @@ export const ProfileView: React.FC = () => {
             ))}
         </div>
       </div>
+
+      {/* Contas e Parcelas — acesso secundário, sem nova aba inferior */}
+      <button
+        type="button"
+        onClick={openPayablesModal}
+        className="w-full p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/40 cursor-pointer shadow-md transition-all text-left"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0">
+              <WalletCards className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-white tracking-tight">Contas e Parcelas</h3>
+              <p className="text-xs text-slate-400 truncate">
+                Financiamentos, contas recorrentes e compras parceladas
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {payablesSummary.overdueCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-[9px] font-bold text-rose-300">
+                {payablesSummary.overdueCount} em atraso
+              </span>
+            )}
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </div>
+        </div>
+      </button>
 
       {/* Critérios de Aceite de Corrida Card */}
       <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">

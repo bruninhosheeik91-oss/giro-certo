@@ -9,6 +9,7 @@ import { SimulatorsModal } from './components/SimulatorsModal';
 import { AppsManagementModal } from './components/AppsManagementModal';
 import { TransactionDetailModal } from './components/TransactionDetailModal';
 import { MaintenanceReserveModal } from './components/MaintenanceReserveModal';
+import { PayablesModal } from './components/PayablesModal';
 import { HomeView } from './views/HomeView';
 import { TransactionsView } from './views/TransactionsView';
 import { ShiftView } from './views/ShiftView';
@@ -73,6 +74,7 @@ const MainAppContent: React.FC = () => {
         <SimulatorsModal />
         <AppsManagementModal />
         <MaintenanceReserveModal />
+        <PayablesModal />
         <DetailModalBridge />
       </div>
     </div>
@@ -89,5 +91,7 @@ export default function App() {
 
 const DetailModalBridge: React.FC = () => {
   const { selectedTransaction, closeTransactionDetail } = useApp();
-  return <TransactionDetailModal transaction={selectedTransaction} onClose={closeTransactionDetail} />;
+  return (
+    <TransactionDetailModal transaction={selectedTransaction} onClose={closeTransactionDetail} />
+  );
 };
