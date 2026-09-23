@@ -26,6 +26,10 @@ export type OtherExpenseCategory =
   | 'Pedágio'
   | 'Seguro'
   | 'Financiamento'
+  | 'Empréstimo'
+  | 'Consórcio'
+  | 'Compra parcelada'
+  | 'Conta de consumo'
   | 'Aluguel do veículo'
   | 'IPVA'
   | 'Licenciamento'
@@ -73,6 +77,8 @@ export interface BaseTransaction {
   description?: string;
   vehicleId?: string;
   shiftId?: string;
+  payableId?: string;
+  payableInstallmentId?: string;
   createdAt: number;
   updatedAt?: number;
 }
@@ -304,4 +310,80 @@ export interface OdometerRecord {
 export interface OdometerReconcileResult {
   currentKm: number;
   anomalies: OdometerRecord[];
+}
+
+export type FinancialCommitmentType =
+  | 'conta_unica'
+  | 'conta_recorrente'
+  | 'compra_parcelada'
+  | 'financiamento_veiculo'
+  | 'emprestimo'
+  | 'consorcio';
+
+export type FinancialCommitmentStatus = 'ativo' | 'pausado' | 'concluido' | 'cancelado';
+
+export interface FinancialCommitment {
+  id: string;
+  title: string;
+  type: FinancialCommitmentType;
+  category: OtherExpenseCategory;
+  creditor?: string;
+  vehicleId?: string;
+  installmentAmount: number;
+  totalInstallments?: number;
+  firstDueDate: string; // YYYY-MM-DD
+  dueDay: number;
+  endDate?: string; // YYYY-MM-DD
+  notes?: string;
+  status: FinancialCommitmentStatus;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export type PayablePaymentOrigin = 'transaction' | 'opening_balance';
+
+export interface PayableInstallment {
+  id: string;
+  commitmentId: string;
+  number: number;
+  referenceMonth: string; // YYYY-MM
+  dueDate: string; // YYYY-MM-DD
+  expectedAmount: number;
+  paidAt?: string; // YYYY-MM-DD
+  paidAmount?: number;
+  transactionId?: string;
+  paymentOrigin?: PayablePaymentOrigin;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export interface FinancialState {
+  version: 3;
+  commitments: FinancialCommitment[];
+  installments: PayableInstallment[];
+}
+
+export type PayableInstallmentStatus = 'pendente' | 'vence_em_breve' | 'atrasada' | 'paga';
+
+export interface FinancialCommitmentProgress {
+  totalInstallments: number;
+  paidInstallments: number;
+  openInstallments: number;
+  progressPercent: number;
+  totalExpected: number;
+  totalPaid: number;
+  openBalance: number;
+  nextInstallment: PayableInstallment | null;
+  projectedEndDate?: string;
+}
+
+export interface PayablesSummary {
+  pendingAmount: number;
+  paidAmount: number;
+  overdueAmount: number;
+  overdueCount: number;
+  nextDue: PayableInstallment | null;
+  coverageGap: number;
+  dailyRequired: number;
+  daysRemaining: number;
 }
