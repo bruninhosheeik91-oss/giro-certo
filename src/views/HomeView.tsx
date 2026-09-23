@@ -16,6 +16,7 @@ import {
   PiggyBank,
   Calculator,
   Edit2,
+  CalendarClock,
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -51,6 +52,8 @@ export const HomeView: React.FC = () => {
     openMaintenanceModal,
     openSimulatorsModal,
     openReserveModal,
+    openPayablesModal,
+    payablesSummary,
     setActiveTab,
     selectedMonth,
     getShiftTotals,
@@ -349,6 +352,45 @@ export const HomeView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Compact bills entry point — details stay behind user action */}
+      <button
+        type="button"
+        onClick={openPayablesModal}
+        className="w-full p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/40 text-left shadow-md transition-all active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0">
+              <CalendarClock className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                  Contas do mês
+                </h3>
+                {payablesSummary.overdueCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-[9px] font-bold text-rose-300">
+                    {payablesSummary.overdueCount} atrasada
+                    {payablesSummary.overdueCount > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 truncate">
+                {payablesSummary.nextDue
+                  ? `Próximo vencimento: ${new Date(`${payablesSummary.nextDue.dueDate}T12:00:00`).toLocaleDateString('pt-BR')}`
+                  : 'Nenhum vencimento pendente'}
+              </p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <span className="text-sm font-bold font-mono text-white block">
+              {formatBRL(payablesSummary.pendingAmount)}
+            </span>
+            <span className="text-[9px] uppercase text-blue-300 font-semibold">Ver contas</span>
+          </div>
+        </div>
+      </button>
 
       {/* Requirement 7: Reserva para Manutenção (Cofrinho) */}
       <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950/30 border border-slate-800 space-y-3 shadow-md">

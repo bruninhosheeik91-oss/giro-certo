@@ -10,6 +10,11 @@ import {
   ActiveShiftState,
   MaintenanceReserveEntry,
   OdometerRecord,
+  FinancialCommitment,
+  FinancialCommitmentStatus,
+  FinancialState,
+  PayableInstallment,
+  PayablesSummary,
 } from '../types';
 import {
   INITIAL_TRANSACTIONS,
@@ -25,6 +30,18 @@ import {
   reconcileVehicleOdometer,
   formatBRL,
 } from '../utils/calculations';
+import {
+  calculatePayablesSummary,
+  generatePayableSchedule,
+  isInstallmentPaid,
+  mergeCommitmentSchedule,
+  migrateFinancialState,
+  reconcileFinancialState,
+  removeTransactionWithFinancialReconciliation,
+  resolveScheduleThroughMonth,
+  reopenInstallment,
+  settleInstallment,
+} from '../utils/payables';
 
 export type TransactionInput = {
   type: TransactionType;
@@ -37,6 +54,13 @@ export type TransactionInput = {
   [key: string]: unknown;
 };
 
+export type FinancialCommitmentInput = Omit<
+  FinancialCommitment,
+  'id' | 'status' | 'createdAt' | 'updatedAt' | 'dueDay'
+> & {
+  initialPaidInstallments?: number;
+};
+
 interface AppContextType {
   // Navigation
   activeTab: 'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil';
@@ -47,6 +71,17 @@ interface AppContextType {
   addTransaction: (tx: TransactionInput) => void;
   updateTransaction: (id: string, updated: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
+
+  // Financial commitments, bills and installments
+  financialCommitments: FinancialCommitment[];
+  payableInstallments: PayableInstallment[];
+  payablesSummary: PayablesSummary;
+  addFinancialCommitment: (input: FinancialCommitmentInput) => string | null;
+  updateFinancialCommitment: (id: string, updates: Partial<FinancialCommitmentInput>) => boolean;
+  setFinancialCommitmentStatus: (id: string, status: FinancialCommitmentStatus) => void;
+  removeFinancialCommitment: (id: string) => void;
+  payInstallment: (installmentId: string, amount: number, paidAt: string) => boolean;
+  reopenPayableInstallment: (installmentId: string) => boolean;
 
   // Transaction detail/edit modal
   selectedTransaction: Transaction | null;
@@ -126,6 +161,10 @@ interface AppContextType {
   openReserveModal: () => void;
   closeReserveModal: () => void;
 
+  isPayablesModalOpen: boolean;
+  openPayablesModal: () => void;
+  closePayablesModal: () => void;
+
   // Feedback Toast
   toastMessage: string | null;
   showToast: (msg: string) => void;
@@ -141,6 +180,7 @@ const LOCAL_STORAGE_APPS_KEY = 'rota_financeira_apps_v2';
 const LOCAL_STORAGE_ACTIVE_SHIFT_KEY = 'rota_financeira_active_shift_v2';
 const LOCAL_STORAGE_MONTH_KEY = 'rota_financeira_selected_month_v2';
 const LOCAL_STORAGE_RESERVE_KEY = 'rota_financeira_reserve_ledger_v2';
+const LOCAL_STORAGE_FINANCIAL_KEY = 'giro_certo_financial_state_v3';
 
 const CANONICAL_VEHICLE_ID = 'veh-factor-150';
 const LEGACY_VEHICLE_ID = 'veh-fazer-250';
@@ -246,6 +286,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return INITIAL_TRANSACTIONS;
   });
 
+  const [financialState, setFinancialState] = useState<FinancialState>(() => {
+    try {
+      return migrateFinancialState(localStorage.getItem(LOCAL_STORAGE_FINANCIAL_KEY));
+    } catch (e) {
+      console.error(e);
+      return migrateFinancialState(null);
+    }
+  });
+
+  const financialCommitments = financialState.commitments;
+  const payableInstallments = financialState.installments;
+
   // Shifts state
   const [shifts, setShifts] = useState<Shift[]>(() => {
     try {
@@ -300,6 +352,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isSimulatorsModalOpen, setIsSimulatorsModalOpen] = useState(false);
   const [isAppsModalOpen, setIsAppsModalOpen] = useState(false);
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
+  const [isPayablesModalOpen, setIsPayablesModalOpen] = useState(false);
 
   // Transaction detail modal
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
@@ -326,7 +379,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const savedProfile = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
       const parsedProfile = savedProfile ? JSON.parse(savedProfile) : null;
       const legacy = Number(parsedProfile?.maintenanceReserveSaved) || 0;
-      const initial = legacy > 0 ? legacy : Number(INITIAL_USER_PROFILE.maintenanceReserveSaved) || 0;
+      const initial =
+        legacy > 0 ? legacy : Number(INITIAL_USER_PROFILE.maintenanceReserveSaved) || 0;
       if (initial > 0) {
         return [
           {
@@ -433,6 +487,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [maintenanceReserveLedger]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_FINANCIAL_KEY, JSON.stringify(financialState));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [financialState]);
+
+  useEffect(() => {
+    setFinancialState((previous) => {
+      const reconciled = reconcileFinancialState(previous, transactions);
+      return JSON.stringify(reconciled) === JSON.stringify(previous) ? previous : reconciled;
+    });
+  }, [transactions]);
+
+  useEffect(() => {
+    setFinancialState((previous) => {
+      const knownIds = new Set(previous.installments.map((installment) => installment.id));
+      const missing = previous.commitments
+        .filter((commitment) => commitment.type === 'conta_recorrente')
+        .flatMap((commitment) =>
+          generatePayableSchedule(
+            commitment,
+            resolveScheduleThroughMonth(commitment, selectedMonth),
+          ),
+        )
+        .filter((installment) => !knownIds.has(installment.id));
+      if (missing.length === 0) return previous;
+      return reconcileFinancialState(
+        { ...previous, installments: [...previous.installments, ...missing] },
+        transactions,
+      );
+    });
+  }, [selectedMonth, transactions]);
+
   // Real-time ticker for shift timings
   const [elapsedShiftSeconds, setElapsedShiftSeconds] = useState(0);
   const [elapsedWorkSeconds, setElapsedWorkSeconds] = useState(0);
@@ -487,8 +576,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       prev.map((v) => {
         if (v.id === id) {
           // Leitura manual do odômetro também eleva o piso de reconciliação (nunca regride)
-          const raisedKm =
-            typeof updates.currentKm === 'number' && updates.currentKm > v.currentKm;
+          const raisedKm = typeof updates.currentKm === 'number' && updates.currentKm > v.currentKm;
           return {
             ...v,
             ...updates,
@@ -726,25 +814,226 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateTransaction = (id: string, updated: Partial<Transaction>) => {
-    setTransactions((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? ({ ...t, ...updated, id, updatedAt: Date.now() } as Transaction)
-          : t,
-      ),
+    const nextTransactions = transactions.map((transaction) =>
+      transaction.id === id
+        ? ({ ...transaction, ...updated, id, updatedAt: Date.now() } as Transaction)
+        : transaction,
     );
+    setTransactions(nextTransactions);
+    setFinancialState((previous) => reconcileFinancialState(previous, nextTransactions));
     showToast('Lançamento atualizado.');
   };
 
   const deleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    const result = removeTransactionWithFinancialReconciliation(financialState, transactions, id);
+    setTransactions(result.transactions);
+    setFinancialState(result.financialState);
     if (selectedTransactionId === id) setSelectedTransactionId(null);
-    showToast('Lançamento excluído.');
+    showToast(
+      result.financialState.installments.some(
+        (installment) =>
+          installment.id === transactions.find((t) => t.id === id)?.payableInstallmentId,
+      )
+        ? 'Lançamento excluído e parcela reaberta.'
+        : 'Lançamento excluído.',
+    );
   };
 
   // Transaction detail modal
   const openTransactionDetail = (id: string) => setSelectedTransactionId(id);
   const closeTransactionDetail = () => setSelectedTransactionId(null);
+
+  const addFinancialCommitment = (input: FinancialCommitmentInput): string | null => {
+    const installmentAmount = Math.round((Number(input.installmentAmount) || 0) * 100) / 100;
+    const dueParts = input.firstDueDate.split('-').map(Number);
+    if (!input.title.trim() || installmentAmount <= 0 || dueParts.length !== 3 || !dueParts[2]) {
+      showToast('Preencha nome, valor e primeiro vencimento da conta.');
+      return null;
+    }
+
+    const now = Date.now();
+    const id = `payable-${now}-${Math.random().toString(36).slice(2, 7)}`;
+    const isRecurring = input.type === 'conta_recorrente';
+    const isSingle = input.type === 'conta_unica';
+    const commitment: FinancialCommitment = {
+      id,
+      title: input.title.trim(),
+      type: input.type,
+      category: input.category,
+      creditor: input.creditor?.trim() || undefined,
+      vehicleId: input.vehicleId,
+      installmentAmount,
+      totalInstallments: isRecurring
+        ? undefined
+        : isSingle
+          ? 1
+          : Math.max(1, Math.floor(input.totalInstallments || 1)),
+      firstDueDate: input.firstDueDate,
+      dueDay: dueParts[2],
+      endDate: isRecurring ? input.endDate : undefined,
+      notes: input.notes?.trim() || undefined,
+      status: 'ativo',
+      createdAt: now,
+    };
+    const throughMonth = resolveScheduleThroughMonth(commitment, selectedMonth);
+    const installments = generatePayableSchedule(
+      commitment,
+      throughMonth,
+      input.initialPaidInstallments,
+      now,
+    );
+    setFinancialState((previous) =>
+      reconcileFinancialState(
+        {
+          ...previous,
+          commitments: [commitment, ...previous.commitments],
+          installments: [...previous.installments, ...installments],
+        },
+        transactions,
+      ),
+    );
+    showToast('Conta cadastrada com sucesso.');
+    return id;
+  };
+
+  const updateFinancialCommitment = (
+    id: string,
+    updates: Partial<FinancialCommitmentInput>,
+  ): boolean => {
+    const current = financialCommitments.find((commitment) => commitment.id === id);
+    if (!current) return false;
+    const { initialPaidInstallments: ignoredInitialPaidInstallments, ...domainUpdates } = updates;
+    void ignoredInitialPaidInstallments;
+    const nextFirstDueDate = domainUpdates.firstDueDate ?? current.firstDueDate;
+    const dueDay = Number(nextFirstDueDate.split('-')[2]) || current.dueDay;
+    const nextCommitment: FinancialCommitment = {
+      ...current,
+      ...domainUpdates,
+      title: domainUpdates.title?.trim() || current.title,
+      installmentAmount:
+        Math.round(
+          (Number(domainUpdates.installmentAmount ?? current.installmentAmount) || 0) * 100,
+        ) / 100,
+      firstDueDate: nextFirstDueDate,
+      dueDay,
+      creditor:
+        domainUpdates.creditor === undefined
+          ? current.creditor
+          : domainUpdates.creditor.trim() || undefined,
+      notes:
+        domainUpdates.notes === undefined ? current.notes : domainUpdates.notes.trim() || undefined,
+      updatedAt: Date.now(),
+    };
+    if (nextCommitment.installmentAmount <= 0) {
+      showToast('O valor da parcela precisa ser maior que zero.');
+      return false;
+    }
+
+    const related = payableInstallments.filter(
+      (installment) => installment.commitmentId === current.id,
+    );
+    const highestPaidNumber = related.reduce(
+      (highest, installment) =>
+        isInstallmentPaid(installment, transactions)
+          ? Math.max(highest, installment.number)
+          : highest,
+      0,
+    );
+    if (
+      nextCommitment.type !== 'conta_recorrente' &&
+      (nextCommitment.totalInstallments || 1) < highestPaidNumber
+    ) {
+      showToast(`O contrato já possui a parcela ${highestPaidNumber} paga.`);
+      return false;
+    }
+
+    const throughMonth = resolveScheduleThroughMonth(nextCommitment, selectedMonth);
+    const rebuilt = mergeCommitmentSchedule(nextCommitment, related, transactions, throughMonth);
+    setFinancialState((previous) =>
+      reconcileFinancialState(
+        {
+          ...previous,
+          commitments: previous.commitments.map((commitment) =>
+            commitment.id === id ? nextCommitment : commitment,
+          ),
+          installments: [
+            ...previous.installments.filter((installment) => installment.commitmentId !== id),
+            ...rebuilt,
+          ],
+        },
+        transactions,
+      ),
+    );
+    showToast('Conta atualizada. O histórico pago foi preservado.');
+    return true;
+  };
+
+  const setFinancialCommitmentStatus = (id: string, status: FinancialCommitmentStatus) => {
+    setFinancialState((previous) => ({
+      ...previous,
+      commitments: previous.commitments.map((commitment) =>
+        commitment.id === id ? { ...commitment, status, updatedAt: Date.now() } : commitment,
+      ),
+    }));
+    showToast(
+      status === 'pausado'
+        ? 'Conta pausada.'
+        : status === 'cancelado'
+          ? 'Conta cancelada. O histórico foi preservado.'
+          : 'Conta reativada.',
+    );
+  };
+
+  const removeFinancialCommitment = (id: string) => {
+    const related = payableInstallments.filter((installment) => installment.commitmentId === id);
+    const hasPayments = related.some((installment) => isInstallmentPaid(installment, transactions));
+    if (hasPayments) {
+      setFinancialCommitmentStatus(id, 'cancelado');
+      return;
+    }
+    setFinancialState((previous) => ({
+      ...previous,
+      commitments: previous.commitments.filter((commitment) => commitment.id !== id),
+      installments: previous.installments.filter((installment) => installment.commitmentId !== id),
+    }));
+    showToast('Conta removida.');
+  };
+
+  const payInstallment = (installmentId: string, amount: number, paidAt: string): boolean => {
+    const now = new Date();
+    const paidTime = `${now.getHours().toString().padStart(2, '0')}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+    const result = settleInstallment(
+      financialState,
+      transactions,
+      installmentId,
+      amount,
+      paidAt,
+      paidTime,
+    );
+    if (!result.changed) {
+      showToast('Esta parcela já foi paga ou possui dados inválidos.');
+      return false;
+    }
+    setTransactions(result.transactions);
+    setFinancialState(result.financialState);
+    showToast('Pagamento registrado e despesa criada.');
+    return true;
+  };
+
+  const reopenPayableInstallment = (installmentId: string): boolean => {
+    const result = reopenInstallment(financialState, transactions, installmentId);
+    if (!result.changed) {
+      showToast('Não foi possível reabrir esta parcela.');
+      return false;
+    }
+    setTransactions(result.transactions);
+    setFinancialState(result.financialState);
+    showToast('Pagamento reaberto e despesa vinculada removida.');
+    return true;
+  };
 
   const updateUserProfile = (updates: Partial<UserProfile>) => {
     setUserProfile((prev) => ({ ...prev, ...updates }));
@@ -814,9 +1103,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         createdAt: Date.now(),
       },
     ]);
-    showToast(
-      `Cofrinho de manutenção ${amt > 0 ? 'ajustado para cima' : 'ajustado para baixo'}.`,
-    );
+    showToast(`Cofrinho de manutenção ${amt > 0 ? 'ajustado para cima' : 'ajustado para baixo'}.`);
   };
 
   // Modal handlers
@@ -841,6 +1128,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const openReserveModal = () => setIsReserveModalOpen(true);
   const closeReserveModal = () => setIsReserveModalOpen(false);
 
+  const openPayablesModal = () => setIsPayablesModalOpen(true);
+  const closePayablesModal = () => setIsPayablesModalOpen(false);
+
   // Month filtered data
   const monthTransactions = useMemo(() => {
     return transactions.filter((t) => t.date.startsWith(selectedMonth));
@@ -862,6 +1152,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     monthShifts,
     userProfile.monthlyGoal,
     userProfile.maintenanceReservePerKm,
+  ]);
+
+  const payablesSummary = useMemo(() => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    return calculatePayablesSummary(
+      financialCommitments,
+      payableInstallments,
+      transactions,
+      selectedMonth,
+      monthSummary.lucroDisponivel,
+      today,
+    );
+  }, [
+    financialCommitments,
+    payableInstallments,
+    transactions,
+    selectedMonth,
+    monthSummary.lucroDisponivel,
   ]);
 
   // Previous month summary
@@ -916,10 +1227,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         months.add(s.date.slice(0, 7));
       }
     }
+    for (const installment of payableInstallments) {
+      if (installment.referenceMonth) months.add(installment.referenceMonth);
+      if (installment.paidAt && installment.paidAt.length >= 7) {
+        months.add(installment.paidAt.slice(0, 7));
+      }
+    }
     const now = new Date();
     months.add(`${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`);
     return Array.from(months).sort((a, b) => b.localeCompare(a));
-  }, [transactions, shifts]);
+  }, [transactions, shifts, payableInstallments]);
 
   const goToPreviousMonth = () => {
     setSelectedMonth((current) => {
@@ -948,19 +1265,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         for (const t of transactions) {
           if (t.vehicleId !== v.id) continue;
           if (t.type === 'abastecimento' && typeof t.currentKm === 'number' && t.currentKm > 0) {
-            records.push({ date: t.date, time: t.time, km: t.currentKm, source: 'abastecimento', sourceId: t.id });
+            records.push({
+              date: t.date,
+              time: t.time,
+              km: t.currentKm,
+              source: 'abastecimento',
+              sourceId: t.id,
+            });
           }
           if (t.type === 'manutencao' && typeof t.currentKm === 'number' && t.currentKm > 0) {
-            records.push({ date: t.date, time: t.time, km: t.currentKm, source: 'manutencao', sourceId: t.id });
+            records.push({
+              date: t.date,
+              time: t.time,
+              km: t.currentKm,
+              source: 'manutencao',
+              sourceId: t.id,
+            });
           }
         }
         for (const s of shifts) {
           if (s.vehicleId !== v.id) continue;
           if (typeof s.startKm === 'number' && s.startKm > 0) {
-            records.push({ date: s.date, time: s.startTime, km: s.startKm, source: 'jornada-inicio', sourceId: s.id });
+            records.push({
+              date: s.date,
+              time: s.startTime,
+              km: s.startKm,
+              source: 'jornada-inicio',
+              sourceId: s.id,
+            });
           }
           if (typeof s.endKm === 'number' && s.endKm > 0) {
-            records.push({ date: s.date, time: s.endTime, km: s.endKm, source: 'jornada-fim', sourceId: s.id });
+            records.push({
+              date: s.date,
+              time: s.endTime,
+              km: s.endKm,
+              source: 'jornada-fim',
+              sourceId: s.id,
+            });
           }
         }
         if (activeShift && activeShift.vehicleId === v.id && activeShift.startKm > 0) {
@@ -992,6 +1333,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addTransaction,
         updateTransaction,
         deleteTransaction,
+        financialCommitments,
+        payableInstallments,
+        payablesSummary,
+        addFinancialCommitment,
+        updateFinancialCommitment,
+        setFinancialCommitmentStatus,
+        removeFinancialCommitment,
+        payInstallment,
+        reopenPayableInstallment,
         selectedTransaction,
         openTransactionDetail,
         closeTransactionDetail,
@@ -1051,6 +1401,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isReserveModalOpen,
         openReserveModal,
         closeReserveModal,
+        isPayablesModalOpen,
+        openPayablesModal,
+        closePayablesModal,
         toastMessage,
         showToast,
       }}
