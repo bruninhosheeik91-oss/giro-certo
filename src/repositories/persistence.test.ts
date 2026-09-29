@@ -19,6 +19,13 @@ describe('migração localStorage → conta (Fase 4B)', () => {
     localStorage.clear();
   });
 
+  it('inicia uma conta autenticada sem o veículo da demonstração', () => {
+    const cloud = createDefaultSnapshot('cloud');
+
+    expect(cloud.vehicles).toEqual([]);
+    expect(readAppSnapshot(getScopedStorageKeys(ALICE), 'cloud', ALICE).vehicles).toEqual([]);
+  });
+
   it('hasPersistedLocalData é falso numa instalação que nunca gravou', () => {
     const local = getScopedStorageKeys('local');
     expect(hasPersistedLocalData(local)).toBe(false);
