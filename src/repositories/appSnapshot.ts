@@ -66,10 +66,7 @@ export function createDefaultSnapshot(mode: 'local' | 'cloud'): AppSnapshot {
   }
   return {
     profile,
-    vehicles:
-      mode === 'local'
-        ? INITIAL_VEHICLES.map((vehicle) => ({ ...vehicle }))
-        : INITIAL_VEHICLES.slice(0, 1).map((vehicle) => ({ ...vehicle })),
+    vehicles: mode === 'local' ? INITIAL_VEHICLES.map((vehicle) => ({ ...vehicle })) : [],
     registeredApps: INITIAL_REGISTERED_APPS.map((app) => ({ ...app })),
     transactions: mode === 'local' ? INITIAL_TRANSACTIONS.map((transaction) => ({ ...transaction })) : [],
     shifts: mode === 'local' ? INITIAL_SHIFTS.map((shift) => ({ ...shift, pauses: [...shift.pauses] })) : [],
@@ -142,7 +139,7 @@ function remapVehicleId(
 }
 
 export function normalizeAppSnapshot(snapshot: AppSnapshot, userId: string | null): AppSnapshot {
-  const sourceVehicles = snapshot.vehicles.length > 0 ? snapshot.vehicles : createDefaultSnapshot('cloud').vehicles;
+  const sourceVehicles = snapshot.vehicles;
   const officialVehicle = sourceVehicles.find(
     (vehicle) => vehicle.id === CANONICAL_VEHICLE_ID || vehicle.model?.includes('Factor 150'),
   );
@@ -185,7 +182,6 @@ export function normalizeAppSnapshot(snapshot: AppSnapshot, userId: string | nul
 
   const hasActiveVehicle = vehicles.some((vehicle) => vehicle.isActive);
   if (vehicles.length > 0 && !hasActiveVehicle && vehicles[0]) vehicles[0].isActive = true;
-  if (userId !== null && vehicles.length === 0) vehicles.push(createDefaultSnapshot('cloud').vehicles[0]!);
 
   const shiftIds = new Map<string, string>();
   const shifts = snapshot.shifts.map((shift) => {
