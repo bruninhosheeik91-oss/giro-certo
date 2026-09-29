@@ -46,6 +46,8 @@ export interface RegisteredApp {
   icon: string; // 'car' | 'bike' | 'package' | 'navigation' | 'zap' | 'shopping-bag'
   isActive: boolean;
   isDefault?: boolean;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface UserVehicle {
@@ -66,6 +68,8 @@ export interface UserVehicle {
   notes?: string;
   isActive: boolean;
   isArchived?: boolean;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface BaseTransaction {
@@ -79,6 +83,7 @@ export interface BaseTransaction {
   shiftId?: string;
   payableId?: string;
   payableInstallmentId?: string;
+  origin?: 'manual' | 'opening_balance';
   createdAt: number;
   updatedAt?: number;
 }
@@ -155,6 +160,8 @@ export interface Shift {
   status: 'completed' | 'active' | 'paused';
   notes?: string;
   activeApps: string[];
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface ActiveShiftState {
@@ -169,11 +176,14 @@ export interface ActiveShiftState {
   startKm: number;
   currentKm?: number;
   pauseStartEpoch?: number;
+  pauseId?: string;
   totalPausedSeconds: number;
   accumulatedGain: number;
   accumulatedExpense: number;
   activeApps: string[];
   notes?: string;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface RideCriteria {
@@ -198,6 +208,14 @@ export interface UserProfile {
     maintenanceAlert: boolean;
     shiftReminders: boolean;
   };
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface UserSettings {
+  selectedMonth: string;
+  localImportCompletedAt?: string;
+  updatedAt?: number;
 }
 
 export interface PeriodSummary {
@@ -375,6 +393,7 @@ export interface FinancialCommitmentProgress {
   openBalance: number;
   nextInstallment: PayableInstallment | null;
   projectedEndDate?: string;
+  isOpenEnded?: boolean;
 }
 
 export interface PayablesSummary {

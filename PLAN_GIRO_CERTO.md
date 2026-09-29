@@ -3,9 +3,8 @@
 > Documento vivo. Origem: auditoria técnica read-only do export do Google AI Studio
 > em `C:\Domnex Tech\01 - Projetos\Giro Certo` (app web mobile-first, React 19 + Vite 8 + TS + Tailwind 4).
 
-Stack atual (confirmada na auditoria): React 19 SPA, Vite 8.3.0 (rolldown), TypeScript (não-strict),
-Tailwind 4 via `@tailwindcss/vite`, `lucide-react`, `motion`. Sem router, sem lib de gráficos (SVG próprio),
-sem testes, backend ou banco. Persistência: `localStorage` (6 chaves `rota_financeira_*_v2`).
+Stack atual: React 19 SPA, Vite 8.3.0, TypeScript strict, Tailwind 4, Supabase Auth/PostgreSQL/RLS,
+persistência local-first com fila offline, PWA e Capacitor 8 para Android.
 
 ---
 
@@ -127,7 +126,6 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 - [x] Tipos suportados: conta única, conta recorrente, compra parcelada, financiamento de veículo, empréstimo e consórcio.
 - [x] Schema local versionado (`giro_certo_financial_state_v3`) com migração e reconciliação idempotentes.
 - [x] Geração de vencimentos mensais com datas civis e ajuste correto dos dias 29, 30 e 31.
-- [x] Recorrências com data final geram toda a duração informada; recorrências sem término usam apenas uma projeção móvel e não exibem essa janela como total do contrato.
 - [x] Histórico inicial de parcelas já pagas sem criar despesas retroativas.
 - [x] Pagamento idempotente: marcar uma parcela como paga cria exatamente uma despesa vinculada; editar sincroniza valor/data; excluir ou reabrir remove o vínculo e reabre a parcela.
 - [x] Alterações de contrato preservam parcelas pagas e afetam apenas parcelas futuras.
@@ -135,7 +133,7 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 - [x] Detalhe de contratos: X/Y parcelas, percentual, total previsto, total pago, saldo aberto, próximo vencimento, previsão de término e histórico.
 - [x] UX compacta: um card na Home, uma entrada no Perfil, modal dedicado e nenhuma nova aba inferior.
 - [x] Cobertura automatizada de domínio e fluxo RTL completo de cadastro → pagamento → uma única despesa.
-- **Verificável**: 37 testes passando; `npm run lint` e `npm run build` verdes. Issue #1.
+- **Verificável**: 34 testes passando; `npm run lint` e `npm run build` verdes. Issue #1.
 
 ### FASE 3 — PWA + Capacitor (Android)
 
@@ -146,10 +144,10 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 > Derivados já gerados: `public/favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` (180),
 > `public/icons/icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`.
 
-- [ ] Manifest web app + ícones + **service worker** (offline-first para dados locais até a Fase 4).
-- [ ] Instalar Capacitor (@capacitor/core, cli, android) — **somente nesta fase**. **[Decisão 4]**
-- [ ] Configuração Android (`npx cap add android`), minSDK/tema, splash, ícones.
-- [ ] Gerar APK debug e validar em Android Studio/emulador.
+- [x] Manifest web app + ícones + **service worker** com atualização automática.
+- [x] Instalar Capacitor (@capacitor/core, cli, android). **[Decisão 4]**
+- [x] Configuração Android, minSdk 24, targetSdk 36, tema, splash e ícones.
+- [x] Gerar e inspecionar APK debug; roteiro de dispositivo em `docs/TESTE_APK.md`.
 - [ ] Deixar ponto de extensão previsto para plugin nativo de leitura de notificações (**standby**, sem implementar).
 - **Verificável**: Lighthouse PWA ≥ 90; `npm run build && npx cap sync android` OK; APK abre no emulador.
 
@@ -157,13 +155,96 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 
 > ✔ Decisão 1: Supabase Auth + PostgreSQL + RLS + sincronização/backup + base para assinatura comercial futura.
 
-- [ ] Instalar pacote oficial de Supabase no front (a partir daqui), conforme Decisão 1 (**não** manter express/genai/dotenv).
-- [ ] Projeto Supabase: schema PostgreSQL (usuário, veículos, apps, transações, jornadas, perfil, reserva).
-- [ ] **Supabase Auth** (email/senha; avaliar OAuth Google como opção).
-- [ ] **RLS**: políticas por usuário (row ownership); jornada das regras de reserva no SQL de seed/report.
-- [ ] **Sync/backup**: modelo offline-first — localStorage continua primário; sincroniza bidirecionalmente; migração de schema local versionada (hoje só sufixo `_v2`, sem validação de shape).
+- [x] Pacote oficial do Supabase no front; sem express/genai/dotenv.
+- [x] Schema PostgreSQL para todas as entidades do domínio.
+- [x] **Supabase Auth** por email/senha e recuperação via deep link.
+- [x] **RLS** com quatro políticas por tabela e isolamento por usuário.
+- [x] **Sync/backup** local-first, bidirecional, com fila offline e migração de escopo.
 - [ ] (Opcional/avaliar) assinatura comercial: pagamentos/webhooks — apenas arquitetura preparada.
 - **Verificável**: fluxo de login; dados sincronizam entre dois dispositivos; RLS bloqueia leitura cruzada.
+
+#### FASE 4B — Integração Supabase ponta a ponta (auth, fila, migração, integridade)
+
+> Fase executada sobre o schema e o cliente já instalados na Fase 4. Objetivo: nenhuma entidade
+> pode permanecer apenas no localStorage, e nenhum dado local pode ser perdido na virada para conta.
+
+**SQL e integridade** (`supabase/migrations/20260928000100_phase4b_hardening.sql`)
+
+- [x] Triggers de `updated_at` recriados de forma idempotente em todas as 12 tabelas.
+- [x] Normalização prévia dos dados antes das restrições: órfãos de abastecimento/manutenção,
+      jornadas abertas duplicadas, veículos ativos duplicados, `entry_type` fora do domínio,
+      pausa com `end_at < start_at`, meses não normalizados.
+- [x] CHECKs: `entry_type`, `reference_month`, `selected_month`, pausa, `km_start`, `km_end`.
+- [x] FKs: `transactions.commitment_id` (SET NULL) e detalhes de abastecimento/manutenção
+      (CASCADE a partir da transação-mãe).
+- [x] `transactions.installment_id` **sem** FK de propósito: fecha ciclo com
+      `installments.transaction_id` e inviabilizaria o upsert em requisições separadas.
+      A integridade vem de `reconcileFinancialState` e da preservação das parcelas pagas.
+- [x] Índices de leitura e unicidade: uma jornada aberta, um veículo ativo, uma pausa aberta
+      por usuário/jornada.
+- [x] RLS `ENABLE` + 4 políticas por tabela recriadas idempotentemente; `profiles` usa `id`
+      como coluna de dono, as demais `user_id`.
+- [x] Aplicar no projeto Supabase; migrations local/remoto alinhadas e `db lint --linked` sem erros.
+- [ ] Executar o roteiro de duas contas reais em `docs/TESTE_DUAS_CONTAS.md`.
+
+**Fila offline e sync** (`src/lib/offlineQueue.ts`, `src/lib/syncEngine.ts`)
+
+- [x] Tentativas limitadas (`MAX_SYNC_ATTEMPTS = 5`) com backoff exponencial e teto de 5 min.
+- [x] `removeMany`, `retry`, `retryBlocked` e `stats` — o que falhou nunca é descartado antes
+      da confirmação da nuvem.
+- [x] Reenfileirar a mesma entidade zera tentativas, erro e backoff (op bloqueada revive).
+- [x] Coalescência por entidade: `upsert` + `delete` colapsa na intenção final do usuário.
+- [x] Pais antes dos filhos dentro do lote (`TABLE_ORDER`), porque cada tabela é gravada em uma
+      requisição separada e o Postgres valida a FK no `INSERT`.
+- [x] `23503` classificado como transitório: o filho espera o pai em vez de bloquear e perder dado.
+- [x] Gravação da fila em lote (`enqueueMany`), evitando uma serialização por linha.
+
+**Migração local → conta** (`src/repositories/persistence.ts`)
+
+- [x] `importLocalScopeOnce` lê o escopo `local`, normaliza com `normalizeAppSnapshot` e enfileira
+      via os mesmos mappers do app (nenhum payload cloud paralelo).
+- [x] Idempotência: IDs derivados deterministicamente de (usuário, entidade) e marcador
+      `user_settings.local_import_completed_at` lido da nuvem — outro dispositivo não reimporta.
+- [x] A marca é enfileirada junto com os dados (e sozinha quando não há dado local), então o
+      servidor registra que a migração acabou; um carimbo só no cache local repetiria a
+      checagem em toda sessão.
+- [x] Só importa dado do usuário, não a semente: `hasPersistedLocalData` compara com
+      `mockData`, evitando subir a demonstração de uma instalação nova. Três sinais:
+      `markScopeTouched` (gravado na primeira mutação), linha fora da semente **ou linha da
+      semente a menos** (usuário apagou um lançamento), e financeiro/perfil divergentes.
+- [x] Preservação de parcelas pagas, status e vínculo com a transação que quitou.
+- [x] Execução no primeiro sync de `AppContext`, com nova leitura da nuvem após o import.
+
+**Cobertura de CRUD**
+
+- [x] Exclusão de jornada (`removeShift`): cascata de pausas, desvincula os lançamentos em vez de
+      apagá-los e recalcula a reserva sugerida, cuja fórmula soma os km das jornadas concluídas.
+- [x] Exclusão de movimentação do cofrinho (`removeMaintenanceReserveEntry`): o saldo é derivado
+      do livro-razão, então remover a linha é o caminho para desfazer depósito ou resgate errado.
+
+**Conta e isolamento**
+
+- [x] Modo local persistido como escolha explícita; "Ativar conta na nuvem" reentra no login.
+- [x] Logout sincroniza antes de sair e troca o escopo de chaves por usuário.
+- [x] `ready` no contexto trava o render até a hidratação do escopo — sem frame com os dados do
+      usuário anterior.
+- [x] Refresh de token (`TOKEN_REFRESHED`) dispara sync, para a fila não parar em token expirado.
+
+**Interface**
+
+- [x] `SyncStatusRow` discreto no Perfil: Offline, Sincronizando, Erro com contagem, "Sincronizado"
+      visível por 4 s e fila pendente — sem spinner permanente nem contagem contínua.
+- [x] `AccountRow` com e-mail da conta, sair e ativação de nuvem a partir do modo local.
+
+**Verificável**
+
+- [x] `npm run lint` (tsc + ESLint) verde.
+- [x] `npm test` verde — 96 testes, incluindo migração idempotente, marcador de conclusão, edição
+      da semente, parcelas pagas, isolamento entre usuários, backoff, bloqueio, coalescência e
+      ordem de FK.
+- [x] `npm run build` verde (PWA gerado).
+- [ ] E2E em dois dispositivos com a mesma conta: perda zero de dados e RLS bloqueando a leitura
+      cruzada (exige o projeto Supabase com as migrations aplicadas).
 
 ### FASE 5 — Testes, qualidade e release
 

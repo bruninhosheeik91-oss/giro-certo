@@ -5,12 +5,8 @@ import { formatBRL, formatDisplayDate } from '../utils/calculations';
 import { Search, Trash2, Fuel, Wrench, PlusCircle, Wallet } from 'lucide-react';
 
 export const TransactionsView: React.FC = () => {
-  const {
-    transactions,
-    deleteTransaction,
-    openNewTransactionModal,
-    openTransactionDetail,
-  } = useApp();
+  const { transactions, deleteTransaction, openNewTransactionModal, openTransactionDetail } =
+    useApp();
   const [filterType, setFilterType] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);

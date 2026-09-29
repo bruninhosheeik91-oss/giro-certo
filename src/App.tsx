@@ -17,9 +17,20 @@ import { ReportsView } from './views/ReportsView';
 import { ProfileView } from './views/ProfileView';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
+import { SessionProvider } from './context/SessionContext';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, toastMessage } = useApp();
+  const { activeTab, toastMessage, ready } = useApp();
+
+  // Sem esta trava, o logout/troca de conta renderiza um frame com os dados do
+  // usuário anterior antes do efeito de hidratação trocar o escopo.
+  if (!ready) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#090d16]">
+        <div className="w-8 h-8 border-2 border-emerald-500/40 border-t-emerald-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex justify-center bg-[#060910] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
@@ -83,9 +94,11 @@ const MainAppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainAppContent />
-    </AppProvider>
+    <SessionProvider>
+      <AppProvider>
+        <MainAppContent />
+      </AppProvider>
+    </SessionProvider>
   );
 }
 

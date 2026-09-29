@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Giro Certo</string>
+    <string name="title_activity_main">Giro Certo</string>
+    <string name="package_name">tech.domnex.girocerto</string>
+    <string name="custom_url_scheme">tech.domnex.girocerto</string>
+    <string name="auth_redirect_host" translatable="false">login-callback</string>
+</resources>

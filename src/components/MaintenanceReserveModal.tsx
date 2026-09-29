@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import {
-  formatBRL,
-  formatBRLInput,
-  formatDisplayDate,
-  parseBRLInput,
-} from '../utils/calculations';
-import { X, Plus, ArrowDownToLine, PiggyBank, History } from 'lucide-react';
+import { formatBRL, formatBRLInput, formatDisplayDate, parseBRLInput } from '../utils/calculations';
+import { X, Plus, ArrowDownToLine, PiggyBank, History, Trash2 } from 'lucide-react';
 
 export const MaintenanceReserveModal: React.FC = () => {
   const {
@@ -16,6 +11,7 @@ export const MaintenanceReserveModal: React.FC = () => {
     maintenanceReserveLedger,
     depositMaintenanceReserve,
     withdrawMaintenanceReserve,
+    removeMaintenanceReserveEntry,
     activeVehicle,
     monthSummary,
   } = useApp();
@@ -192,8 +188,11 @@ export const MaintenanceReserveModal: React.FC = () => {
                 {[...maintenanceReserveLedger]
                   .sort((a, b) => b.createdAt - a.createdAt)
                   .map((e) => (
-                    <div key={e.id} className="px-3 py-2.5 flex items-center justify-between text-xs">
-                      <div>
+                    <div
+                      key={e.id}
+                      className="px-3 py-2.5 flex items-center justify-between gap-2 text-xs"
+                    >
+                      <div className="min-w-0">
                         <span
                           className={`font-bold ${
                             e.type === 'deposito'
@@ -213,9 +212,20 @@ export const MaintenanceReserveModal: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text-slate-500 text-[10px]">
-                        {formatDisplayDate(e.date)}
-                      </span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-slate-500 text-[10px]">
+                          {formatDisplayDate(e.date)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeMaintenanceReserveEntry(e.id)}
+                          title="Excluir movimentação"
+                          aria-label="Excluir movimentação"
+                          className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
               </div>

@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { TransactionType, FuelType, MaintenanceCategory, OtherExpenseCategory } from '../types';
-import {
-  formatBRL,
-  formatBRLInput,
-  parseBRLInput,
-  parseDecimalInput,
-} from '../utils/calculations';
+import { formatBRL, formatBRLInput, parseBRLInput, parseDecimalInput } from '../utils/calculations';
 import { X, PlusCircle, Fuel, Wrench, Wallet, Check, Clock, Link, Unlink } from 'lucide-react';
 
 const MAINTENANCE_CATEGORIES: MaintenanceCategory[] = [
@@ -319,8 +314,8 @@ export const NewTransactionModal: React.FC = () => {
         workshop: workshop.trim() || undefined,
         currentKm: kmEntered || activeVehicle.currentKm,
         nextMaintenanceKm: nextMaintenanceKmStr
-            ? parseDecimalInput(nextMaintenanceKmStr)
-            : undefined,
+          ? parseDecimalInput(nextMaintenanceKmStr)
+          : undefined,
         nextMaintenanceDate: nextMaintenanceDate || undefined,
         date,
         time,

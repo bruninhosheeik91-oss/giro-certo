@@ -5,11 +5,11 @@ import {
   calculatePayablesSummary,
   deriveInstallmentStatus,
   generatePayableSchedule,
+  isInstallmentPaid,
   mergeCommitmentSchedule,
   migrateFinancialState,
   reconcileFinancialState,
   removeTransactionWithFinancialReconciliation,
-  resolveScheduleThroughMonth,
   reopenInstallment,
   settleInstallment,
 } from './payables';
@@ -70,37 +70,101 @@ describe('payables schedule', () => {
     ]);
   });
 
-  it('uses the full end date for a three-year recurring account', () => {
-    const commitment = makeCommitment({
-      type: 'conta_recorrente',
-      totalInstallments: undefined,
-      firstDueDate: '2026-10-02',
-      endDate: '2029-09-02',
-    });
-    const throughMonth = resolveScheduleThroughMonth(commitment, '2026-09');
-    const installments = generatePayableSchedule(commitment, throughMonth, 0, 1);
-
-    expect(throughMonth).toBe('2029-09');
-    expect(installments).toHaveLength(36);
-    expect(installments.at(-1)?.dueDate).toBe('2029-09-02');
-  });
-
-  it('keeps an open-ended recurrence on a rolling projection window', () => {
-    const commitment = makeCommitment({
-      type: 'conta_recorrente',
-      totalInstallments: undefined,
-      firstDueDate: '2026-10-02',
-      endDate: undefined,
-    });
-
-    expect(resolveScheduleThroughMonth(commitment, '2026-09')).toBe('2027-09');
-  });
-
   it('imports explicitly informed historical installments without creating transactions', () => {
     const commitment = makeCommitment();
     const installments = generatePayableSchedule(commitment, '2026-12', 2, 1);
     expect(installments.filter((item) => item.paymentOrigin === 'opening_balance')).toHaveLength(2);
     expect(installments[0].transactionId).toBeUndefined();
+  });
+});
+
+describe('payables recurring schedule with an end date', () => {
+  const THREE_YEAR_RECURRING = (installmentAmount = 748): FinancialCommitment =>
+    makeCommitment({
+      type: 'conta_recorrente',
+      totalInstallments: undefined,
+      installmentAmount,
+      firstDueDate: '2026-10-02',
+      endDate: '2029-09-02',
+    });
+
+  it('generates exactly 36 installments for a 3 year recurring bill, not limited to 12', () => {
+    const installments = generatePayableSchedule(THREE_YEAR_RECURRING(), '2027-09', 0, 1);
+    expect(installments).toHaveLength(36);
+    expect(installments[0].dueDate).toBe('2026-10-02');
+    expect(installments[35].dueDate).toBe('2029-09-02');
+    expect(installments.map((item) => item.number)).toEqual(
+      Array.from({ length: 36 }, (_, i) => i + 1),
+    );
+  });
+
+  it('does not allow a fixed 12-installment limit when an end date defines the duration', () => {
+    const earlyWindow = generatePayableSchedule(THREE_YEAR_RECURRING(), '2027-09', 0, 1);
+    const farWindow = generatePayableSchedule(THREE_YEAR_RECURRING(), '2030-12', 0, 1);
+    expect(earlyWindow).toHaveLength(36);
+    expect(farWindow).toHaveLength(36);
+  });
+
+  it('totals exactly R$ 26.928,00 for 36 installments of R$ 748,00', () => {
+    const installments = generatePayableSchedule(THREE_YEAR_RECURRING(), '2027-09', 0, 1);
+    const total = installments.reduce((sum, item) => sum + item.expectedAmount, 0);
+    expect(total).toBe(26928);
+    const progress = calculateCommitmentProgress(THREE_YEAR_RECURRING(), installments, []);
+    expect(progress.totalInstallments).toBe(36);
+    expect(progress.totalExpected).toBe(26928);
+  });
+
+  it('does not present the 12 month rolling projection as the contract duration', () => {
+    const commitment = THREE_YEAR_RECURRING();
+    const openEnded = {
+      ...commitment,
+      endDate: undefined,
+    };
+    const projected = generatePayableSchedule(openEnded, '2027-09', 0, 1);
+    expect(projected).toHaveLength(12);
+    const progress = calculateCommitmentProgress(openEnded, projected, []);
+    expect(progress.isOpenEnded).toBe(true);
+    expect(progress.totalInstallments).toBe(0);
+    expect(progress.projectedEndDate).toBeUndefined();
+  });
+
+  it('returns an empty schedule when the end date comes before the first due date', () => {
+    const commitment = THREE_YEAR_RECURRING();
+    const invalid = {
+      ...commitment,
+      endDate: '2026-09-02',
+    };
+    expect(generatePayableSchedule(invalid, '2027-09', 0, 1)).toEqual([]);
+  });
+
+  it('preserves paid installments when editing a recurring contract with an end date', () => {
+    const commitment = THREE_YEAR_RECURRING();
+    const state: FinancialState = {
+      version: 3,
+      commitments: [commitment],
+      installments: generatePayableSchedule(commitment, '2027-09', 0, 1),
+    };
+    const paid = settleInstallment(
+      state,
+      [],
+      state.installments[0].id,
+      748,
+      '2026-10-02',
+      '09:00',
+      2,
+    );
+    const merged = mergeCommitmentSchedule(
+      THREE_YEAR_RECURRING(),
+      paid.financialState.installments,
+      paid.transactions,
+      '2027-09',
+      3,
+    );
+    expect(merged).toHaveLength(36);
+    expect(merged[0].number).toBe(1);
+    expect(isInstallmentPaid(merged[0], paid.transactions)).toBe(true);
+    expect(merged[1].number).toBe(2);
+    expect(merged[35].dueDate).toBe('2029-09-02');
   });
 });
 

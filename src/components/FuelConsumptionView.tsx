@@ -29,7 +29,9 @@ export const FuelConsumptionView: React.FC = () => {
           </div>
           <div className="flex-1">
             <p className="text-xs font-bold text-amber-300">Ciclo de consumo em aberto</p>
-            <p className="text-[11px] text-slate-300 mt-0.5">{openFuelCycleLabel(result.openCycle)}</p>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              {openFuelCycleLabel(result.openCycle)}
+            </p>
           </div>
         </div>
       )}
@@ -53,8 +55,8 @@ export const FuelConsumptionView: React.FC = () => {
             </span>
           ) : (
             'sem dados'
-          )}
-          {' '}• {result.validCyclesCount} ciclo(s) confirmado(s)
+          )}{' '}
+          • {result.validCyclesCount} ciclo(s) confirmado(s)
         </p>
       </div>
 
@@ -87,7 +89,9 @@ export const FuelConsumptionView: React.FC = () => {
             <span>Custo</span>
             <Fuel className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <p className="text-base font-bold text-amber-400 font-mono">{formatBRL(result.totalAmount)}</p>
+          <p className="text-base font-bold text-amber-400 font-mono">
+            {formatBRL(result.totalAmount)}
+          </p>
           <span className="text-[10px] text-slate-500">Total abastecido</span>
         </div>
 
@@ -97,7 +101,9 @@ export const FuelConsumptionView: React.FC = () => {
             <Gauge className="w-3.5 h-3.5 text-teal-400" />
           </div>
           <p className="text-base font-bold text-teal-400 font-mono">
-            {result.validCyclesCount > 0 ? formatBRL(result.confirmedCycles[result.confirmedCycles.length - 1].costPerKm) : '--'}
+            {result.validCyclesCount > 0
+              ? formatBRL(result.confirmedCycles[result.confirmedCycles.length - 1].costPerKm)
+              : '--'}
             <span className="text-xs font-normal">/{'km'}</span>
           </p>
           <span className="text-[10px] text-slate-500">Último ciclo</span>

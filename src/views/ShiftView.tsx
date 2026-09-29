@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatBRL, safeDivide, formatDisplayDate } from '../utils/calculations';
-import { Play, Square, Clock, Coffee, AlertTriangle, History } from 'lucide-react';
+import { Play, Square, Clock, Coffee, AlertTriangle, History, Trash2 } from 'lucide-react';
 
 export const ShiftView: React.FC = () => {
   const {
@@ -10,6 +10,7 @@ export const ShiftView: React.FC = () => {
     pauseShift,
     resumeShift,
     endShift,
+    removeShift,
     elapsedShiftSeconds,
     elapsedWorkSeconds,
     elapsedPausedSeconds,
@@ -41,6 +42,7 @@ export const ShiftView: React.FC = () => {
   const [endKmInput, setEndKmInput] = useState('');
   const [endNotes, setEndNotes] = useState('');
   const [endError, setEndError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Helper format seconds to hh:mm:ss
   const formatSeconds = (sec: number) => {
@@ -488,7 +490,9 @@ export const ShiftView: React.FC = () => {
                       </div>
                       <p className="text-xs text-slate-400">
                         Veículo:{' '}
-                        <strong className="text-slate-300">{s.vehicleName || 'Moto do Dia a Dia'}</strong>
+                        <strong className="text-slate-300">
+                          {s.vehicleName || 'Moto do Dia a Dia'}
+                        </strong>
                       </p>
                     </div>
 
@@ -534,6 +538,41 @@ export const ShiftView: React.FC = () => {
                     <p className="text-[11px] text-slate-400 bg-slate-950/40 p-2 rounded-lg italic">
                       "{s.notes}"
                     </p>
+                  )}
+
+                  {deleteConfirmId === s.id ? (
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <span className="text-[11px] text-rose-300">Excluir esta jornada?</span>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] bg-slate-800 text-slate-300"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          removeShift(s.id);
+                          setDeleteConfirmId(null);
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-[11px] bg-rose-500 text-white font-semibold"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(s.id)}
+                        title="Excluir jornada"
+                        aria-label="Excluir jornada"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   )}
                 </div>
               );
