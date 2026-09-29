@@ -33,9 +33,7 @@ describe('calculateReserveBalance', () => {
   });
 
   it('never counts negative deposit amounts', () => {
-    const entries = [
-      { type: 'deposito', amount: -50 },
-    ] as MaintenanceReserveEntry[];
+    const entries = [{ type: 'deposito', amount: -50 }] as MaintenanceReserveEntry[];
     expect(calculateReserveBalance(entries)).toBe(0);
   });
 });
@@ -54,9 +52,7 @@ describe('reconcileVehicleOdometer', () => {
   });
 
   it('uses initialKm as floor when no record is higher', () => {
-    const records = [
-      { date: '2026-09-01', km: 20000, sourceId: 'a' },
-    ] as OdometerRecord[];
+    const records = [{ date: '2026-09-01', km: 20000, sourceId: 'a' }] as OdometerRecord[];
     expect(reconcileVehicleOdometer(records, 42118).currentKm).toBe(42118);
   });
 

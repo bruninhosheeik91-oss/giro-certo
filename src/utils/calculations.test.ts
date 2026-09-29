@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  parseBRLInput,
-  formatBRLInput,
-  formatBRL,
-  calculateFuelConsumption,
-} from './calculations';
+import { parseBRLInput, formatBRLInput, formatBRL, calculateFuelConsumption } from './calculations';
 import { FuelTransaction } from '../types';
 
 describe('parseBRLInput', () => {

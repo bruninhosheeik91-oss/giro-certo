@@ -13,6 +13,7 @@ import {
   Sliders,
   WalletCards,
 } from 'lucide-react';
+import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 
 export const ProfileView: React.FC = () => {
   const {
@@ -466,6 +467,11 @@ export const ProfileView: React.FC = () => {
             />
           </div>
         </div>
+      </div>
+
+      <div className="divide-y divide-slate-800/70 rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <SyncStatusRow />
+        <AccountRow />
       </div>
     </div>
   );

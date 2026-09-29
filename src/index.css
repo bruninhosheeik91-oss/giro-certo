@@ -1,1 +1,6 @@
 @import 'tailwindcss';
+
+/* Áreas seguras de dispositivos com notch (viewport-fit=cover) */
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}

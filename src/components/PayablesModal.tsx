@@ -255,6 +255,10 @@ export const PayablesModal: React.FC = () => {
       setFormError('Informe nome, valor e primeiro vencimento.');
       return;
     }
+    if (form.type === 'conta_recorrente' && form.endDate && form.endDate < form.firstDueDate) {
+      setFormError('A data final não pode ser anterior ao primeiro vencimento.');
+      return;
+    }
     if (
       initialPaidInstallments !== undefined &&
       totalInstallments !== undefined &&
@@ -288,7 +292,8 @@ export const PayablesModal: React.FC = () => {
       const scheduleChanged =
         current.installmentAmount !== amount ||
         current.firstDueDate !== form.firstDueDate ||
-        current.totalInstallments !== totalInstallments;
+        current.totalInstallments !== totalInstallments ||
+        (current.endDate ?? '') !== (form.type === 'conta_recorrente' ? form.endDate : '');
       if (hasPaid && scheduleChanged && !confirmFutureEdit) {
         setConfirmFutureEdit(true);
         return;
@@ -765,20 +770,30 @@ export const PayablesModal: React.FC = () => {
           <div className="flex items-end justify-between">
             <div>
               <p className="text-2xl font-extrabold text-white font-mono">
-                {progress.paidInstallments} de {progress.totalInstallments || related.length}
+                {progress.isOpenEnded
+                  ? `${progress.paidInstallments} pagas`
+                  : `${progress.paidInstallments} de ${progress.totalInstallments}`}
               </p>
               <span className="text-[10px] text-slate-400">parcelas pagas</span>
             </div>
-            <span className="text-sm font-bold text-emerald-400 font-mono">
-              {progress.progressPercent.toFixed(0)}%
-            </span>
+            {!progress.isOpenEnded && (
+              <span className="text-sm font-bold text-emerald-400 font-mono">
+                {progress.progressPercent.toFixed(0)}%
+              </span>
+            )}
           </div>
-          <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
-              style={{ width: `${Math.min(100, progress.progressPercent)}%` }}
-            />
-          </div>
+          {progress.isOpenEnded ? (
+            <p className="text-[10px] text-slate-400">
+              Recorrência contínua sem data final — a projeção mensal não é a duração do contrato.
+            </p>
+          ) : (
+            <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
+                style={{ width: `${Math.min(100, progress.progressPercent)}%` }}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
             <div className="col-span-2 p-2.5 rounded-xl bg-slate-950/60 flex items-center justify-between gap-3">

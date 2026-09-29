@@ -34,9 +34,7 @@ export const ReportsView: React.FC = () => {
   // App color lookup (presentation-only; totals come from periodSummary.appStats)
   const appStats = useMemo(() => {
     const colorFor = (name: string) => {
-      const registered = registeredApps.find(
-        (a) => a.name.toLowerCase() === name.toLowerCase(),
-      );
+      const registered = registeredApps.find((a) => a.name.toLowerCase() === name.toLowerCase());
       return registered?.color || '#64748B';
     };
     return periodSummary.appStats.map((s) => ({ ...s, color: colorFor(s.name) }));

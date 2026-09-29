@@ -72,12 +72,19 @@ export function generatePayableSchedule(
   initialPaidInstallments = 0,
   createdAt = Date.now(),
 ): PayableInstallment[] {
+  // Data final anterior ao primeiro vencimento é inválida: não gera cronograma.
+  if (commitment.endDate && commitment.endDate < commitment.firstDueDate) return [];
+
   let count = 0;
   if (commitment.type === 'conta_unica') {
     count = 1;
   } else if (isFixedCommitment(commitment)) {
     count = Math.max(1, Math.floor(commitment.totalInstallments || 1));
+  } else if (commitment.endDate) {
+    // Recorrência com término: a duração real vem da data final, não da janela móvel.
+    count = Math.max(0, monthDistance(commitment.firstDueDate, commitment.endDate.slice(0, 7)) + 1);
   } else {
+    // Recorrência sem término: projeção móvel até o mês solicitado (janela de visualização).
     count = Math.max(0, monthDistance(commitment.firstDueDate, throughMonth) + 1);
   }
 
@@ -281,7 +288,9 @@ export function calculateCommitmentProgress(
     .sort((a, b) => a.number - b.number);
   const paid = related.filter((installment) => isInstallmentPaid(installment, transactions));
   const open = related.filter((installment) => !isInstallmentPaid(installment, transactions));
-  const totalInstallments = commitment.totalInstallments ?? related.length;
+  // Recorrência sem término usa projeção móvel de 12 meses, que NÃO é a duração do contrato.
+  const isOpenEnded = commitment.type === 'conta_recorrente' && !commitment.endDate;
+  const totalInstallments = isOpenEnded ? 0 : (commitment.totalInstallments ?? related.length);
   const paidInstallments = paid.length;
 
   return {
@@ -301,7 +310,8 @@ export function calculateCommitmentProgress(
     ),
     openBalance: roundMoney(open.reduce((sum, installment) => sum + installment.expectedAmount, 0)),
     nextInstallment: open.sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] ?? null,
-    projectedEndDate: related.at(-1)?.dueDate,
+    projectedEndDate: isOpenEnded ? undefined : related.at(-1)?.dueDate,
+    isOpenEnded,
   };
 }
 

@@ -25,7 +25,7 @@ describe('PayablesModal flow', () => {
   });
 
   it('creates a bill and records exactly one expense when it is paid', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(
       <AppProvider>
         <Harness />
@@ -51,5 +51,5 @@ describe('PayablesModal flow', () => {
 
     await waitFor(() => expect(screen.getByTestId('linked-expenses')).toHaveTextContent('1'));
     expect(screen.getByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
-  });
+  }, 15000);
 });

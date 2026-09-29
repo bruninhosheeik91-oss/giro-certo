@@ -43,13 +43,15 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3">
+    <header className="safe-top sticky top-0 z-30 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 pb-3">
       <div className="max-w-md mx-auto flex items-center justify-between gap-2">
         {/* Brand & Active Vehicle Info */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-            <span className="font-extrabold text-sm tracking-tighter">GC</span>
-          </div>
+          <img
+            src="/icons/icon-192.png"
+            alt="Giro Certo"
+            className="w-9 h-9 rounded-xl object-cover shadow-md shadow-emerald-500/20"
+          />
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="text-sm font-bold tracking-tight text-white">Giro Certo</h1>

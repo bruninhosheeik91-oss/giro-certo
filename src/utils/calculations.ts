@@ -105,7 +105,7 @@ export function parseBRLInput(formattedValue: string | number): number {
 
 /**
  * Parse a decimal string (km, liters, rates) into a number, accepting both the
- * pt-BR format ("1.250,50", "0,12") and the en/plain format ("1250.5", "2.5") — 
+ * pt-BR format ("1.250,50", "0,12") and the en/plain format ("1250.5", "2.5") —
  * which is what <input type="number"> values expose regardless of the browser locale.
  * NaN / Infinity / empty values resolve to 0.
  */
@@ -501,7 +501,8 @@ export function calculateFuelConsumption(
   );
 
   const confirmed: FuelConsumptionResult['confirmedCycles'] = [];
-  let open: { date: string; time?: string; km: number; liters: number; amount: number } | null = null;
+  let open: { date: string; time?: string; km: number; liters: number; amount: number } | null =
+    null;
 
   for (const t of sorted) {
     const liters = isPositiveNumber(t.liters) ? t.liters : 0;
