@@ -16,11 +16,11 @@ import { ShiftView } from './views/ShiftView';
 import { ReportsView } from './views/ReportsView';
 import { ProfileView } from './views/ProfileView';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2 } from 'lucide-react';
+import { Bike, CheckCircle2, Plus } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, toastMessage, ready } = useApp();
+  const { activeTab, toastMessage, ready, mode, vehicles, openVehiclesModal } = useApp();
 
   // Sem esta trava, o logout/troca de conta renderiza um frame com os dados do
   // usuário anterior antes do efeito de hidratação trocar o escopo.
@@ -28,6 +28,32 @@ const MainAppContent: React.FC = () => {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-[#090d16]">
         <div className="w-8 h-8 border-2 border-emerald-500/40 border-t-emerald-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (mode === 'cloud' && vehicles.length === 0) {
+    return (
+      <div className="min-h-screen w-full flex justify-center items-center bg-[#060910] px-5 text-slate-100">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#0f172a] p-7 text-center shadow-2xl shadow-black">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+            <Bike className="h-8 w-8" />
+          </div>
+          <h1 className="text-xl font-bold text-white">Cadastre seu primeiro veículo</h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Sua conta está pronta e começa limpa. Adicione a moto, o carro ou a bicicleta que você
+            usa para trabalhar.
+          </p>
+          <button
+            type="button"
+            onClick={openVehiclesModal}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 transition active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            Cadastrar veículo
+          </button>
+        </div>
+        <VehiclesModal />
       </div>
     );
   }
