@@ -12,7 +12,8 @@ bolso — inclusive offline (PWA) e como app Android nativo (Capacitor).
 - **lucide-react** (ícones) e **motion** (animações)
 - **vite-plugin-pwa** — manifest + Service Worker (instalável, offline)
 - **Capacitor 8** — empacotamento Android nativo (WebView)
-- **localStorage** — toda a persistência fica **no dispositivo** (local-first, por padrão)
+- **Supabase** — autenticação, PostgreSQL, RLS e sincronização opcional
+- **localStorage** — operação local-first e fila offline no dispositivo
 
 ## Rodar localmente
 
@@ -41,7 +42,7 @@ npm run build   # build de produção em dist/
 
 ## Android (Capacitor)
 
-Requisitos: Node 22+, JDK 17 e **Android Studio** com SDK (recomendado
+Requisitos: Node 22+, JDK 21 e **Android Studio** com SDK (recomendado
 `compileSdk`/`targetSdk` 36 e `minSdk` 24).
 
 ```bash
@@ -95,9 +96,14 @@ autenticação.
   no Perfil, com "Tentar novamente".
 - **Ordem e chaves.** As chaves são isoladas por usuário
   (`giro_certo_user_<uid>_v4_*`), e o logout sincroniza antes de trocar de escopo.
-  O Postgres aplica RLS por `uid()`, então um usuário não lê nem escreve dados de
+  O Postgres aplica RLS por `auth.uid()`, então um usuário não lê nem escreve dados de
   outro.
 
-Aplicar o backend exige rodar as migrations em `supabase/migrations/` no projeto
-Supabase — a da Fase 4B adiciona integridade referencial, unicidade e as políticas
-RLS completas.
+As migrations de `supabase/migrations/` foram aplicadas e auditadas no projeto de
+desenvolvimento. Em outro ambiente, use `npx supabase link`, `npx supabase db push`
+e `npx supabase db lint --linked`.
+
+No Supabase Auth, cadastre como Redirect URL o endereço web utilizado no ambiente e
+o deep link Android `tech.domnex.girocerto://login-callback`. Os roteiros de validação
+estão em [Teste com duas contas](docs/TESTE_DUAS_CONTAS.md) e
+[Teste do APK](docs/TESTE_APK.md).

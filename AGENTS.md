@@ -22,6 +22,7 @@ aplicativo controlarem ganhos, despesas, jornadas e lucro real.
 - `npm run preview` — pré-visualização do build
 - `npm run lint` — `tsc --noEmit` + ESLint (obrigatório passar antes de qualquer PR/commit)
 - `npm test` — Vitest (testes de utilidades e da camada de sync)
+- `npm run verify:rls` — valida isolamento RLS com duas contas reais (requer variáveis `RLS_*`)
 - `npm run format` — Prettier (write) em `src/`
 - `npm run clean` — remove `dist/` (funciona em Windows)
 - `npm run android:sync` — build + `cap sync android`; `npm run android:open` — abre o Android Studio
@@ -45,7 +46,7 @@ aplicativo controlarem ganhos, despesas, jornadas e lucro real.
   `veh-fazer-250` está proibido; reconciliação idempotente ao carregar do localStorage.
 - **Backend**: Supabase (Auth + PostgreSQL + RLS + sync) instalado e ativo via env vars.
   Sem `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` o `AuthGate` deixa o app seguir local.
-  Nunca usar service_role no cliente; RLS garante isolamento por `uid()`.
+  Nunca usar service_role no cliente; RLS garante isolamento por `auth.uid()`.
 - **Fase 4B (sync)**: toda alteração passa pela fila antes de chegar à nuvem; uma op só é
   descartada depois da confirmação do servidor. Cada tabela é gravada em requisição separada,
   então a ordem importa (pais antes dos filhos) e o FK `23503` é transitório, nunca bloqueio.
@@ -67,6 +68,7 @@ aplicativo controlarem ganhos, despesas, jornadas e lucro real.
   e adiciona CHECKs, FKs, unicidade (uma jornada/veículo/pausa ativos) e as 4 políticas RLS por
   tabela. `transactions.installment_id` fica **sem** FK de propósito: fecha ciclo com
   `installments.transaction_id` e quebraria o upsert em requisições separadas.
+- As três migrations estão aplicadas no projeto remoto e `supabase db lint --linked` está verde.
 - O Perfil expõe o status de sync; o `AppContext` expõe `syncQueue`, `retryPendingSync`,
   `signOut`, `enableCloudMode` e `ready` (trava o render durante a troca de escopo).
 

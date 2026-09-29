@@ -3,9 +3,8 @@
 > Documento vivo. Origem: auditoria técnica read-only do export do Google AI Studio
 > em `C:\Domnex Tech\01 - Projetos\Giro Certo` (app web mobile-first, React 19 + Vite 8 + TS + Tailwind 4).
 
-Stack atual (confirmada na auditoria): React 19 SPA, Vite 8.3.0 (rolldown), TypeScript (não-strict),
-Tailwind 4 via `@tailwindcss/vite`, `lucide-react`, `motion`. Sem router, sem lib de gráficos (SVG próprio),
-sem testes, backend ou banco. Persistência: `localStorage` (6 chaves `rota_financeira_*_v2`).
+Stack atual: React 19 SPA, Vite 8.3.0, TypeScript strict, Tailwind 4, Supabase Auth/PostgreSQL/RLS,
+persistência local-first com fila offline, PWA e Capacitor 8 para Android.
 
 ---
 
@@ -145,10 +144,10 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 > Derivados já gerados: `public/favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` (180),
 > `public/icons/icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`.
 
-- [ ] Manifest web app + ícones + **service worker** (offline-first para dados locais até a Fase 4).
-- [ ] Instalar Capacitor (@capacitor/core, cli, android) — **somente nesta fase**. **[Decisão 4]**
-- [ ] Configuração Android (`npx cap add android`), minSDK/tema, splash, ícones.
-- [ ] Gerar APK debug e validar em Android Studio/emulador.
+- [x] Manifest web app + ícones + **service worker** com atualização automática.
+- [x] Instalar Capacitor (@capacitor/core, cli, android). **[Decisão 4]**
+- [x] Configuração Android, minSdk 24, targetSdk 36, tema, splash e ícones.
+- [x] Gerar e inspecionar APK debug; roteiro de dispositivo em `docs/TESTE_APK.md`.
 - [ ] Deixar ponto de extensão previsto para plugin nativo de leitura de notificações (**standby**, sem implementar).
 - **Verificável**: Lighthouse PWA ≥ 90; `npm run build && npx cap sync android` OK; APK abre no emulador.
 
@@ -156,11 +155,11 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 
 > ✔ Decisão 1: Supabase Auth + PostgreSQL + RLS + sincronização/backup + base para assinatura comercial futura.
 
-- [ ] Instalar pacote oficial de Supabase no front (a partir daqui), conforme Decisão 1 (**não** manter express/genai/dotenv).
-- [ ] Projeto Supabase: schema PostgreSQL (usuário, veículos, apps, transações, jornadas, perfil, reserva).
-- [ ] **Supabase Auth** (email/senha; avaliar OAuth Google como opção).
-- [ ] **RLS**: políticas por usuário (row ownership); jornada das regras de reserva no SQL de seed/report.
-- [ ] **Sync/backup**: modelo offline-first — localStorage continua primário; sincroniza bidirecionalmente; migração de schema local versionada (hoje só sufixo `_v2`, sem validação de shape).
+- [x] Pacote oficial do Supabase no front; sem express/genai/dotenv.
+- [x] Schema PostgreSQL para todas as entidades do domínio.
+- [x] **Supabase Auth** por email/senha e recuperação via deep link.
+- [x] **RLS** com quatro políticas por tabela e isolamento por usuário.
+- [x] **Sync/backup** local-first, bidirecional, com fila offline e migração de escopo.
 - [ ] (Opcional/avaliar) assinatura comercial: pagamentos/webhooks — apenas arquitetura preparada.
 - **Verificável**: fluxo de login; dados sincronizam entre dois dispositivos; RLS bloqueia leitura cruzada.
 
@@ -185,8 +184,8 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
       por usuário/jornada.
 - [x] RLS `ENABLE` + 4 políticas por tabela recriadas idempotentemente; `profiles` usa `id`
       como coluna de dono, as demais `user_id`.
-- [ ] Aplicar no projeto Supabase e validar com dois usuários reais (RLS bloqueando leitura
-      cruzada, `23505` na jornada/veículo ativos, `23514` nos CHECKs).
+- [x] Aplicar no projeto Supabase; migrations local/remoto alinhadas e `db lint --linked` sem erros.
+- [ ] Executar o roteiro de duas contas reais em `docs/TESTE_DUAS_CONTAS.md`.
 
 **Fila offline e sync** (`src/lib/offlineQueue.ts`, `src/lib/syncEngine.ts`)
 
@@ -240,7 +239,7 @@ Pontos onde há decisão em aberto marcados como **[DECIDIR]**.
 **Verificável**
 
 - [x] `npm run lint` (tsc + ESLint) verde.
-- [x] `npm test` verde — 81 testes, incluindo migração idempotente, marcador de conclusão, edição
+- [x] `npm test` verde — 96 testes, incluindo migração idempotente, marcador de conclusão, edição
       da semente, parcelas pagas, isolamento entre usuários, backoff, bloqueio, coalescência e
       ordem de FK.
 - [x] `npm run build` verde (PWA gerado).
