@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Car, Bike, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ProfileAvatar } from './ProfileAvatar';
 
 export const Header: React.FC = () => {
   const {
@@ -106,11 +107,10 @@ export const Header: React.FC = () => {
             className="relative rounded-full ring-2 ring-emerald-500/40 hover:ring-emerald-500 transition-all active:scale-95"
             title="Ver perfil"
           >
-            <img
-              src={userProfile.photoUrl}
-              alt={userProfile.name}
-              referrerPolicy="no-referrer"
-              className="w-8 h-8 rounded-full object-cover"
+            <ProfileAvatar
+              name={userProfile.name}
+              photoUrl={userProfile.photoUrl}
+              className="w-8 h-8 rounded-full"
             />
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#090d16]" />
           </button>
