@@ -35,6 +35,7 @@ export const ProfileView: React.FC = () => {
   } = useApp();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const editProfileRef = useRef<HTMLFormElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
@@ -58,6 +59,21 @@ export const ProfileView: React.FC = () => {
   const [considerReturn, setConsiderReturn] = useState(
     userProfile.rideCriteria?.considerReturnDistance ?? true,
   );
+
+  const openProfileEditor = () => {
+    setName(userProfile.name);
+    setCity(userProfile.city);
+    setMonthlyGoalStr(userProfile.monthlyGoal.toString());
+    setReservePerKmStr(userProfile.maintenanceReservePerKm.toString());
+    setMinProfitPerKmStr(userProfile.rideCriteria.minProfitPerKm.toString());
+    setMinProfitPerHourStr(userProfile.rideCriteria.minProfitPerHour.toString());
+    setMinAcceptableValueStr(userProfile.rideCriteria.minAcceptableValue.toString());
+    setConsiderReturn(userProfile.rideCriteria.considerReturnDistance);
+    setIsEditingProfile(true);
+    requestAnimationFrame(() =>
+      editProfileRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +189,7 @@ export const ProfileView: React.FC = () => {
           </div>
 
           <button
-            onClick={() => setIsEditingProfile(!isEditingProfile)}
+            onClick={() => (isEditingProfile ? setIsEditingProfile(false) : openProfileEditor())}
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
             title="Editar perfil"
           >
@@ -189,7 +205,11 @@ export const ProfileView: React.FC = () => {
               disabled={avatarBusy}
               className="font-semibold text-emerald-400 disabled:opacity-50"
             >
-              {avatarBusy ? 'Processando foto…' : userProfile.photoUrl ? 'Trocar foto' : 'Adicionar foto'}
+              {avatarBusy
+                ? 'Processando foto…'
+                : userProfile.photoUrl
+                  ? 'Trocar foto'
+                  : 'Adicionar foto'}
             </button>
             {userProfile.photoUrl && !avatarBusy && (
               <button
@@ -207,6 +227,7 @@ export const ProfileView: React.FC = () => {
         {/* Edit profile inline form */}
         {isEditingProfile && (
           <form
+            ref={editProfileRef}
             onSubmit={handleSaveProfile}
             className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 animate-in fade-in"
           >
@@ -455,7 +476,8 @@ export const ProfileView: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setIsEditingProfile(true)}
+            type="button"
+            onClick={openProfileEditor}
             className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
           >
             Ajustar
