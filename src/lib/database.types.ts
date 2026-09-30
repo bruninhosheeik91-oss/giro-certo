@@ -317,6 +317,12 @@ export type Database = {
           id: string;
           user_id: string;
           vehicle_id: string | null;
+          reserve_id: string | null;
+          reserve_name: string | null;
+          reserve_category: string | null;
+          institution: string | null;
+          goal_amount: number | null;
+          is_primary: boolean;
           date: string;
           amount: number;
           entry_type: string;
@@ -329,6 +335,12 @@ export type Database = {
           id: string;
           user_id: string;
           vehicle_id?: string | null;
+          reserve_id?: string | null;
+          reserve_name?: string | null;
+          reserve_category?: string | null;
+          institution?: string | null;
+          goal_amount?: number | null;
+          is_primary?: boolean;
           date: string;
           amount: number;
           entry_type?: string;
