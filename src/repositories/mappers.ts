@@ -646,6 +646,12 @@ export function reserveToRow(
   return {
     id: entry.id,
     user_id: userId,
+    reserve_id: entry.reserveId ?? null,
+    reserve_name: entry.reserveName ?? 'Manutenção do veículo',
+    reserve_category: entry.reserveCategory ?? 'manutencao',
+    institution: nullableText(entry.institution),
+    goal_amount: entry.goalAmount ?? null,
+    is_primary: entry.isPrimary ?? false,
     vehicle_id: null,
     date: entry.date,
     amount: Math.abs(entry.amount),
@@ -664,6 +670,18 @@ export function reserveFromRow(row: ReserveRow): MaintenanceReserveEntry {
       : 'deposito';
   return {
     id: row.id,
+    reserveId: row.reserve_id ?? normalizeUuid('default-financial-reserve', row.user_id, 'financial_reserve'),
+    reserveName: row.reserve_name ?? 'Manutenção do veículo',
+    reserveCategory:
+      row.reserve_category === 'emergencia' ||
+      row.reserve_category === 'impostos' ||
+      row.reserve_category === 'veiculo' ||
+      row.reserve_category === 'outro'
+        ? row.reserve_category
+        : 'manutencao',
+    institution: row.institution ?? undefined,
+    goalAmount: row.goal_amount ?? undefined,
+    isPrimary: row.is_primary,
     type,
     date: row.date,
     amount: type === 'ajuste' ? -row.amount : row.amount,
