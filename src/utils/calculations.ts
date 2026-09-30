@@ -309,6 +309,73 @@ export function calculatePeriodSummary(
   };
 }
 
+export interface AnnualSummary extends PeriodSummary {
+  year: string;
+  melhorMes: { mes: string; lucro: number };
+  piorMes: { mes: string; lucro: number };
+}
+
+const MONTH_NAMES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
+/** Consolida apenas anos e meses que possuem dados reais do usuário. */
+export function calculateAnnualSummaries(
+  transactions: Transaction[],
+  shifts: Shift[],
+  monthlyGoal: number,
+  reservePerKm: number,
+): AnnualSummary[] {
+  const years = new Set<string>();
+  transactions.forEach((item) => item.date?.length >= 4 && years.add(item.date.slice(0, 4)));
+  shifts.forEach((item) => item.date?.length >= 4 && years.add(item.date.slice(0, 4)));
+
+  return [...years]
+    .sort((a, b) => b.localeCompare(a))
+    .map((year) => {
+      const yearTransactions = transactions.filter((item) => item.date.startsWith(year));
+      const yearShifts = shifts.filter(
+        (item) => item.status === 'completed' && item.date.startsWith(year),
+      );
+      const activeMonths = new Set<string>();
+      yearTransactions.forEach((item) => activeMonths.add(item.date.slice(0, 7)));
+      yearShifts.forEach((item) => activeMonths.add(item.date.slice(0, 7)));
+
+      const months = [...activeMonths].sort().map((monthKey) => {
+        const summary = calculatePeriodSummary(
+          yearTransactions.filter((item) => item.date.startsWith(monthKey)),
+          yearShifts.filter((item) => item.date.startsWith(monthKey)),
+          monthlyGoal,
+          reservePerKm,
+        );
+        return {
+          mes: MONTH_NAMES[Number(monthKey.slice(5, 7)) - 1] || monthKey,
+          lucro: summary.lucroDisponivel,
+        };
+      });
+      const orderedMonths = [...months].sort((a, b) => b.lucro - a.lucro);
+      const emptyMonth = { mes: 'Sem dados', lucro: 0 };
+
+      return {
+        year,
+        ...calculatePeriodSummary(yearTransactions, yearShifts, monthlyGoal * 12, reservePerKm),
+        melhorMes: orderedMonths[0] || emptyMonth,
+        piorMes: orderedMonths.at(-1) || emptyMonth,
+      };
+    });
+}
+
 /**
  * Filter transactions by selected time period
  */
