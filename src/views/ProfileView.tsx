@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatBRL, parseDecimalInput } from '../utils/calculations';
 import {
@@ -12,8 +12,12 @@ import {
   Edit2,
   Sliders,
   WalletCards,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
+import { ProfileAvatar } from '../components/ProfileAvatar';
+import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 
 export const ProfileView: React.FC = () => {
   const {
@@ -26,7 +30,13 @@ export const ProfileView: React.FC = () => {
     openAppsModal,
     openPayablesModal,
     payablesSummary,
+    mode,
+    cloudUserId,
   } = useApp();
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [name, setName] = useState(userProfile.name);
@@ -82,6 +92,36 @@ export const ProfileView: React.FC = () => {
     });
   };
 
+  const handleAvatarFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !cloudUserId) return;
+    setAvatarBusy(true);
+    setAvatarError(null);
+    try {
+      const photoUrl = await uploadProfileAvatar(cloudUserId, file);
+      updateUserProfile({ photoUrl });
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Não foi possível enviar a foto.');
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!cloudUserId) return;
+    setAvatarBusy(true);
+    setAvatarError(null);
+    try {
+      await removeProfileAvatar(cloudUserId);
+      updateUserProfile({ photoUrl: '' });
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Não foi possível remover a foto.');
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-4 pb-2">
       {/* Profile Header Card (Without PRO badge or rating as requested) */}
@@ -89,10 +129,30 @@ export const ProfileView: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="relative">
-              <img
-                src={userProfile.photoUrl}
-                alt={userProfile.name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700 shadow-md"
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={mode !== 'cloud' || avatarBusy}
+                className="relative rounded-2xl disabled:cursor-default"
+                title={mode === 'cloud' ? 'Alterar foto' : 'Entre na sua conta para adicionar foto'}
+              >
+                <ProfileAvatar
+                  name={userProfile.name}
+                  photoUrl={userProfile.photoUrl}
+                  className="w-14 h-14 rounded-2xl border-2 border-slate-700 shadow-md"
+                />
+                {mode === 'cloud' && (
+                  <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/45 opacity-0 transition-opacity hover:opacity-100">
+                    <Camera className="h-5 w-5 text-white" />
+                  </span>
+                )}
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                onChange={handleAvatarFile}
+                className="hidden"
               />
               <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
                 <Check className="w-3 h-3 text-slate-950 stroke-[3]" />
@@ -120,6 +180,29 @@ export const ProfileView: React.FC = () => {
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
+
+        {mode === 'cloud' && (
+          <div className="flex items-center gap-3 text-[11px]">
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarBusy}
+              className="font-semibold text-emerald-400 disabled:opacity-50"
+            >
+              {avatarBusy ? 'Processando foto…' : userProfile.photoUrl ? 'Trocar foto' : 'Adicionar foto'}
+            </button>
+            {userProfile.photoUrl && !avatarBusy && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="inline-flex items-center gap-1 font-semibold text-rose-400"
+              >
+                <Trash2 className="h-3 w-3" /> Remover
+              </button>
+            )}
+            {avatarError && <span className="text-rose-400">{avatarError}</span>}
+          </div>
+        )}
 
         {/* Edit profile inline form */}
         {isEditingProfile && (
