@@ -18,6 +18,7 @@ import {
   PeriodSummary,
   ActiveShiftState,
   MaintenanceReserveEntry,
+  FinancialReserveInput,
   OdometerRecord,
   FinancialCommitment,
   FinancialCommitmentStatus,
@@ -170,8 +171,10 @@ interface AppContextType {
   // Profile & Settings
   userProfile: UserProfile;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
-  depositMaintenanceReserve: (amount: number, description?: string) => void;
-  withdrawMaintenanceReserve: (amount: number, description?: string) => boolean;
+  depositMaintenanceReserve: (amount: number, description?: string, reserveId?: string) => void;
+  withdrawMaintenanceReserve: (amount: number, description?: string, reserveId?: string) => boolean;
+  createFinancialReserve: (input: FinancialReserveInput) => string;
+  updateFinancialReserve: (reserveId: string, updates: Partial<FinancialReserveInput>) => void;
   removeMaintenanceReserveEntry: (id: string) => void;
   adjustMaintenanceReserve: (amount: number, description?: string) => void;
   maintenanceReserveLedger: MaintenanceReserveEntry[];
@@ -1492,17 +1495,97 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Perfil atualizado com sucesso.');
   };
 
-  const depositMaintenanceReserve = (amount: number, description?: string) => {
+  const getReserveMeta = (reserveId?: string) => {
+    const found = maintenanceReserveLedger.find((entry) =>
+      reserveId ? entry.reserveId === reserveId : entry.isPrimary,
+    ) ?? maintenanceReserveLedger[0];
+    return {
+      reserveId: reserveId ?? found?.reserveId ?? newEntityId('financial-reserve'),
+      reserveName: found?.reserveName ?? 'Manutenção do veículo',
+      reserveCategory: found?.reserveCategory ?? ('manutencao' as const),
+      institution: found?.institution,
+      goalAmount: found?.goalAmount,
+      isPrimary: found?.isPrimary ?? maintenanceReserveLedger.length === 0,
+    };
+  };
+
+  const createFinancialReserve = (input: FinancialReserveInput): string => {
+    const now = Date.now();
+    const reserveId = newEntityId('financial-reserve');
+    setMaintenanceReserveLedger((previous) => [
+      ...previous.map((entry) =>
+        input.isPrimary ? { ...entry, isPrimary: false, updatedAt: now } : entry,
+      ),
+      {
+        id: newEntityId('reserve'),
+        reserveId,
+        reserveName: input.name.trim(),
+        reserveCategory: input.category,
+        institution: input.institution?.trim() || undefined,
+        goalAmount: Math.max(0, Number(input.goalAmount) || 0) || undefined,
+        isPrimary: input.isPrimary || previous.length === 0,
+        type: 'ajuste',
+        amount: 0,
+        date: new Date(now).toISOString().split('T')[0],
+        description: 'Reserva criada',
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+    markMutation();
+    showToast('Reserva financeira criada.');
+    return reserveId;
+  };
+
+  const updateFinancialReserve = (
+    reserveId: string,
+    updates: Partial<FinancialReserveInput>,
+  ) => {
+    const now = Date.now();
+    setMaintenanceReserveLedger((previous) =>
+      previous.map((entry) => {
+        if (updates.isPrimary && entry.reserveId !== reserveId) {
+          return { ...entry, isPrimary: false, updatedAt: now };
+        }
+        if (entry.reserveId !== reserveId) return entry;
+        return {
+          ...entry,
+          reserveName: updates.name?.trim() || entry.reserveName,
+          reserveCategory: updates.category ?? entry.reserveCategory,
+          institution:
+            updates.institution === undefined
+              ? entry.institution
+              : updates.institution.trim() || undefined,
+          goalAmount:
+            updates.goalAmount === undefined
+              ? entry.goalAmount
+              : Math.max(0, Number(updates.goalAmount) || 0) || undefined,
+          isPrimary: updates.isPrimary ?? entry.isPrimary,
+          updatedAt: now,
+        };
+      }),
+    );
+    markMutation();
+    showToast('Reserva financeira atualizada.');
+  };
+
+  const depositMaintenanceReserve = (
+    amount: number,
+    description?: string,
+    reserveId?: string,
+  ) => {
     const amt = Math.round((Number(amount) || 0) * 100) / 100;
     if (amt <= 0) {
       showToast('Informe um valor positivo para guardar.');
       return;
     }
     const now = Date.now();
+    const meta = getReserveMeta(reserveId);
     setMaintenanceReserveLedger((previous) => [
       ...previous,
       {
         id: newEntityId('reserve'),
+        ...meta,
         type: 'deposito' as const,
         amount: amt,
         date: new Date(now).toISOString().split('T')[0],
@@ -1512,18 +1595,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       },
     ]);
     markMutation();
-    showToast(`${formatBRL(amt)} guardado na reserva de manutenção!`);
+    showToast(`${formatBRL(amt)} guardado em ${meta.reserveName}.`);
   };
 
-  const withdrawMaintenanceReserve = (amount: number, description?: string): boolean => {
+  const withdrawMaintenanceReserve = (
+    amount: number,
+    description?: string,
+    reserveId?: string,
+  ): boolean => {
     const amt = Math.round((Number(amount) || 0) * 100) / 100;
     if (amt <= 0) {
       showToast('Informe um valor positivo para resgatar.');
       return false;
     }
-    const currentBalance = maintenanceReserveBalance;
+    const meta = getReserveMeta(reserveId);
+    const currentBalance = calculateReserveBalance(
+      maintenanceReserveLedger.filter((entry) => entry.reserveId === meta.reserveId),
+    );
     if (amt > currentBalance) {
-      showToast(`Saldo insuficiente: ${formatBRL(currentBalance)} disponível no cofrinho.`);
+      showToast(`Saldo insuficiente: ${formatBRL(currentBalance)} disponível nesta reserva.`);
       return false;
     }
     const now = Date.now();
@@ -1531,6 +1621,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...previous,
       {
         id: newEntityId('reserve'),
+        ...meta,
         type: 'resgate' as const,
         amount: amt,
         date: new Date(now).toISOString().split('T')[0],
@@ -1540,7 +1631,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       },
     ]);
     markMutation();
-    showToast(`${formatBRL(amt)} resgatados da reserva de manutenção.`);
+    showToast(`${formatBRL(amt)} resgatados de ${meta.reserveName}.`);
     return true;
   };
 
@@ -1856,6 +1947,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         getShiftTotals,
         userProfile,
         updateUserProfile,
+        createFinancialReserve,
+        updateFinancialReserve,
         depositMaintenanceReserve,
         withdrawMaintenanceReserve,
         removeMaintenanceReserveEntry,
