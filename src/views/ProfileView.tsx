@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatBRL, parseDecimalInput } from '../utils/calculations';
 import {
@@ -18,7 +18,13 @@ import {
 import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
-import { requestGoalNotificationPermission } from '../lib/nativeCoach';
+import {
+  getCoachVoicePreferences,
+  listCoachVoices,
+  requestGoalNotificationPermission,
+  saveCoachVoicePreferences,
+  speakGoalCoach,
+} from '../lib/nativeCoach';
 
 export const ProfileView: React.FC = () => {
   const {
@@ -39,6 +45,18 @@ export const ProfileView: React.FC = () => {
   const editProfileRef = useRef<HTMLFormElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [coachVoices, setCoachVoices] = useState<Array<{ id: string; name: string }>>([]);
+  const [coachVoice, setCoachVoice] = useState(getCoachVoicePreferences);
+
+  useEffect(() => {
+    void listCoachVoices().then(setCoachVoices).catch(() => setCoachVoices([]));
+  }, []);
+
+  const updateCoachVoice = (updates: Partial<typeof coachVoice>) => {
+    const next = { ...coachVoice, ...updates };
+    setCoachVoice(next);
+    saveCoachVoicePreferences(next);
+  };
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [name, setName] = useState(userProfile.name);
@@ -545,6 +563,29 @@ export const ProfileView: React.FC = () => {
               className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
             />
           </div>
+
+          {userProfile.notificationPreferences.dailyGoalAlert && (
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5">
+              <span className="text-[10px] font-bold text-slate-300 uppercase">Voz do Coach</span>
+              <select value={coachVoice.voiceId ?? ''} onChange={(e) => updateCoachVoice({ voiceId: e.target.value || undefined })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200">
+                <option value="">Voz padrão do celular</option>
+                {coachVoices.map((voice, index) => <option key={voice.id} value={voice.id}>Voz {index + 1} · {voice.name}</option>)}
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] text-slate-400">Velocidade
+                  <select value={coachVoice.rate} onChange={(e) => updateCoachVoice({ rate: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                    <option value="0.82">Calma</option><option value="0.95">Normal</option><option value="1.08">Dinâmica</option>
+                  </select>
+                </label>
+                <label className="text-[10px] text-slate-400">Tom
+                  <select value={coachVoice.pitch} onChange={(e) => updateCoachVoice({ pitch: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                    <option value="0.8">Grave</option><option value="0.92">Natural</option><option value="1.08">Agudo</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" onClick={() => void speakGoalCoach('Olá! Eu sou o seu coach do Giro Certo. Vamos juntos alcançar a sua meta!')} className="w-full py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold active:scale-95">Ouvir exemplo</button>
+            </div>
+          )}
 
           <div className="flex items-center justify-between text-xs">
             <div>
