@@ -13,15 +13,16 @@ export interface CoachVoicePreferences {
   voiceId?: string;
   rate: number;
   pitch: number;
+  greetingEnabled: boolean;
 }
 
 const VOICE_PREFS_KEY = 'giro_certo_coach_voice_v1';
 
 export function getCoachVoicePreferences(): CoachVoicePreferences {
   try {
-    return { rate: 0.95, pitch: 0.92, ...JSON.parse(localStorage.getItem(VOICE_PREFS_KEY) ?? '{}') };
+    return { rate: 0.95, pitch: 0.92, greetingEnabled: true, ...JSON.parse(localStorage.getItem(VOICE_PREFS_KEY) ?? '{}') };
   } catch {
-    return { rate: 0.95, pitch: 0.92 };
+    return { rate: 0.95, pitch: 0.92, greetingEnabled: true };
   }
 }
 
