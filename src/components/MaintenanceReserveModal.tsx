@@ -1,39 +1,75 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatBRL, formatBRLInput, formatDisplayDate, parseBRLInput } from '../utils/calculations';
-import { X, Plus, ArrowDownToLine, PiggyBank, History, Trash2 } from 'lucide-react';
+import { X, Plus, ArrowDownToLine, PiggyBank, History, Trash2, Landmark, Settings2 } from 'lucide-react';
 
 export const MaintenanceReserveModal: React.FC = () => {
   const {
     isReserveModalOpen,
     closeReserveModal,
-    maintenanceReserveBalance,
     maintenanceReserveLedger,
     depositMaintenanceReserve,
     withdrawMaintenanceReserve,
     removeMaintenanceReserveEntry,
-    activeVehicle,
-    monthSummary,
+    createFinancialReserve,
+    updateFinancialReserve,
   } = useApp();
 
   const [mode, setMode] = useState<'deposito' | 'resgate'>('deposito');
   const [amountStr, setAmountStr] = useState('');
+  const [selectedReserveId, setSelectedReserveId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingReserveId, setEditingReserveId] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [goalStr, setGoalStr] = useState('');
+  const [category, setCategory] = useState<'manutencao' | 'emergencia' | 'impostos' | 'veiculo' | 'outro'>('manutencao');
+
+  const reserveMap = new Map<string, (typeof maintenanceReserveLedger)[number]>();
+  for (const entry of maintenanceReserveLedger) {
+    const id = entry.reserveId ?? 'default-financial-reserve';
+    if (!reserveMap.has(id) || entry.updatedAt! > reserveMap.get(id)!.updatedAt!) {
+      reserveMap.set(id, entry);
+    }
+  }
+  const reserves = [...reserveMap.entries()].map(([id, meta]) => ({
+    id,
+    name: meta.reserveName ?? 'Manutenção do veículo',
+    category: meta.reserveCategory ?? 'manutencao',
+    institution: meta.institution,
+    goalAmount: meta.goalAmount,
+    isPrimary: meta.isPrimary,
+    balance: maintenanceReserveLedger
+      .filter((entry) => (entry.reserveId ?? 'default-financial-reserve') === id)
+      .reduce(
+        (total, entry) =>
+          total + (entry.type === 'resgate' ? -entry.amount : entry.type === 'ajuste' ? entry.amount : entry.amount),
+        0,
+      ),
+  }));
+  const selected = reserves.find((reserve) => reserve.id === selectedReserveId) ?? reserves[0];
+  const selectedBalance = Math.round((selected?.balance ?? 0) * 100) / 100;
+  const selectedLedger = selected
+    ? maintenanceReserveLedger.filter(
+        (entry) => (entry.reserveId ?? 'default-financial-reserve') === selected.id && entry.amount !== 0,
+      )
+    : [];
 
   if (!isReserveModalOpen) return null;
 
   const quickAmounts =
     mode === 'deposito'
       ? [20, 50, 100]
-      : maintenanceReserveBalance > 0
-        ? [20, 50, Math.round(maintenanceReserveBalance * 100) / 100]
+      : selectedBalance > 0
+        ? [20, 50, selectedBalance]
         : [];
 
   const handleSubmit = () => {
     const amt = parseBRLInput(amountStr);
     if (mode === 'deposito') {
-      depositMaintenanceReserve(amt, 'Depósito manual no cofrinho');
+      depositMaintenanceReserve(amt, 'Depósito manual', selected?.id);
     } else {
-      withdrawMaintenanceReserve(amt, 'Resgate manual do cofrinho');
+      withdrawMaintenanceReserve(amt, 'Resgate manual', selected?.id);
     }
     setAmountStr('');
   };
@@ -57,10 +93,8 @@ export const MaintenanceReserveModal: React.FC = () => {
               <PiggyBank className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Cofrinho de Manutenção</h3>
-              <p className="text-[10px] text-slate-400">
-                Veículo: {activeVehicle?.nickname || activeVehicle?.model}
-              </p>
+              <h3 className="text-sm font-bold text-white">Reservas Financeiras</h3>
+              <p className="text-[10px] text-slate-400">Organize valores por objetivo e instituição</p>
             </div>
           </div>
           <button
@@ -73,18 +107,45 @@ export const MaintenanceReserveModal: React.FC = () => {
 
         {/* Content */}
         <div className="p-5 space-y-4 overflow-y-auto">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {reserves.map((reserve) => (
+              <button key={reserve.id} onClick={() => setSelectedReserveId(reserve.id)} className={`min-w-[150px] p-3 rounded-xl border text-left ${selected?.id === reserve.id ? 'border-teal-400 bg-teal-500/10' : 'border-slate-800 bg-slate-900'}`}>
+                <span className="text-xs font-bold text-white block truncate">{reserve.name}</span>
+                <span className="text-[10px] text-slate-400 block truncate">{reserve.institution || 'Local não informado'}</span>
+                <span className="text-sm font-mono font-bold text-teal-400 block mt-1">{formatBRL(reserve.balance)}</span>
+              </button>
+            ))}
+            <button onClick={() => { setEditingReserveId(null); setShowForm(true); setName(''); setInstitution(''); setGoalStr(''); setCategory('manutencao'); }} className="min-w-[92px] rounded-xl border border-dashed border-teal-500/40 text-teal-300 text-xs font-bold flex items-center justify-center gap-1"><Plus className="w-4 h-4" /> Nova</button>
+          </div>
+
+          {showForm && (
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da reserva" className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+              <div className="grid grid-cols-2 gap-2">
+                <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Banco ou carteira" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+                <input value={goalStr} onChange={(e) => setGoalStr(formatBRLInput(e.target.value))} placeholder="Meta: R$ 0,00" inputMode="decimal" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+              </div>
+              <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                <option value="manutencao">Manutenção</option><option value="emergencia">Emergência</option><option value="impostos">Impostos</option><option value="veiculo">Troca/financiamento do veículo</option><option value="outro">Outro objetivo</option>
+              </select>
+              <div className="flex gap-2">
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">Cancelar</button>
+                <button disabled={!name.trim()} onClick={() => { const input = { name, institution, goalAmount: parseBRLInput(goalStr), category }; if (editingReserveId) { updateFinancialReserve(editingReserveId, input); } else { const id = createFinancialReserve(input); setSelectedReserveId(id); } setShowForm(false); }} className="flex-1 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-bold disabled:opacity-40">{editingReserveId ? 'Salvar alterações' : 'Criar reserva'}</button>
+              </div>
+            </div>
+          )}
+
           {/* Balance Card */}
           <div className="p-4 rounded-xl bg-gradient-to-br from-teal-950/40 to-slate-900 border border-teal-500/30 text-center">
+            <div className="flex justify-center items-center gap-1 text-[10px] text-slate-400 mb-1"><Landmark className="w-3 h-3" /> {selected?.institution || 'Informe onde o dinheiro está guardado'}</div>
             <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block mb-1">
               Saldo Disponível
             </span>
             <span className="text-3xl font-extrabold font-mono text-teal-400 tracking-tight">
-              {formatBRL(maintenanceReserveBalance)}
+              {formatBRL(selectedBalance)}
             </span>
-            <p className="text-[10px] text-slate-400 mt-1.5">
-              Sugerido no mês ({monthSummary.quilometrosRodados.toLocaleString('pt-BR')} km):{' '}
-              {formatBRL(monthSummary.reservaManutencao)}
-            </p>
+            {selected?.goalAmount ? <p className="text-[10px] text-slate-400 mt-1.5">Meta {formatBRL(selected.goalAmount)} · {Math.min(100, Math.round((selectedBalance / selected.goalAmount) * 100))}% alcançada</p> : <p className="text-[10px] text-slate-400 mt-1.5">Sem meta definida</p>}
+            {selected && <button onClick={() => { setEditingReserveId(selected.id); setName(selected.name); setInstitution(selected.institution || ''); setGoalStr(formatBRLInput(String(Math.round((selected.goalAmount || 0) * 100)))); setCategory(selected.category); setShowForm(true); }} className="mt-2 text-[10px] text-teal-300 inline-flex items-center gap-1"><Settings2 className="w-3 h-3" /> Ajustar dados</button>}
           </div>
 
           {/* Mode Toggle */}
@@ -147,7 +208,7 @@ export const MaintenanceReserveModal: React.FC = () => {
                         : 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
                     }`}
                   >
-                    {mode === 'resgate' && amt === maintenanceReserveBalance
+                    {mode === 'resgate' && amt === selectedBalance
                       ? 'Saldo total'
                       : formatBRL(amt)}
                   </button>
@@ -172,20 +233,20 @@ export const MaintenanceReserveModal: React.FC = () => {
             <div className="p-3 flex items-center gap-2 border-b border-slate-800">
               <History className="w-3.5 h-3.5 text-slate-400" />
               <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
-                Histórico do Cofrinho
+                Histórico da Reserva
               </h4>
               <span className="text-[10px] text-slate-500 ml-auto">
-                {maintenanceReserveLedger.length} movimentações
+                {selectedLedger.length} movimentações
               </span>
             </div>
 
-            {maintenanceReserveLedger.length === 0 ? (
+            {selectedLedger.length === 0 ? (
               <p className="p-4 text-xs text-slate-500 text-center">
                 Nenhuma movimentação ainda. Guarde parte da reserva sugerida para começar.
               </p>
             ) : (
               <div className="divide-y divide-slate-800/70 max-h-52 overflow-y-auto">
-                {[...maintenanceReserveLedger]
+                {[...selectedLedger]
                   .sort((a, b) => b.createdAt - a.createdAt)
                   .map((e) => (
                     <div
