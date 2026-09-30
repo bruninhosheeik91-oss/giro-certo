@@ -350,6 +350,34 @@ export type Database = {
           updated_at?: string;
         }
       >;
+      subscriptions: Table<
+        {
+          user_id: string;
+          status: 'trialing' | 'active' | 'past_due' | 'expired' | 'canceled';
+          plan: 'trial' | 'monthly' | 'annual';
+          trial_started_at: string;
+          trial_ends_at: string;
+          current_period_end: string | null;
+          provider: 'google_play' | 'apple' | null;
+          product_id: string | null;
+          purchase_token: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          user_id: string;
+          status?: 'trialing' | 'active' | 'past_due' | 'expired' | 'canceled';
+          plan?: 'trial' | 'monthly' | 'annual';
+          trial_started_at?: string;
+          trial_ends_at?: string;
+          current_period_end?: string | null;
+          provider?: 'google_play' | 'apple' | null;
+          product_id?: string | null;
+          purchase_token?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
       registered_apps: Table<
         {
           id: string;
