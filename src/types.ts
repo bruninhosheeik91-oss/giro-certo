@@ -277,12 +277,26 @@ export type MaintenanceReserveEntryType = 'deposito' | 'resgate' | 'ajuste';
 
 export interface MaintenanceReserveEntry {
   id: string;
+  reserveId?: string;
+  reserveName?: string;
+  reserveCategory?: 'manutencao' | 'emergencia' | 'impostos' | 'veiculo' | 'outro';
+  institution?: string;
+  goalAmount?: number;
+  isPrimary?: boolean;
   type: MaintenanceReserveEntryType;
   amount: number; // Positivo para depósito/resgate; ajuste pode ser negativo
   date: string; // YYYY-MM-DD
   description?: string;
   createdAt: number;
   updatedAt?: number;
+}
+
+export interface FinancialReserveInput {
+  name: string;
+  category: NonNullable<MaintenanceReserveEntry['reserveCategory']>;
+  institution?: string;
+  goalAmount?: number;
+  isPrimary?: boolean;
 }
 
 export interface FuelConsumptionCycle {

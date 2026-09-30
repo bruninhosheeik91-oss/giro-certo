@@ -286,9 +286,16 @@ export function normalizeAppSnapshot(snapshot: AppSnapshot, userId: string | nul
       : undefined,
   })) as Transaction[];
 
-  const reserve = snapshot.maintenanceReserve.map((entry) => ({
+  const defaultReserveId = userId
+    ? mapId('default-financial-reserve', userId, 'financial_reserve')
+    : 'default-financial-reserve';
+  const reserve = snapshot.maintenanceReserve.map((entry, index) => ({
     ...entry,
     id: mapEntityId(entry.id, 'reserve'),
+    reserveId: entry.reserveId ?? defaultReserveId,
+    reserveName: entry.reserveName ?? 'Manutenção do veículo',
+    reserveCategory: entry.reserveCategory ?? ('manutencao' as const),
+    isPrimary: entry.isPrimary ?? index === 0,
     createdAt: entry.createdAt ?? epochForDate(entry.date),
     updatedAt: entry.updatedAt ?? entry.createdAt ?? epochForDate(entry.date),
   }));

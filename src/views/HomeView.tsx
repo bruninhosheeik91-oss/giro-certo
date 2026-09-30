@@ -444,7 +444,7 @@ export const HomeView: React.FC = () => {
         </div>
       </button>
 
-      {/* Requirement 7: Reserva para Manutenção (Cofrinho) */}
+      {/* Reservas financeiras */}
       <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950/30 border border-slate-800 space-y-3 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -453,10 +453,10 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                Reserva para Manutenção
+                Reservas Financeiras
               </h3>
               <p className="text-[10px] text-slate-400">
-                Poupança preventiva sugerida por KM rodado
+                Organize valores por objetivo e banco
               </p>
             </div>
           </div>
@@ -476,7 +476,7 @@ export const HomeView: React.FC = () => {
           </div>
           <div>
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Guardado no Cofrinho
+              Total Reservado
             </span>
             <span className="text-sm font-bold text-teal-400 font-mono">
               {formatBRL(maintenanceReserveBalance)}
@@ -490,7 +490,7 @@ export const HomeView: React.FC = () => {
             className="w-full py-2 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
             <PiggyBank className="w-3.5 h-3.5" />
-            <span>Abrir Cofrinho (Guardar / Resgatar)</span>
+            <span>Gerenciar Reservas</span>
           </button>
         </div>
       </div>
