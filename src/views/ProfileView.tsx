@@ -18,6 +18,7 @@ import {
 import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
+import { AchievementsCard } from '../components/AchievementsCard';
 import {
   getCoachVoicePreferences,
   listCoachVoices,
@@ -540,6 +541,8 @@ export const ProfileView: React.FC = () => {
       </div>
 
       {/* Notification Preferences */}
+      <AchievementsCard />
+
       <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-slate-400" />
