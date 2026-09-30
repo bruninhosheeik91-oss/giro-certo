@@ -26,7 +26,7 @@ import {
   Volume2,
   Sparkles,
 } from 'lucide-react';
-import { showGoalNotification, speakGoalCoach } from '../lib/nativeCoach';
+import { getCoachVoicePreferences, showGoalNotification, speakGoalCoach } from '../lib/nativeCoach';
 
 const MONTH_NAMES = [
   'Jan',
@@ -124,6 +124,28 @@ export const HomeView: React.FC = () => {
   const speakCoachMessage = () => {
     void speakGoalCoach(`${goalCoach.title}. ${goalCoach.message}`);
   };
+
+  useEffect(() => {
+    const preferences = getCoachVoicePreferences();
+    if (!preferences.greetingEnabled || activeShift || periodState !== 'current') return;
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+    const key = `giro_certo_spoken_greeting_${today}`;
+    if (localStorage.getItem(key)) return;
+    const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+    const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
+    const encouragement = targetRemaining <= 0
+      ? `Parabéns! Você alcançou sua meta mensal. Continue cuidando bem dos seus resultados.`
+      : paceDifference >= 0
+        ? `Você está no ritmo certo e já alcançou ${formatPercent(monthSummary.progressoMeta)} da sua meta. Continue firme, porque cada giro conta!`
+        : `Não desista da sua meta. Uma média de ${formatBRL(dailyRequired)} por dia pode colocar você novamente no caminho certo.`;
+    const timer = window.setTimeout(() => {
+      void speakGoalCoach(`${greeting}, ${firstName}! ${encouragement}`)
+        .then(() => localStorage.setItem(key, 'spoken'))
+        .catch(() => undefined);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [activeShift, dailyRequired, monthSummary.progressoMeta, paceDifference, periodState, targetRemaining, userProfile.name]);
 
   useEffect(() => {
     if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current') return;
