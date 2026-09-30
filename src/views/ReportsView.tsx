@@ -1,17 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { ANNUAL_SUMMARY_MOCK } from '../data/mockData';
 import {
   formatBRL,
   formatPercent,
   filterTransactionsByPeriod,
   calculatePeriodSummary,
+  calculateAnnualSummaries,
 } from '../utils/calculations';
 import { Award, Trophy } from 'lucide-react';
 import { FuelConsumptionView } from '../components/FuelConsumptionView';
 
 export const ReportsView: React.FC = () => {
-  const { transactions, selectedMonth, registeredApps } = useApp();
+  const { transactions, shifts, selectedMonth, registeredApps, userProfile } = useApp();
   const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual' | 'consumo'>('mensal');
   const [periodFilter, setPeriodFilter] = useState<'hoje' | 'semana' | 'mes' | 'ano'>('mes');
 
@@ -26,10 +26,56 @@ export const ReportsView: React.FC = () => {
     );
   }, [transactions, periodFilter, selectedMonth]);
 
+  const filteredShifts = useMemo(() => {
+    const allowedDates = new Set(
+      filterTransactionsByPeriod(
+        shifts.map((shift) => ({
+          id: shift.id,
+          type: 'outra_despesa' as const,
+          category: 'Outra' as const,
+          date: shift.date,
+          time: shift.startTime,
+          amount: 0,
+          createdAt: shift.createdAt || 0,
+        })),
+        periodFilter,
+        undefined,
+        undefined,
+        `${selectedMonth}-15`,
+      ).map((item) => item.date),
+    );
+    return shifts.filter((shift) => shift.status === 'completed' && allowedDates.has(shift.date));
+  }, [shifts, periodFilter, selectedMonth]);
+
   // Unified period summary (app stats sourced from single calculation function)
   const periodSummary = useMemo(() => {
-    return calculatePeriodSummary(filteredTxs, [], 5400, 0.12);
-  }, [filteredTxs]);
+    return calculatePeriodSummary(
+      filteredTxs,
+      filteredShifts,
+      userProfile.monthlyGoal,
+      userProfile.maintenanceReservePerKm,
+    );
+  }, [filteredTxs, filteredShifts, userProfile]);
+
+  const annualSummaries = useMemo(
+    () =>
+      calculateAnnualSummaries(
+        transactions,
+        shifts,
+        userProfile.monthlyGoal,
+        userProfile.maintenanceReservePerKm,
+      ),
+    [transactions, shifts, userProfile],
+  );
+  const annualGrowth = useMemo(() => {
+    if (annualSummaries.length < 2) return null;
+    const [current, previous] = annualSummaries;
+    if (previous.lucroDisponivel === 0) return null;
+    return (
+      ((current.lucroDisponivel - previous.lucroDisponivel) / Math.abs(previous.lucroDisponivel)) *
+      100
+    );
+  }, [annualSummaries]);
 
   // App color lookup (presentation-only; totals come from periodSummary.appStats)
   const appStats = useMemo(() => {
@@ -292,27 +338,40 @@ export const ReportsView: React.FC = () => {
       {/* ================= 3. COMPARATIVO ANUAL (Requirement 9) ================= */}
       {viewMode === 'anual' && (
         <div className="space-y-4 animate-in fade-in">
-          {/* Annual Highlights Banner */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border border-purple-500/30 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <Award className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">
-                  Crescimento Anual Consolidado
-                </span>
-                <h3 className="text-base font-extrabold text-white">+14,8% em 2026 vs 2025</h3>
-              </div>
+          {annualSummaries.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
+              <Award className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+              <h3 className="text-sm font-bold text-white">Nenhum histórico disponível</h3>
+              <p className="mt-1 text-xs text-slate-400">
+                Seus comparativos aparecerão após os primeiros lançamentos ou jornadas.
+              </p>
             </div>
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Alta Lucratividade
-            </span>
-          </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border border-purple-500/30 flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">
+                    Crescimento Anual Consolidado
+                  </span>
+                  <h3 className="text-base font-extrabold text-white">
+                    {annualGrowth === null
+                      ? `Histórico de ${annualSummaries[0].year} em construção`
+                      : `${annualGrowth >= 0 ? '+' : ''}${formatPercent(annualGrowth)} em ${annualSummaries[0].year} vs ${annualSummaries[1].year}`}
+                  </h3>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Dados reais
+              </span>
+            </div>
+          )}
 
           {/* Annual Comparison Cards */}
           <div className="space-y-3">
-            {ANNUAL_SUMMARY_MOCK.map((yr) => (
+            {annualSummaries.map((yr, index) => (
               <div
                 key={yr.year}
                 className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md hover:border-slate-700 transition-all"
@@ -322,7 +381,7 @@ export const ReportsView: React.FC = () => {
                     <span className="text-base font-extrabold text-white font-mono">
                       Ano {yr.year}
                     </span>
-                    {yr.year === '2026' && (
+                    {index === 0 && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         Ano Atual
                       </span>
