@@ -116,7 +116,6 @@ export const PayablesModal: React.FC = () => {
   const {
     isPayablesModalOpen,
     closePayablesModal,
-    selectedMonth,
     financialCommitments,
     payableInstallments,
     payablesSummary,
@@ -153,28 +152,22 @@ export const PayablesModal: React.FC = () => {
     ? (commitmentsById.get(selectedCommitmentId) ?? null)
     : null;
 
-  const listInstallments = useMemo(() => {
-    return payableInstallments
-      .filter((installment) => {
-        const commitment = commitmentsById.get(installment.commitmentId);
-        if (!commitment) return false;
-        const paid = isInstallmentPaid(installment, transactions);
-        const paidMonth =
-          transactions
-            .find((transaction) => transaction.id === installment.transactionId)
-            ?.date.slice(0, 7) ?? installment.paidAt?.slice(0, 7);
-        const dueInMonth = installment.referenceMonth === selectedMonth;
-        const overdue =
-          commitment.status === 'ativo' &&
-          deriveInstallmentStatus(installment, transactions, today) === 'atrasada';
+  const visibleCommitments = useMemo(() => {
+    return financialCommitments
+      .filter((commitment) => {
+        const progress = calculateCommitmentProgress(commitment, payableInstallments, transactions);
+        const fullyPaid =
+          !progress.isOpenEnded &&
+          progress.totalInstallments > 0 &&
+          progress.paidInstallments >= progress.totalInstallments;
         if (filter === 'abertas') {
-          return commitment.status === 'ativo' && !paid && (dueInMonth || overdue);
+          return !fullyPaid && !['cancelado', 'concluido'].includes(commitment.status);
         }
-        if (filter === 'pagas') return paid && paidMonth === selectedMonth;
-        return dueInMonth || paidMonth === selectedMonth;
+        if (filter === 'pagas') return fullyPaid || commitment.status === 'concluido';
+        return true;
       })
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [commitmentsById, filter, payableInstallments, selectedMonth, today, transactions]);
+      .sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
+  }, [filter, financialCommitments, payableInstallments, transactions]);
 
   if (!isPayablesModalOpen) return null;
 
@@ -449,7 +442,7 @@ export const PayablesModal: React.FC = () => {
         </button>
       </div>
 
-      {listInstallments.length === 0 ? (
+      {visibleCommitments.length === 0 ? (
         <div className="py-12 px-5 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/40">
           <ReceiptText className="w-10 h-10 mx-auto text-slate-600 mb-2" />
           <p className="text-sm font-semibold text-slate-300">
@@ -472,15 +465,23 @@ export const PayablesModal: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {listInstallments.map((installment) => {
-            const commitment = commitmentsById.get(installment.commitmentId);
-            if (!commitment) return null;
-            const status = deriveInstallmentStatus(installment, transactions, today);
+          {visibleCommitments.map((commitment) => {
+            const related = payableInstallments
+              .filter((installment) => installment.commitmentId === commitment.id)
+              .sort((a, b) => a.number - b.number);
+            const progress = calculateCommitmentProgress(commitment, related, transactions);
+            const nextInstallment = related.find(
+              (installment) => !isInstallmentPaid(installment, transactions),
+            );
+            const status = nextInstallment
+              ? deriveInstallmentStatus(nextInstallment, transactions, today)
+              : 'paga';
             return (
               <button
-                key={installment.id}
+                key={commitment.id}
                 type="button"
                 onClick={() => openDetail(commitment.id)}
+                aria-label={`Abrir conta ${commitment.title}`}
                 className="w-full p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-left flex items-center justify-between gap-3 transition-colors"
               >
                 <div className="min-w-0">
@@ -495,21 +496,19 @@ export const PayablesModal: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    {commitment.type === 'conta_unica'
-                      ? TYPE_LABELS[commitment.type]
-                      : `Parcela ${installment.number}${commitment.totalInstallments ? ` de ${commitment.totalInstallments}` : ''}`}{' '}
-                    · vence {formatDisplayDate(installment.dueDate)}
+                    {progress.isOpenEnded
+                      ? `${progress.paidInstallments} parcelas pagas`
+                      : `${progress.paidInstallments} de ${progress.totalInstallments} parcelas pagas`}
+                    {nextInstallment
+                      ? ` · próxima ${formatDisplayDate(nextInstallment.dueDate)}`
+                      : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span
                     className={`text-sm font-bold font-mono ${status === 'paga' ? 'text-emerald-400' : 'text-slate-200'}`}
                   >
-                    {formatBRL(
-                      status === 'paga'
-                        ? getInstallmentPaidAmount(installment, transactions)
-                        : installment.expectedAmount,
-                    )}
+                    {formatBRL(nextInstallment?.expectedAmount ?? progress.totalPaid)}
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-500" />
                 </div>
