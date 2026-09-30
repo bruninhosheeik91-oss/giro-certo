@@ -213,7 +213,9 @@ export const HomeView: React.FC = () => {
               Lucro / Hora
             </span>
             <span className="text-xs font-bold text-emerald-400 font-mono">
-              {formatBRL(monthSummary.lucroPorHora)}/h
+              {monthSummary.hourlyMetricsReady
+                ? `${formatBRL(monthSummary.lucroPorHora)}/h`
+                : 'Em cálculo'}
             </span>
           </div>
         </div>
@@ -365,15 +367,25 @@ export const HomeView: React.FC = () => {
         {/* Daily Target & Projection Row */}
         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-center">
           <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Dias após hoje</span>
+            <span className="text-[10px] text-slate-400 block uppercase">Prazo da Meta</span>
             <span className="text-xs font-bold text-slate-200 font-mono">
-              {daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'}
+              {periodState === 'past'
+                ? 'Encerrado'
+                : periodState === 'current' && daysRemaining === 0
+                  ? 'Encerra hoje'
+                  : `${daysRemaining} ${daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`}
             </span>
           </div>
           <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Necessário / Dia</span>
+            <span className="text-[10px] text-slate-400 block uppercase">
+              {periodState === 'current' && daysRemaining === 0
+                ? 'Meta Mensal'
+                : 'Média Necessária'}
+            </span>
             <span className="text-xs font-bold text-blue-400 font-mono">
-              {formatBRL(dailyRequired)}/dia
+              {periodState === 'current' && daysRemaining === 0
+                ? formatBRL(userProfile.monthlyGoal)
+                : `${formatBRL(dailyRequired)}/dia`}
             </span>
           </div>
           <div className="bg-slate-950/50 rounded-lg p-2">
@@ -513,9 +525,15 @@ export const HomeView: React.FC = () => {
             <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <p className="text-base font-bold text-emerald-400 font-mono">
-            {formatBRL(monthSummary.ganhoPorHora)}/h
+            {monthSummary.hourlyMetricsReady
+              ? `${formatBRL(monthSummary.ganhoPorHora)}/h`
+              : 'Em cálculo'}
           </p>
-          <span className="text-[10px] text-slate-500">Bruto faturado / hora</span>
+          <span className="text-[10px] text-slate-500">
+            {monthSummary.hourlyMetricsReady
+              ? 'Bruto faturado / hora'
+              : 'Disponível após 1h trabalhada'}
+          </span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">

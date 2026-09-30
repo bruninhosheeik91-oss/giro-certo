@@ -229,6 +229,7 @@ export interface PeriodSummary {
   lucroDisponivel: number; // Lucro após despesas - reserva para manutenção
   lucroLiquido: number; // Sinônimo de lucro após despesas
   horasTrabalhadas: number;
+  hourlyMetricsReady: boolean; // Evita projetar ganho/hora com amostras menores que 1 hora
   quilometrosRodados: number;
   ganhoPorHora: number;
   lucroPorHora: number;

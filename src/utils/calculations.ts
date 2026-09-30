@@ -321,8 +321,11 @@ export function calculatePeriodSummary(
   const lucroLiquido = lucroAposDespesas;
 
   // Key performance indicators
-  const ganhoPorHora = safeDivide(ganhoBruto, horasTrabalhadas);
-  const lucroPorHora = safeDivide(lucroDisponivel, horasTrabalhadas);
+  // Uma fração de poucos minutos gera projeções absurdas (ex.: R$ 157 em 1 min = R$ 9.450/h).
+  // Só consolidamos a métrica após ao menos uma hora efetivamente trabalhada no período.
+  const hourlyMetricsReady = horasTrabalhadas >= 1;
+  const ganhoPorHora = hourlyMetricsReady ? safeDivide(ganhoBruto, horasTrabalhadas) : 0;
+  const lucroPorHora = hourlyMetricsReady ? safeDivide(lucroDisponivel, horasTrabalhadas) : 0;
   const ganhoPorKm = safeDivide(ganhoBruto, quilometrosRodados);
   const lucroPorKm = safeDivide(lucroDisponivel, quilometrosRodados);
   const custoPorKm = safeDivide(totalDespesas, quilometrosRodados);
@@ -385,6 +388,7 @@ export function calculatePeriodSummary(
     lucroDisponivel,
     lucroLiquido,
     horasTrabalhadas,
+    hourlyMetricsReady,
     quilometrosRodados,
     ganhoPorHora,
     lucroPorHora,

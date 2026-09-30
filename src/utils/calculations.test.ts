@@ -6,6 +6,7 @@ import {
   calculateFuelConsumption,
   calculateAnnualSummaries,
   calculateMonthlyGoalProjection,
+  calculatePeriodSummary,
 } from './calculations';
 import { FuelTransaction, Shift, Transaction } from '../types';
 
@@ -69,6 +70,51 @@ describe('calculateMonthlyGoalProjection', () => {
     expect(future.status).toBe('Planejada');
     expect(future.daysRemaining).toBe(31);
     expect(future.dailyRequired).toBe(100);
+  });
+});
+
+describe('hourly metrics reliability', () => {
+  const gain = {
+    id: 'gain-1',
+    type: 'ganho',
+    gainType: 'total_periodo',
+    app: 'Uber',
+    baseAmount: 157.5,
+    amount: 157.5,
+    ridesCount: 1,
+    date: '2026-09-30',
+    time: '12:00',
+    createdAt: 1,
+  } as Transaction;
+  const shift = (hours: number): Shift => ({
+    id: 'shift-1',
+    date: '2026-09-30',
+    startTime: '12:00',
+    endTime: '13:00',
+    startKm: 100,
+    endKm: 102,
+    pauses: [],
+    totalPauseMinutes: 0,
+    totalWorkHours: hours,
+    totalElapsedHours: hours,
+    totalKm: 2,
+    accumulatedGain: 157.5,
+    accumulatedExpense: 0,
+    status: 'completed',
+    activeApps: ['Uber'],
+  });
+
+  it('does not extrapolate an hourly rate from only one minute', () => {
+    const summary = calculatePeriodSummary([gain], [shift(1 / 60)], 1500, 0.12);
+    expect(summary.hourlyMetricsReady).toBe(false);
+    expect(summary.ganhoPorHora).toBe(0);
+    expect(summary.lucroPorHora).toBe(0);
+  });
+
+  it('calculates the hourly rate after one worked hour', () => {
+    const summary = calculatePeriodSummary([gain], [shift(1)], 1500, 0.12);
+    expect(summary.hourlyMetricsReady).toBe(true);
+    expect(summary.ganhoPorHora).toBe(157.5);
   });
 });
 
