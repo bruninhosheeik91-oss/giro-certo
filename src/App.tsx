@@ -18,6 +18,7 @@ import { ProfileView } from './views/ProfileView';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bike, CheckCircle2, Plus } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
+import { SubscriptionAccessGate } from './components/SubscriptionAccessGate';
 
 const MainAppContent: React.FC = () => {
   const { activeTab, toastMessage, ready, mode, vehicles, openVehiclesModal } = useApp();
@@ -121,9 +122,11 @@ const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <SessionProvider>
-      <AppProvider>
-        <MainAppContent />
-      </AppProvider>
+      <SubscriptionAccessGate>
+        <AppProvider>
+          <MainAppContent />
+        </AppProvider>
+      </SubscriptionAccessGate>
     </SessionProvider>
   );
 }
