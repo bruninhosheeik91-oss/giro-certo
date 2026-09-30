@@ -587,6 +587,14 @@ export const ProfileView: React.FC = () => {
                 </label>
               </div>
               <button type="button" onClick={() => void speakGoalCoach('Olá! Eu sou o seu coach do Giro Certo. Vamos juntos alcançar a sua meta!')} className="w-full py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold active:scale-95">Ouvir exemplo</button>
+              <label className="flex items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
+                <div>
+                  <span className="text-slate-200 font-medium block">Saudação com voz ao abrir</span>
+                  <span className="text-[10px] text-slate-400">Uma vez por dia e fora da jornada</span>
+                </div>
+                <input type="checkbox" checked={coachVoice.greetingEnabled} onChange={() => updateCoachVoice({ greetingEnabled: !coachVoice.greetingEnabled })} className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700" />
+              </label>
+              <button type="button" onClick={() => { const hour = new Date().getHours(); const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'; const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista'; void speakGoalCoach(`${greeting}, ${firstName}! Não desista da sua meta. Continue firme, porque cada giro conta!`); }} className="w-full py-2 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-bold active:scale-95">Ouvir saudação agora</button>
             </div>
           )}
 
