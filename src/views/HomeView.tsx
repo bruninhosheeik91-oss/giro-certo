@@ -26,6 +26,7 @@ import {
   Volume2,
   Sparkles,
 } from 'lucide-react';
+import { showGoalNotification, speakGoalCoach } from '../lib/nativeCoach';
 
 const MONTH_NAMES = [
   'Jan',
@@ -121,22 +122,17 @@ export const HomeView: React.FC = () => {
         : 'bg-slate-800/60 border-slate-700 text-slate-300';
 
   const speakCoachMessage = () => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const speech = new SpeechSynthesisUtterance(`${goalCoach.title}. ${goalCoach.message}`);
-    speech.lang = 'pt-BR';
-    speech.rate = 0.95;
-    window.speechSynthesis.speak(speech);
+    void speakGoalCoach(`${goalCoach.title}. ${goalCoach.message}`);
   };
 
   useEffect(() => {
     if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current') return;
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const today = new Date().toISOString().slice(0, 10);
     const key = `giro_certo_goal_coach_${today}_${goalCoach.title}`;
     if (localStorage.getItem(key)) return;
-    new Notification(`Giro Certo · ${goalCoach.title}`, { body: goalCoach.message, icon: '/icons/icon-192.png' });
-    localStorage.setItem(key, 'sent');
+    void showGoalNotification(`Giro Certo · ${goalCoach.title}`, goalCoach.message)
+      .then(() => localStorage.setItem(key, 'sent'))
+      .catch(() => undefined);
   }, [goalCoach, periodState, userProfile.notificationPreferences.dailyGoalAlert]);
 
   const handleSaveGoal = () => {
