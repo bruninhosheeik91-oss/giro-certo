@@ -20,6 +20,7 @@ import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
 import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
+import { AdminOverviewCard } from '../components/AdminOverviewCard';
 import {
   getCoachVoicePreferences,
   listCoachVoices,
@@ -542,6 +543,7 @@ export const ProfileView: React.FC = () => {
       </div>
 
       <SubscriptionStatusCard />
+      <AdminOverviewCard />
 
       {/* Notification Preferences */}
       <AchievementsCard />

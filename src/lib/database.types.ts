@@ -431,6 +431,14 @@ export type Database = {
         Args: { p_table: string; p_id: string };
         Returns: boolean;
       };
+      is_giro_certo_admin: {
+        Args: Record<never, never>;
+        Returns: boolean;
+      };
+      get_admin_overview: {
+        Args: Record<never, never>;
+        Returns: Json;
+      };
     };
     Enums: {
       transaction_type: 'ganho' | 'abastecimento' | 'manutencao' | 'outra_despesa';
