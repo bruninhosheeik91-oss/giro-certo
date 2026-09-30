@@ -99,7 +99,11 @@ export const ProfileView: React.FC = () => {
     setIsEditingProfile(false);
   };
 
-  const handleToggleNotification = (key: keyof typeof userProfile.notificationPreferences) => {
+  const handleToggleNotification = async (key: keyof typeof userProfile.notificationPreferences) => {
+    const enabling = !userProfile.notificationPreferences[key];
+    if (key === 'dailyGoalAlert' && enabling && 'Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
     updateUserProfile({
       notificationPreferences: {
         ...userProfile.notificationPreferences,
@@ -527,9 +531,9 @@ export const ProfileView: React.FC = () => {
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between text-xs">
             <div>
-              <span className="text-slate-200 font-medium block">Alerta de Meta Diária</span>
+              <span className="text-slate-200 font-medium block">Coach de Meta Mensal</span>
               <span className="text-[10px] text-slate-400">
-                Aviso quando estiver próximo de atingir a meta
+                Incentivos e alertas conforme o ritmo do mês
               </span>
             </div>
             <input

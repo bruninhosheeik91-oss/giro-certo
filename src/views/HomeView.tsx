@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   formatBRL,
@@ -23,6 +23,8 @@ import {
   Calculator,
   Edit2,
   CalendarClock,
+  Volume2,
+  Sparkles,
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -86,6 +88,56 @@ export const HomeView: React.FC = () => {
     periodState,
     status: goalStatus,
   } = goalProjection;
+
+  const goalCoach = useMemo(() => {
+    const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
+    if (periodState === 'past') {
+      return { tone: 'slate', title: 'Mês encerrado', message: `O resultado final foi ${formatBRL(monthSummary.lucroDisponivel)}. Use este histórico para planejar a próxima meta.` };
+    }
+    if (periodState === 'future') {
+      return { tone: 'blue', title: 'Planejamento pronto', message: `Sua meta de ${formatBRL(userProfile.monthlyGoal)} será acompanhada durante os ${daysInMonth} dias deste mês.` };
+    }
+    if (targetRemaining <= 0) {
+      return { tone: 'emerald', title: `Meta alcançada, ${firstName}!`, message: `Você superou sua meta em ${formatBRL(Math.abs(targetRemaining))}. Que tal direcionar parte do resultado para suas Reservas Financeiras?` };
+    }
+    if (monthSummary.progressoMeta >= 85) {
+      return { tone: 'emerald', title: 'Falta muito pouco!', message: `Você já alcançou ${formatPercent(monthSummary.progressoMeta)} da meta. Faltam apenas ${formatBRL(targetRemaining)} para concluir.` };
+    }
+    if (paceDifference >= 0) {
+      return { tone: 'blue', title: 'Você está no ritmo certo', message: `Seu resultado está ${formatBRL(paceDifference)} acima do ritmo esperado. Continue assim!` };
+    }
+    if (daysRemaining === 0) {
+      return { tone: 'amber', title: 'Último dia do mês', message: `Ainda faltam ${formatBRL(targetRemaining)} para a meta. Faça o melhor resultado possível hoje, sem aceitar corridas que dão prejuízo.` };
+    }
+    return { tone: 'amber', title: 'Vamos recuperar o ritmo', message: `Você está ${formatBRL(Math.abs(paceDifference))} abaixo do planejado. Uma média de ${formatBRL(dailyRequired)} por dia coloca você novamente no caminho da meta.` };
+  }, [dailyRequired, daysInMonth, daysRemaining, monthSummary.lucroDisponivel, monthSummary.progressoMeta, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal, userProfile.name]);
+
+  const coachToneClass = goalCoach.tone === 'emerald'
+    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300'
+    : goalCoach.tone === 'amber'
+      ? 'bg-amber-500/10 border-amber-500/25 text-amber-300'
+      : goalCoach.tone === 'blue'
+        ? 'bg-blue-500/10 border-blue-500/25 text-blue-300'
+        : 'bg-slate-800/60 border-slate-700 text-slate-300';
+
+  const speakCoachMessage = () => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const speech = new SpeechSynthesisUtterance(`${goalCoach.title}. ${goalCoach.message}`);
+    speech.lang = 'pt-BR';
+    speech.rate = 0.95;
+    window.speechSynthesis.speak(speech);
+  };
+
+  useEffect(() => {
+    if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current') return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `giro_certo_goal_coach_${today}_${goalCoach.title}`;
+    if (localStorage.getItem(key)) return;
+    new Notification(`Giro Certo · ${goalCoach.title}`, { body: goalCoach.message, icon: '/icons/icon-192.png' });
+    localStorage.setItem(key, 'sent');
+  }, [goalCoach, periodState, userProfile.notificationPreferences.dailyGoalAlert]);
 
   const handleSaveGoal = () => {
     const val = parseDecimalInput(newGoalInput);
@@ -340,28 +392,22 @@ export const HomeView: React.FC = () => {
           />
         </div>
 
-        <div className="px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-slate-300">
-          {periodState === 'current' ? (
-            <>
-              Hoje é <strong className="capitalize text-white">{weekdayLabel}</strong>, dia{' '}
-              <strong className="text-white">{dayOfMonth}</strong> de {daysInMonth}. Até hoje, o
-              ritmo esperado era{' '}
-              <strong className="text-blue-300">{formatBRL(expectedProfitToDate)}</strong>. Você
-              está{' '}
-              <strong className={paceDifference >= 0 ? 'text-emerald-400' : 'text-amber-300'}>
-                {paceDifference >= 0
-                  ? `${formatBRL(paceDifference)} acima`
-                  : `${formatBRL(Math.abs(paceDifference))} abaixo`}
-              </strong>{' '}
-              desse ritmo.
-            </>
-          ) : periodState === 'past' ? (
-            <>
-              Este mês já encerrou. O resultado final foi {formatBRL(monthSummary.lucroDisponivel)}.
-            </>
-          ) : (
-            <>Planejamento futuro: a meta será distribuída pelos {daysInMonth} dias do mês.</>
-          )}
+        <div className={`px-3 py-3 rounded-xl border ${coachToneClass}`}>
+          <div className="flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <strong className="text-xs text-white block mb-1">{goalCoach.title}</strong>
+              <p className="text-[11px] leading-relaxed text-slate-300">{goalCoach.message}</p>
+              {periodState === 'current' && (
+                <p className="text-[10px] text-slate-500 mt-1.5 capitalize">
+                  {weekdayLabel}, dia {dayOfMonth} de {daysInMonth} · ritmo esperado até hoje: {formatBRL(expectedProfitToDate)}
+                </p>
+              )}
+            </div>
+            <button type="button" onClick={speakCoachMessage} title="Ouvir mensagem" aria-label="Ouvir mensagem de incentivo" className="p-1.5 rounded-lg bg-slate-950/40 hover:bg-slate-950 text-current active:scale-95">
+              <Volume2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Daily Target & Projection Row */}
