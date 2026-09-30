@@ -439,6 +439,10 @@ export type Database = {
         Args: Record<never, never>;
         Returns: Json;
       };
+      delete_my_account: {
+        Args: { p_confirmation: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       transaction_type: 'ganho' | 'abastecimento' | 'manutencao' | 'outra_despesa';

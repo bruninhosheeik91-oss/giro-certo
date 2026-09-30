@@ -14,6 +14,7 @@ import {
   WalletCards,
   Camera,
   Trash2,
+  ShieldCheck,
 } from 'lucide-react';
 import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
@@ -21,6 +22,7 @@ import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
 import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
 import { AdminOverviewCard } from '../components/AdminOverviewCard';
+import { AccountPrivacyModal } from '../components/AccountPrivacyModal';
 import {
   getCoachVoicePreferences,
   listCoachVoices,
@@ -50,6 +52,7 @@ export const ProfileView: React.FC = () => {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [coachVoices, setCoachVoices] = useState<Array<{ id: string; name: string }>>([]);
   const [coachVoice, setCoachVoice] = useState(getCoachVoicePreferences);
+  const [accountPrivacyOpen, setAccountPrivacyOpen] = useState(false);
 
   useEffect(() => {
     void listCoachVoices().then(setCoachVoices).catch(() => setCoachVoices([]));
@@ -638,9 +641,15 @@ export const ProfileView: React.FC = () => {
       </div>
 
       <div className="divide-y divide-slate-800/70 rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <button type="button" onClick={() => setAccountPrivacyOpen(true)} className="flex w-full items-center gap-2 px-3 py-3 text-left text-[11px] text-slate-300 hover:text-white">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+          Conta e Privacidade
+          <span className="ml-auto text-slate-600">›</span>
+        </button>
         <SyncStatusRow />
         <AccountRow />
       </div>
+      <AccountPrivacyModal open={accountPrivacyOpen} onClose={() => setAccountPrivacyOpen(false)} />
     </div>
   );
 };
