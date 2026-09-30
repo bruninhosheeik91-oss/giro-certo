@@ -7,6 +7,7 @@ import {
   openFuelCycleLabel,
   parseBRLInput,
   parseDecimalInput,
+  calculateOdometerDistance,
 } from './calculations';
 import { Transaction, MaintenanceReserveEntry, OdometerRecord } from '../types';
 
@@ -19,6 +20,18 @@ describe('calculateShiftTotals', () => {
     ] as Transaction[];
     expect(calculateShiftTotals(txs, 's1')).toEqual({ gain: 100, expense: 20 });
     expect(calculateShiftTotals(txs, 's2')).toEqual({ gain: 50, expense: 0 });
+  });
+});
+
+describe('calculateOdometerDistance', () => {
+  it('uses only the two actual odometer readings', () => {
+    expect(calculateOdometerDistance(42118, 42143.5)).toBe(25.5);
+    expect(calculateOdometerDistance(42118, 42118)).toBe(0);
+  });
+
+  it('rejects regressive or invalid readings', () => {
+    expect(calculateOdometerDistance(42118, 42000)).toBe(0);
+    expect(calculateOdometerDistance(42118, Number.NaN)).toBe(0);
   });
 });
 

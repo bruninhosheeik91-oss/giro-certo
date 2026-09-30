@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatBRL, safeDivide, formatDisplayDate } from '../utils/calculations';
+import {
+  formatBRL,
+  safeDivide,
+  formatDisplayDate,
+  parseDecimalInput,
+  calculateOdometerDistance,
+} from '../utils/calculations';
 import { Play, Square, Clock, Coffee, AlertTriangle, History, Trash2 } from 'lucide-react';
 
 export const ShiftView: React.FC = () => {
@@ -62,7 +68,7 @@ export const ShiftView: React.FC = () => {
     e.preventDefault();
     setStartError(null);
 
-    const km = parseFloat(startKmInput);
+    const km = parseDecimalInput(startKmInput);
     if (isNaN(km) || km <= 0) {
       setStartError('Informe uma quilometragem inicial válida.');
       return;
@@ -86,8 +92,8 @@ export const ShiftView: React.FC = () => {
   };
 
   const handleOpenEndModal = () => {
-    const currentEstimate = (activeShift?.startKm || 0) + 120;
-    setEndKmInput(currentEstimate.toString());
+    // Nunca inventar distância: o usuário deve informar a leitura real do odômetro.
+    setEndKmInput('');
     setEndError(null);
     setIsEndModalOpen(true);
   };
@@ -96,8 +102,8 @@ export const ShiftView: React.FC = () => {
     e.preventDefault();
     setEndError(null);
 
-    const endKm = parseFloat(endKmInput);
-    if (isNaN(endKm) || !activeShift || endKm < activeShift.startKm) {
+    const endKm = parseDecimalInput(endKmInput);
+    if (!endKm || !activeShift || endKm < activeShift.startKm) {
       setEndError(
         `A quilometragem final não pode ser menor que a inicial (${activeShift?.startKm.toLocaleString('pt-BR')} km).`,
       );
@@ -173,6 +179,7 @@ export const ShiftView: React.FC = () => {
               <div className="relative">
                 <input
                   type="number"
+                  step="0.1"
                   required
                   value={startKmInput}
                   onChange={(e) => setStartKmInput(e.target.value)}
@@ -409,11 +416,18 @@ export const ShiftView: React.FC = () => {
                 </label>
                 <input
                   type="number"
+                  min={activeShift.startKm}
+                  step="0.1"
                   required
                   value={endKmInput}
                   onChange={(e) => setEndKmInput(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500"
                 />
+                <p className="mt-1.5 text-[11px] text-slate-400">
+                  {parseDecimalInput(endKmInput) >= activeShift.startKm
+                    ? `Distância da jornada: ${calculateOdometerDistance(activeShift.startKm, parseDecimalInput(endKmInput)).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`
+                    : 'Digite exatamente o número exibido no odômetro do veículo.'}
+                </p>
               </div>
 
               <div>

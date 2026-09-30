@@ -52,6 +52,7 @@ import { getSupabaseClient } from '../lib/auth';
 import { activePauseId } from '../repositories/mappers';
 import {
   calculatePeriodSummary,
+  calculateOdometerDistance,
   calculateShiftTotals,
   calculateReserveBalance,
   reconcileVehicleOdometer,
@@ -273,13 +274,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeTab, setActiveTab] = useState<
     'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil'
   >('inicio');
-  const [selectedMonth, setSelectedMonthState] = useState<string>(() => initialSnapshot.selectedMonth);
+  const [selectedMonth, setSelectedMonthState] = useState<string>(
+    () => initialSnapshot.selectedMonth,
+  );
   const [userSettings, setUserSettings] = useState<UserSettings>(() => initialSnapshot.settings);
   const [vehicles, setVehicles] = useState<UserVehicle[]>(() => initialSnapshot.vehicles);
   const [registeredApps, setRegisteredApps] = useState<RegisteredApp[]>(
     () => initialSnapshot.registeredApps,
   );
-  const [transactions, setTransactions] = useState<Transaction[]>(() => initialSnapshot.transactions);
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    () => initialSnapshot.transactions,
+  );
   const [financialState, setFinancialState] = useState<FinancialState>(
     () => initialSnapshot.financialState,
   );
@@ -310,7 +315,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const financialCommitments = financialState.commitments;
   const payableInstallments = financialState.installments;
   const activeVehicle = useMemo<UserVehicle>(
-    () => vehicles.find((vehicle) => vehicle.isActive) || vehicles[0] || initialSnapshot.vehicles[0]!,
+    () =>
+      vehicles.find((vehicle) => vehicle.isActive) || vehicles[0] || initialSnapshot.vehicles[0]!,
     [initialSnapshot.vehicles, vehicles],
   );
 
@@ -690,7 +696,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const throughMonth = addMonthsClamped(`${selectedMonth}-01`, 12).slice(0, 7);
     setFinancialState((previous) => {
       const knownNumbers = new Set(
-        previous.installments.map((installment) => `${installment.commitmentId}:${installment.number}`),
+        previous.installments.map(
+          (installment) => `${installment.commitmentId}:${installment.number}`,
+        ),
       );
       const missing = previous.commitments
         .filter((commitment) => commitment.type === 'conta_recorrente')
@@ -780,7 +788,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ...vehicle,
             ...updates,
             odometerBaselineKm: raisedKm
-              ? Math.max(vehicle.odometerBaselineKm ?? vehicle.currentKm, updates.currentKm as number)
+              ? Math.max(
+                  vehicle.odometerBaselineKm ?? vehicle.currentKm,
+                  updates.currentKm as number,
+                )
               : vehicle.odometerBaselineKm,
             updatedAt: now,
           };
@@ -868,7 +879,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!registeredApps.some((app) => app.id === id)) return;
     const now = Date.now();
     setRegisteredApps((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, isActive: !app.isActive, updatedAt: now } : app)),
+      prev.map((app) =>
+        app.id === id ? { ...app, isActive: !app.isActive, updatedAt: now } : app,
+      ),
     );
     markMutation();
   };
@@ -928,7 +941,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!activeShift || activeShift.isPaused) return;
     const now = Date.now();
     const pauseId =
-      activeShift.pauseId ?? (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : undefined);
+      activeShift.pauseId ??
+      (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : undefined);
     setActiveShift({
       ...activeShift,
       isPaused: true,
@@ -944,7 +958,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!activeShift || (!activeShift.isPaused && !activeShift.pauseId)) return;
     const now = Date.now();
     const pauseId =
-      activeShift.pauseId ?? (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : undefined);
+      activeShift.pauseId ??
+      (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : undefined);
     if (pauseId) enqueueCloudDelete('shift_pauses', pauseId);
     const additionalPaused =
       activeShift.isPaused && activeShift.pauseStartEpoch
@@ -983,9 +998,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const totalElapsedHours = Math.max(0.05, Number((elapsedShiftSeconds / 3600).toFixed(2)));
     const totalWorkHours = Math.max(0.05, Number((elapsedWorkSeconds / 3600).toFixed(2)));
     const totalPauseMinutes = Math.round(elapsedPausedSeconds / 60);
-    const totalKm = Math.max(0, endKm - activeShift.startKm);
+    const totalKm = calculateOdometerDistance(activeShift.startKm, endKm);
 
-    const shiftedTxs = transactions.filter((transaction) => transaction.shiftId === activeShift.shiftId);
+    const shiftedTxs = transactions.filter(
+      (transaction) => transaction.shiftId === activeShift.shiftId,
+    );
     const accumulatedGain = shiftedTxs
       .filter((transaction) => transaction.type === 'ganho')
       .reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -993,15 +1010,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .filter((transaction) => transaction.type !== 'ganho')
       .reduce((sum, transaction) => sum + transaction.amount, 0);
 
-    const currentVeh = vehicles.find((vehicle) => vehicle.id === activeShift.vehicleId) || activeVehicle;
+    const currentVeh =
+      vehicles.find((vehicle) => vehicle.id === activeShift.vehicleId) || activeVehicle;
     if (endKm > (currentVeh.currentKm || 0)) {
       updateVehicle(activeShift.vehicleId, { currentKm: endKm });
     }
 
     const openPauseId =
       activeShift.isPaused && activeShift.pauseStartEpoch !== undefined
-        ? activeShift.pauseId ??
-          (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : `p-${nowEpoch}`)
+        ? (activeShift.pauseId ??
+          (cloudUserId ? activePauseId(activeShift.shiftId, cloudUserId) : `p-${nowEpoch}`))
         : undefined;
     const pauses =
       totalPauseMinutes > 0
@@ -1407,7 +1425,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const cloudId = createUuid();
         nextTransactions = nextTransactions.map((transaction) =>
           transaction.id === generatedPayment.id
-            ? ({ ...transaction, id: cloudId, createdAt: nowEpoch, updatedAt: nowEpoch } as Transaction)
+            ? ({
+                ...transaction,
+                id: cloudId,
+                createdAt: nowEpoch,
+                updatedAt: nowEpoch,
+              } as Transaction)
             : transaction,
         );
         nextFinancialState = {
@@ -1529,7 +1552,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
    */
   const removeMaintenanceReserveEntry = (id: string) => {
     setMaintenanceReserveLedger((previous) =>
-      previous.some((entry) => entry.id === id) ? previous.filter((entry) => entry.id !== id) : previous,
+      previous.some((entry) => entry.id === id)
+        ? previous.filter((entry) => entry.id !== id)
+        : previous,
     );
     enqueueCloudDelete('maintenance_reserve_entries', id);
     markMutation();
