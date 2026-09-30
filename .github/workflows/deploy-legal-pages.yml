@@ -1,0 +1,43 @@
+name: Publicar páginas legais
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - public/index.html
+      - public/privacy.html
+      - public/delete-account.html
+      - public/legal.css
+      - public/icons/**
+      - .github/workflows/deploy-legal-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: legal-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Preparar páginas públicas
+        run: |
+          mkdir -p legal-site/icons
+          cp public/index.html public/privacy.html public/delete-account.html public/legal.css legal-site/
+          cp public/icons/icon-192.png legal-site/icons/
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: legal-site
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
