@@ -134,18 +134,21 @@ export const HomeView: React.FC = () => {
     const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
     const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
     const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
+    const monthlyContext = `Sua meta mensal é ${formatBRL(userProfile.monthlyGoal)}. Até agora, você acumulou ${formatBRL(monthSummary.lucroDisponivel)}.`;
     const encouragement = targetRemaining <= 0
-      ? `Parabéns! Você alcançou sua meta mensal. Continue cuidando bem dos seus resultados.`
-      : paceDifference >= 0
-        ? `Você está no ritmo certo e já alcançou ${formatPercent(monthSummary.progressoMeta)} da sua meta. Continue firme, porque cada giro conta!`
-        : `Não desista da sua meta. Uma média de ${formatBRL(dailyRequired)} por dia pode colocar você novamente no caminho certo.`;
+      ? `${monthlyContext} Parabéns! A meta do mês foi alcançada. Continue cuidando bem dos seus resultados.`
+      : daysRemaining === 0
+        ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta mensal, e hoje é o último dia do mês. Faça o seu melhor sem aceitar corridas que dão prejuízo.`
+        : paceDifference >= 0
+          ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta do mês. Você está no ritmo certo. Continue firme, porque cada giro conta!`
+          : `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta do mês. Para chegar lá, a média necessária nos próximos ${daysRemaining} dias é de ${formatBRL(dailyRequired)} por dia. Não desista!`;
     const timer = window.setTimeout(() => {
       void speakGoalCoach(`${greeting}, ${firstName}! ${encouragement}`)
         .then(() => localStorage.setItem(key, 'spoken'))
         .catch(() => undefined);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [activeShift, dailyRequired, monthSummary.progressoMeta, paceDifference, periodState, targetRemaining, userProfile.name]);
+  }, [activeShift, dailyRequired, daysRemaining, monthSummary.lucroDisponivel, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal, userProfile.name]);
 
   useEffect(() => {
     if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current') return;
