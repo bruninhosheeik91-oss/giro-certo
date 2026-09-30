@@ -5,6 +5,7 @@ import {
   formatBRL,
   calculateFuelConsumption,
   calculateAnnualSummaries,
+  calculateMonthlyGoalProjection,
 } from './calculations';
 import { FuelTransaction, Shift, Transaction } from '../types';
 
@@ -35,6 +36,39 @@ describe('formatBRL', () => {
   it('formats BRL with pt-BR', () => {
     expect(formatBRL(0)).toContain('0,00');
     expect(formatBRL(1234.56)).toContain('1.234,56');
+  });
+});
+
+describe('calculateMonthlyGoalProjection', () => {
+  it('uses the actual day and remaining days of the selected current month', () => {
+    const result = calculateMonthlyGoalProjection('2026-09', 1000, 3000, new Date(2026, 8, 15, 12));
+    expect(result.periodState).toBe('current');
+    expect(result.daysInMonth).toBe(30);
+    expect(result.dayOfMonth).toBe(15);
+    expect(result.daysRemaining).toBe(15);
+    expect(result.actionableDays).toBe(16);
+    expect(result.dailyRequired).toBe(125);
+    expect(result.expectedProfitToDate).toBe(1500);
+    expect(result.projectedMonthProfit).toBe(2000);
+  });
+
+  it('does not invent a day remaining on the last day of the month', () => {
+    const result = calculateMonthlyGoalProjection('2026-09', 2500, 3000, new Date(2026, 8, 30, 12));
+    expect(result.daysRemaining).toBe(0);
+    expect(result.actionableDays).toBe(1);
+    expect(result.dailyRequired).toBe(500);
+  });
+
+  it('treats past and future months without using todays day number', () => {
+    const reference = new Date(2026, 8, 15, 12);
+    const past = calculateMonthlyGoalProjection('2026-08', 2800, 3000, reference);
+    const future = calculateMonthlyGoalProjection('2026-10', 0, 3100, reference);
+    expect(past.status).toBe('Mês encerrado');
+    expect(past.daysRemaining).toBe(0);
+    expect(past.projectedMonthProfit).toBe(2800);
+    expect(future.status).toBe('Planejada');
+    expect(future.daysRemaining).toBe(31);
+    expect(future.dailyRequired).toBe(100);
   });
 });
 

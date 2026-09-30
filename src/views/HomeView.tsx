@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatBRL, formatHours, formatPercent, parseDecimalInput } from '../utils/calculations';
+import {
+  formatBRL,
+  formatHours,
+  formatPercent,
+  parseDecimalInput,
+  calculateMonthlyGoalProjection,
+} from '../utils/calculations';
 import {
   TrendingUp,
   DollarSign,
@@ -62,28 +68,24 @@ export const HomeView: React.FC = () => {
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoalInput, setNewGoalInput] = useState(userProfile.monthlyGoal.toString());
 
-  // Goal projections and daily target
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonthNum = now.getMonth() + 1;
-  const daysInCurrentMonth = new Date(currentYear, currentMonthNum, 0).getDate();
-  const currentDay = now.getDate();
-  const daysRemaining = Math.max(1, daysInCurrentMonth - currentDay);
-
-  // Remaining target for the days left in the month
-  const targetRemaining = Math.max(0, userProfile.monthlyGoal - monthSummary.lucroDisponivel);
-  const dailyNeeded = targetRemaining / daysRemaining;
-
-  // Pace projection
-  const dailyPace = currentDay > 0 ? monthSummary.lucroDisponivel / currentDay : 0;
-  const projectedMonthProfit = dailyPace * daysInCurrentMonth;
-
-  let goalStatus: 'No ritmo' | 'Atenção' | 'Abaixo da meta' = 'No ritmo';
-  if (projectedMonthProfit < userProfile.monthlyGoal * 0.75) {
-    goalStatus = 'Abaixo da meta';
-  } else if (projectedMonthProfit < userProfile.monthlyGoal * 0.95) {
-    goalStatus = 'Atenção';
-  }
+  const goalProjection = calculateMonthlyGoalProjection(
+    selectedMonth,
+    monthSummary.lucroDisponivel,
+    userProfile.monthlyGoal,
+  );
+  const {
+    targetRemaining,
+    dailyRequired,
+    projectedMonthProfit,
+    daysRemaining,
+    dayOfMonth,
+    daysInMonth,
+    weekdayLabel,
+    expectedProfitToDate,
+    paceDifference,
+    periodState,
+    status: goalStatus,
+  } = goalProjection;
 
   const handleSaveGoal = () => {
     const val = parseDecimalInput(newGoalInput);
@@ -273,11 +275,15 @@ export const HomeView: React.FC = () => {
           <div className="flex items-center gap-2">
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                goalStatus === 'No ritmo'
+                goalStatus === 'Meta atingida' || goalStatus === 'No ritmo'
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  : goalStatus === 'Atenção'
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                  : goalStatus === 'Planejada'
+                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                    : goalStatus === 'Mês encerrado'
+                      ? 'bg-slate-700/40 text-slate-300 border-slate-600'
+                      : goalStatus === 'Atenção'
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
               }`}
             >
               {goalStatus}
@@ -332,22 +338,56 @@ export const HomeView: React.FC = () => {
           />
         </div>
 
+        <div className="px-3 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-slate-300">
+          {periodState === 'current' ? (
+            <>
+              Hoje é <strong className="capitalize text-white">{weekdayLabel}</strong>, dia{' '}
+              <strong className="text-white">{dayOfMonth}</strong> de {daysInMonth}. Até hoje, o
+              ritmo esperado era{' '}
+              <strong className="text-blue-300">{formatBRL(expectedProfitToDate)}</strong>. Você
+              está{' '}
+              <strong className={paceDifference >= 0 ? 'text-emerald-400' : 'text-amber-300'}>
+                {paceDifference >= 0
+                  ? `${formatBRL(paceDifference)} acima`
+                  : `${formatBRL(Math.abs(paceDifference))} abaixo`}
+              </strong>{' '}
+              desse ritmo.
+            </>
+          ) : periodState === 'past' ? (
+            <>
+              Este mês já encerrou. O resultado final foi {formatBRL(monthSummary.lucroDisponivel)}.
+            </>
+          ) : (
+            <>Planejamento futuro: a meta será distribuída pelos {daysInMonth} dias do mês.</>
+          )}
+        </div>
+
         {/* Daily Target & Projection Row */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-center">
           <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Dias Restantes</span>
-            <span className="text-xs font-bold text-slate-200 font-mono">{daysRemaining} dias</span>
-          </div>
-          <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Meta Diária</span>
-            <span className="text-xs font-bold text-blue-400 font-mono">
-              {formatBRL(dailyNeeded)}/dia
+            <span className="text-[10px] text-slate-400 block uppercase">Dias após hoje</span>
+            <span className="text-xs font-bold text-slate-200 font-mono">
+              {daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'}
             </span>
           </div>
           <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Projeção Mês</span>
+            <span className="text-[10px] text-slate-400 block uppercase">Necessário / Dia</span>
+            <span className="text-xs font-bold text-blue-400 font-mono">
+              {formatBRL(dailyRequired)}/dia
+            </span>
+          </div>
+          <div className="bg-slate-950/50 rounded-lg p-2">
+            <span className="text-[10px] text-slate-400 block uppercase">
+              Projeção de Fechamento
+            </span>
             <span className="text-xs font-bold text-emerald-400 font-mono">
               {formatBRL(projectedMonthProfit)}
+            </span>
+          </div>
+          <div className="bg-slate-950/50 rounded-lg p-2">
+            <span className="text-[10px] text-slate-400 block uppercase">Falta para a Meta</span>
+            <span className="text-xs font-bold text-amber-300 font-mono">
+              {formatBRL(targetRemaining)}
             </span>
           </div>
         </div>
