@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { parseBRLInput, formatBRLInput, formatBRL, calculateFuelConsumption } from './calculations';
-import { FuelTransaction } from '../types';
+import {
+  parseBRLInput,
+  formatBRLInput,
+  formatBRL,
+  calculateFuelConsumption,
+  calculateAnnualSummaries,
+} from './calculations';
+import { FuelTransaction, Shift, Transaction } from '../types';
 
 describe('parseBRLInput', () => {
   it('parses numbers and strings to cents precision', () => {
@@ -113,5 +119,59 @@ describe('calculateFuelConsumption', () => {
     expect(res.validCyclesCount).toBe(0);
     expect(res.openCycle).not.toBeNull();
     expect(res.openCycle?.startKm).toBe(43200);
+  });
+});
+
+describe('calculateAnnualSummaries', () => {
+  it('returns no history when the account has no real data', () => {
+    expect(calculateAnnualSummaries([], [], 5400, 0.12)).toEqual([]);
+  });
+
+  it('groups real records by year and calculates best and worst active month', () => {
+    const transaction = (id: string, date: string, amount: number): Transaction => ({
+      id,
+      type: 'ganho',
+      gainType: 'total_periodo',
+      app: 'Uber',
+      baseAmount: amount,
+      ridesCount: 1,
+      date,
+      time: '12:00',
+      amount,
+      createdAt: 1,
+    });
+    const shift = (id: string, date: string, km: number): Shift => ({
+      id,
+      date,
+      startTime: '08:00',
+      endTime: '10:00',
+      startKm: 100,
+      endKm: 100 + km,
+      totalKm: km,
+      pauses: [],
+      totalPauseMinutes: 0,
+      totalWorkHours: 2,
+      totalElapsedHours: 2,
+      accumulatedGain: 0,
+      accumulatedExpense: 0,
+      status: 'completed',
+      activeApps: ['Uber'],
+    });
+    const result = calculateAnnualSummaries(
+      [
+        transaction('a', '2025-12-10', 100),
+        transaction('b', '2026-01-10', 200),
+        transaction('c', '2026-02-10', 400),
+      ],
+      [shift('s1', '2026-01-10', 10), shift('s2', '2026-02-10', 20)],
+      5400,
+      0.1,
+    );
+
+    expect(result.map((item) => item.year)).toEqual(['2026', '2025']);
+    expect(result[0].ganhoBruto).toBe(600);
+    expect(result[0].quilometrosRodados).toBe(30);
+    expect(result[0].melhorMes.mes).toBe('Fevereiro');
+    expect(result[0].piorMes.mes).toBe('Janeiro');
   });
 });
