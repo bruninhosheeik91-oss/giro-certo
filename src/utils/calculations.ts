@@ -76,6 +76,91 @@ export function calculateOdometerDistance(startKm: number, endKm: number): numbe
   return Math.round((endKm - startKm) * 100) / 100;
 }
 
+export interface MonthlyGoalProjection {
+  periodState: 'past' | 'current' | 'future';
+  daysInMonth: number;
+  dayOfMonth: number;
+  daysRemaining: number;
+  actionableDays: number;
+  weekdayLabel: string;
+  targetRemaining: number;
+  dailyRequired: number;
+  expectedProfitToDate: number;
+  projectedMonthProfit: number;
+  paceDifference: number;
+  status:
+    'Meta atingida' | 'No ritmo' | 'Atenção' | 'Abaixo da meta' | 'Mês encerrado' | 'Planejada';
+}
+
+/** Planejamento mensal baseado no mês selecionado e no calendário real. */
+export function calculateMonthlyGoalProjection(
+  selectedMonth: string,
+  availableProfit: number,
+  monthlyGoal: number,
+  referenceDate: Date = new Date(),
+): MonthlyGoalProjection {
+  const [year, month] = selectedMonth.split('-').map(Number);
+  const validMonth = Number.isInteger(year) && month >= 1 && month <= 12;
+  const safeYear = validMonth ? year : referenceDate.getFullYear();
+  const safeMonth = validMonth ? month : referenceDate.getMonth() + 1;
+  const daysInMonth = new Date(safeYear, safeMonth, 0).getDate();
+  const referenceKey = `${referenceDate.getFullYear()}-${String(referenceDate.getMonth() + 1).padStart(2, '0')}`;
+  const monthKey = `${safeYear}-${String(safeMonth).padStart(2, '0')}`;
+  const periodState =
+    monthKey < referenceKey ? 'past' : monthKey > referenceKey ? 'future' : 'current';
+  const dayOfMonth =
+    periodState === 'past' ? daysInMonth : periodState === 'future' ? 0 : referenceDate.getDate();
+  const daysRemaining =
+    periodState === 'past'
+      ? 0
+      : periodState === 'future'
+        ? daysInMonth
+        : Math.max(0, daysInMonth - dayOfMonth);
+  // No mês atual, o restante do dia de hoje ainda pode ser usado para alcançar a meta.
+  const actionableDays = periodState === 'current' ? daysRemaining + 1 : daysRemaining;
+  const safeProfit = Number.isFinite(availableProfit) ? availableProfit : 0;
+  const safeGoal = Number.isFinite(monthlyGoal) && monthlyGoal > 0 ? monthlyGoal : 0;
+  const roundMoney = (value: number) => Math.round(value * 100) / 100;
+  const targetRemaining = roundMoney(Math.max(0, safeGoal - safeProfit));
+  const dailyRequired = roundMoney(actionableDays > 0 ? targetRemaining / actionableDays : 0);
+  const expectedProfitToDate = roundMoney(
+    periodState === 'future' ? 0 : safeGoal * (dayOfMonth / daysInMonth),
+  );
+  const projectedMonthProfit = roundMoney(
+    periodState === 'current' && dayOfMonth > 0
+      ? (safeProfit / dayOfMonth) * daysInMonth
+      : safeProfit,
+  );
+  const paceDifference = roundMoney(safeProfit - expectedProfitToDate);
+  const displayDay = periodState === 'future' ? 1 : Math.max(1, dayOfMonth);
+  const weekdayLabel = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
+    new Date(safeYear, safeMonth - 1, displayDay),
+  );
+
+  let status: MonthlyGoalProjection['status'];
+  if (safeGoal > 0 && safeProfit >= safeGoal) status = 'Meta atingida';
+  else if (periodState === 'past') status = 'Mês encerrado';
+  else if (periodState === 'future') status = 'Planejada';
+  else if (projectedMonthProfit >= safeGoal * 0.95) status = 'No ritmo';
+  else if (projectedMonthProfit >= safeGoal * 0.75) status = 'Atenção';
+  else status = 'Abaixo da meta';
+
+  return {
+    periodState,
+    daysInMonth,
+    dayOfMonth,
+    daysRemaining,
+    actionableDays,
+    weekdayLabel,
+    targetRemaining,
+    dailyRequired,
+    expectedProfitToDate,
+    projectedMonthProfit,
+    paceDifference,
+    status,
+  };
+}
+
 /**
  * Mask/Format currency string during typing:
  * E.g.: "12" -> "0,12", "1250" -> "12,50", "150000" -> "1.500,00"
