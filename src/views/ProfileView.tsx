@@ -19,6 +19,7 @@ import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
+import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
 import {
   getCoachVoicePreferences,
   listCoachVoices,
@@ -539,6 +540,8 @@ export const ProfileView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <SubscriptionStatusCard />
 
       {/* Notification Preferences */}
       <AchievementsCard />
