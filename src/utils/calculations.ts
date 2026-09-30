@@ -70,6 +70,12 @@ export function safeDivide(numerator: number, denominator: number): number {
   return numerator / denominator;
 }
 
+/** Distância real entre duas leituras do odômetro, sem estimativas ou regressões. */
+export function calculateOdometerDistance(startKm: number, endKm: number): number {
+  if (![startKm, endKm].every(Number.isFinite) || endKm < startKm) return 0;
+  return Math.round((endKm - startKm) * 100) / 100;
+}
+
 /**
  * Mask/Format currency string during typing:
  * E.g.: "12" -> "0,12", "1250" -> "12,50", "150000" -> "1.500,00"
