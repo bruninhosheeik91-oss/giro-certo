@@ -18,6 +18,7 @@ import {
 import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
+import { requestGoalNotificationPermission } from '../lib/nativeCoach';
 
 export const ProfileView: React.FC = () => {
   const {
@@ -101,8 +102,9 @@ export const ProfileView: React.FC = () => {
 
   const handleToggleNotification = async (key: keyof typeof userProfile.notificationPreferences) => {
     const enabling = !userProfile.notificationPreferences[key];
-    if (key === 'dailyGoalAlert' && enabling && 'Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
+    if (key === 'dailyGoalAlert' && enabling) {
+      const granted = await requestGoalNotificationPermission();
+      if (!granted) return;
     }
     updateUserProfile({
       notificationPreferences: {
