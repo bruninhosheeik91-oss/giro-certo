@@ -1,23 +1,51 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
 interface NativeCoachPlugin {
-  speak(options: { text: string }): Promise<void>;
+  speak(options: { text: string; voiceId?: string; rate?: number; pitch?: number }): Promise<void>;
+  listVoices(): Promise<{ voices: Array<{ id: string; name: string }> }>;
   requestNotificationPermission(): Promise<{ granted: boolean }>;
   notify(options: { title: string; body: string }): Promise<void>;
 }
 
 const NativeCoach = registerPlugin<NativeCoachPlugin>('NativeCoach');
 
+export interface CoachVoicePreferences {
+  voiceId?: string;
+  rate: number;
+  pitch: number;
+}
+
+const VOICE_PREFS_KEY = 'giro_certo_coach_voice_v1';
+
+export function getCoachVoicePreferences(): CoachVoicePreferences {
+  try {
+    return { rate: 0.95, pitch: 0.92, ...JSON.parse(localStorage.getItem(VOICE_PREFS_KEY) ?? '{}') };
+  } catch {
+    return { rate: 0.95, pitch: 0.92 };
+  }
+}
+
+export function saveCoachVoicePreferences(value: CoachVoicePreferences): void {
+  localStorage.setItem(VOICE_PREFS_KEY, JSON.stringify(value));
+}
+
+export async function listCoachVoices(): Promise<Array<{ id: string; name: string }>> {
+  if (!Capacitor.isNativePlatform()) return [];
+  return (await NativeCoach.listVoices()).voices;
+}
+
 export async function speakGoalCoach(text: string): Promise<void> {
+  const preferences = getCoachVoicePreferences();
   if (Capacitor.isNativePlatform()) {
-    await NativeCoach.speak({ text });
+    await NativeCoach.speak({ text, ...preferences });
     return;
   }
   if (!('speechSynthesis' in window)) throw new Error('Áudio indisponível neste dispositivo.');
   window.speechSynthesis.cancel();
   const speech = new SpeechSynthesisUtterance(text);
   speech.lang = 'pt-BR';
-  speech.rate = 0.95;
+  speech.rate = preferences.rate;
+  speech.pitch = preferences.pitch;
   window.speechSynthesis.speak(speech);
 }
 
