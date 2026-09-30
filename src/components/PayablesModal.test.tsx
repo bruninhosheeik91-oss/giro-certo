@@ -43,6 +43,9 @@ describe('PayablesModal flow', () => {
     await user.click(screen.getByRole('button', { name: 'Cadastrar conta' }));
 
     expect(await screen.findByText('Vencimento único')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Voltar' }));
+    await user.click(screen.getByRole('button', { name: 'Abrir conta Seguro anual' }));
+    expect(await screen.findByText('Vencimento único')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Marcar como paga' }));
     fireEvent.change(screen.getByLabelText('Data do pagamento'), {
       target: { value: '2026-09-23' },
