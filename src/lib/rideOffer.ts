@@ -38,6 +38,8 @@ interface RideOfferPlugin {
   getOfferHistory(): Promise<{ offers: AnalyzedRideOffer[] }>;
   clearOfferHistory(): Promise<void>;
   markOfferConverted(options: { offerId: string }): Promise<void>;
+  getAnalyzerEnabled(): Promise<{ enabled: boolean }>;
+  setAnalyzerEnabled(options: { enabled: boolean }): Promise<{ enabled: boolean }>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
@@ -117,6 +119,16 @@ export async function clearRideOfferHistory(): Promise<void> {
 export async function markRideOfferConverted(offerId: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.markOfferConverted({ offerId });
+}
+
+export async function getRideAnalyzerEnabled(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  return (await RideOffer.getAnalyzerEnabled()).enabled;
+}
+
+export async function setRideAnalyzerEnabled(enabled: boolean): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  return (await RideOffer.setAnalyzerEnabled({ enabled })).enabled;
 }
 
 export async function saveNativeRideCriteria(options: {

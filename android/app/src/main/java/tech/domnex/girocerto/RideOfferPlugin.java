@@ -119,6 +119,24 @@ public class RideOfferPlugin extends Plugin {
         }
     }
 
+    @PluginMethod public void getAnalyzerEnabled(PluginCall call) {
+        boolean enabled = getContext()
+            .getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+            .getBoolean("analyzerEnabled", true);
+        JSObject result = new JSObject();
+        result.put("enabled", enabled);
+        call.resolve(result);
+    }
+
+    @PluginMethod public void setAnalyzerEnabled(PluginCall call) {
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", true));
+        getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean("analyzerEnabled", enabled).apply();
+        JSObject result = new JSObject();
+        result.put("enabled", enabled);
+        call.resolve(result);
+    }
+
     @PluginMethod public void getLatestRideOffer(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
         JSObject result = new JSObject();
