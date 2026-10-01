@@ -20,6 +20,8 @@ import {
   clearRideOfferHistory,
   getRideOfferHistory,
   type AnalyzedRideOffer,
+  getRideAnalyzerEnabled,
+  setRideAnalyzerEnabled,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
@@ -49,6 +51,7 @@ export const SimulatorsModal: React.FC = () => {
   const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(null);
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [analyzerEnabled, setAnalyzerEnabled] = useState(true);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -64,6 +67,7 @@ export const SimulatorsModal: React.FC = () => {
   useEffect(() => {
     void isRideOfferAccessGranted().then(setNotificationAccess);
     void isRideOverlayGranted().then(setOverlayAccess);
+    void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
     void saveNativeRideCriteria({
       minProfitPerKm: criteria.minProfitPerKm,
       minProfitPerHour: criteria.minProfitPerHour,
@@ -195,14 +199,16 @@ export const SimulatorsModal: React.FC = () => {
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
               {isRideOfferNativeAvailable() && (
-                <div className={`p-3 rounded-xl border ${notificationAccess && overlayAccess ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
+                <div className={`p-3 rounded-xl border ${notificationAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
                   <div>
                     <div>
                       <p className="text-xs font-bold text-slate-100">Analisador automático de ofertas</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
-                        {notificationAccess && overlayAccess
+                        {notificationAccess && overlayAccess && analyzerEnabled
                           ? 'Ativo. A análise aparece sobre o app de corrida, sem abrir o Giro Certo.'
-                          : 'Conclua as duas autorizações para analisar Uber, 99 e apps compatíveis.'}
+                          : notificationAccess && overlayAccess
+                            ? 'Pausado. Reative o interruptor para voltar a analisar ofertas.'
+                            : 'Conclua as duas autorizações para analisar Uber, 99 e apps compatíveis.'}
                       </p>
                     </div>
                   </div>
@@ -230,6 +236,24 @@ export const SimulatorsModal: React.FC = () => {
                       {overlayAccess ? '✓ Sobreposição ativa' : '2. Aparecer por cima'}
                     </button>
                   </div>
+                  {notificationAccess && overlayAccess && (
+                    <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+                      <span>
+                        <span className="block text-[11px] font-bold text-slate-200">Analisador em segundo plano</span>
+                        <span className="block text-[9px] text-slate-500">Pause sem remover as permissões</span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={analyzerEnabled}
+                        onChange={(event) => {
+                          const enabled = event.target.checked;
+                          setAnalyzerEnabled(enabled);
+                          void setRideAnalyzerEnabled(enabled).then(setAnalyzerEnabled);
+                        }}
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-500"
+                      />
+                    </label>
+                  )}
                   <button
                     type="button"
                     disabled={!notificationAccess || !overlayAccess}
