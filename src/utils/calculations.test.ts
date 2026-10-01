@@ -118,6 +118,40 @@ describe('hourly metrics reliability', () => {
   });
 });
 
+describe('manual transactions in dashboard totals', () => {
+  it('includes gains and expenses without a linked shift in the monthly goal', () => {
+    const transactions = [
+      {
+        id: 'manual-gain',
+        type: 'ganho',
+        gainType: 'corrida_individual',
+        app: 'Particular',
+        baseAmount: 500,
+        amount: 500,
+        ridesCount: 1,
+        date: '2026-10-01',
+        time: '10:00',
+        createdAt: 1,
+      },
+      {
+        id: 'manual-expense',
+        type: 'outra_despesa',
+        category: 'Alimentação',
+        amount: 100,
+        date: '2026-10-01',
+        time: '12:00',
+        createdAt: 2,
+      },
+    ] as Transaction[];
+
+    const summary = calculatePeriodSummary(transactions, [], 1000, 0.12);
+    expect(summary.ganhoBruto).toBe(500);
+    expect(summary.totalDespesas).toBe(100);
+    expect(summary.lucroDisponivel).toBe(400);
+    expect(summary.progressoMeta).toBe(40);
+  });
+});
+
 describe('calculateFuelConsumption', () => {
   it('computes confirmed cycles from full tanks and partials in between', () => {
     const txs = [
