@@ -1093,6 +1093,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     setTransactions((previous) => [fullTx, ...previous]);
+    const transactionMonth = fullTx.date?.slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(transactionMonth) && transactionMonth !== selectedMonth) {
+      setSelectedMonthState(transactionMonth);
+    }
     markMutation();
     showToast(`${fullTx.type === 'ganho' ? 'Ganho' : 'Despesa'} registrado(a) com sucesso!`);
   };
