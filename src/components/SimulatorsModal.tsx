@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   simulateRide,
@@ -9,9 +9,20 @@ import {
   parseDecimalInput,
 } from '../utils/calculations';
 import { X, Calculator, Navigation, Target } from 'lucide-react';
+import {
+  getLatestRideOffer,
+  isRideOfferAccessGranted,
+  isRideOfferNativeAvailable,
+  listenForRideOffers,
+  openRideOfferAccessSettings,
+  parseRideOfferNotification,
+  type RideOfferDraft,
+} from '../lib/rideOffer';
+
+const LAST_RIDE_OFFER_KEY = 'giro_certo_last_ride_offer_v1';
 
 export const SimulatorsModal: React.FC = () => {
-  const { isSimulatorsModalOpen, closeSimulatorsModal, activeVehicle, userProfile } = useApp();
+  const { isSimulatorsModalOpen, openSimulatorsModal, closeSimulatorsModal, activeVehicle, userProfile } = useApp();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
 
   const criteria = userProfile.rideCriteria || {
@@ -31,6 +42,8 @@ export const SimulatorsModal: React.FC = () => {
   const [estimatedMinutes, setEstimatedMinutes] = useState('25');
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
+  const [notificationAccess, setNotificationAccess] = useState(false);
+  const [detectedOffer, setDetectedOffer] = useState<RideOfferDraft | null>(null);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -42,6 +55,38 @@ export const SimulatorsModal: React.FC = () => {
   const [reservePerKm, setReservePerKm] = useState(
     (userProfile.maintenanceReservePerKm || 0.12).toString(),
   );
+
+  useEffect(() => {
+    let disposed = false;
+    let handle: Awaited<ReturnType<typeof listenForRideOffers>> = null;
+
+    const applyOffer = (raw: Parameters<typeof parseRideOfferNotification>[0]) => {
+      if (disposed || raw.receivedAt <= Number(localStorage.getItem(LAST_RIDE_OFFER_KEY) ?? 0)) return;
+      const offer = parseRideOfferNotification(raw);
+      localStorage.setItem(LAST_RIDE_OFFER_KEY, String(raw.receivedAt));
+      setDetectedOffer(offer);
+      if (offer.fareOffered !== undefined) setFareOffered(String(offer.fareOffered));
+      if (offer.distanceToPickup !== undefined) setDistanceToPickup(String(offer.distanceToPickup));
+      if (offer.tripDistance !== undefined) setTripDistance(String(offer.tripDistance));
+      if (offer.estimatedMinutes !== undefined) setEstimatedMinutes(String(offer.estimatedMinutes));
+      setActiveTab('corrida');
+      openSimulatorsModal();
+    };
+
+    void isRideOfferAccessGranted().then((granted) => !disposed && setNotificationAccess(granted));
+    void getLatestRideOffer().then((offer) => offer && applyOffer(offer));
+    void listenForRideOffers(applyOffer).then((listenerHandle) => { handle = listenerHandle; });
+
+    const refreshAccess = () => {
+      if (document.visibilityState === 'visible') void isRideOfferAccessGranted().then(setNotificationAccess);
+    };
+    document.addEventListener('visibilitychange', refreshAccess);
+    return () => {
+      disposed = true;
+      document.removeEventListener('visibilitychange', refreshAccess);
+      void handle?.remove();
+    };
+  }, [openSimulatorsModal]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -132,6 +177,30 @@ export const SimulatorsModal: React.FC = () => {
           {activeTab === 'corrida' ? (
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
+              {isRideOfferNativeAvailable() && (
+                <div className={`p-3 rounded-xl border ${notificationAccess ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-slate-100">Analisador automático de ofertas</p>
+                      <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
+                        {notificationAccess
+                          ? 'Ativo. As ofertas reconhecidas abrem aqui para sua conferência.'
+                          : 'Ative o acesso às notificações para preencher corridas automaticamente.'}
+                      </p>
+                    </div>
+                    {!notificationAccess && (
+                      <button type="button" onClick={() => void openRideOfferAccessSettings()} className="shrink-0 rounded-lg bg-blue-500 px-3 py-2 text-[11px] font-bold text-white active:scale-95">
+                        Ativar
+                      </button>
+                    )}
+                  </div>
+                  {detectedOffer && (
+                    <p className="mt-2 border-t border-slate-700/60 pt-2 text-[10px] text-emerald-300">
+                      Oferta detectada no {detectedOffer.appName}. Confira os dados antes de decidir.
+                    </p>
+                  )}
+                </div>
+              )}
               {/* Inputs Card */}
               <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
