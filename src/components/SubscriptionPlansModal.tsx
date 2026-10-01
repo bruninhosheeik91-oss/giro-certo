@@ -13,10 +13,10 @@ interface SubscriptionPlansModalProps {
 }
 
 const benefits = [
-  'Controle completo de ganhos, gastos e jornadas',
-  'Metas, relatórios e indicadores de lucro real',
-  'Contas, parcelas e organização financeira',
-  'Sincronização segura entre dispositivos',
+  'Analisador automático de ofertas da Uber, 99 e apps compatíveis',
+  'Cartão de viabilidade sobre o aplicativo de corrida',
+  'Histórico das ofertas analisadas e conversão em ganho',
+  'Recursos inteligentes e automações futuras',
 ];
 
 export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
@@ -39,7 +39,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
               <p className="mt-0.5 text-xs text-slate-400">
                 {daysRemaining !== undefined && daysRemaining > 0
                   ? `Seu teste gratuito ainda tem ${daysRemaining} dia${daysRemaining === 1 ? '' : 's'}.`
-                  : 'Escolha o plano ideal para continuar.'}
+                  : 'Automação para decidir melhor cada corrida.'}
               </p>
             </div>
           </div>
@@ -60,6 +60,10 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
               <span>{benefit}</span>
             </div>
           ))}
+        </div>
+
+        <div className="mt-5 rounded-xl border border-slate-700 bg-slate-950/40 p-3 text-[10px] leading-relaxed text-slate-400">
+          O plano Essencial continua gratuito com ganhos, gastos, metas, jornadas, contas e relatórios.
         </div>
 
         <div className="mt-6 grid gap-3">

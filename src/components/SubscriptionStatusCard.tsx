@@ -4,10 +4,18 @@ import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 
 export const SubscriptionStatusCard: React.FC = () => {
-  const { subscription, loading, daysRemaining } = useSubscription();
+  const { subscription, loading, daysRemaining, hasProAccess, isAdmin } = useSubscription();
   const [plansOpen, setPlansOpen] = useState(false);
   if (loading || !subscription) return null;
   const active = subscription.status === 'active';
+  const title = isAdmin ? 'Giro Certo Owner' : hasProAccess ? 'Giro Certo Pro' : 'Giro Certo Essencial';
+  const description = isAdmin
+    ? 'Acesso administrativo completo'
+    : active
+      ? subscription.plan === 'annual' ? 'Plano anual ativo' : 'Plano mensal ativo'
+      : hasProAccess
+        ? 'Período gratuito Pro'
+        : 'Controle financeiro gratuito';
 
   return (
     <>
@@ -18,21 +26,21 @@ export const SubscriptionStatusCard: React.FC = () => {
             {active ? <Crown className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
           </div>
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Giro Certo Pro</h3>
-            <p className="text-[10px] text-slate-400">{active ? (subscription.plan === 'annual' ? 'Plano anual ativo' : 'Plano mensal ativo') : 'Período gratuito'}</p>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">{title}</h3>
+            <p className="text-[10px] text-slate-400">{description}</p>
           </div>
         </div>
         <span className="px-2 py-1 rounded-lg bg-blue-500/15 border border-blue-500/25 text-[10px] font-bold text-blue-300">
-          {active ? 'ATIVO' : `${daysRemaining} dias restantes`}
+          {isAdmin ? 'OWNER' : active ? 'ATIVO' : hasProAccess ? `${daysRemaining} dias restantes` : 'ESSENCIAL'}
         </span>
       </div>
-      {!active && <p className="text-[10px] leading-relaxed text-slate-400">Depois do teste: R$ 14,90/mês ou R$ 119,90/ano. A cobrança pela Google Play será habilitada antes do lançamento.</p>}
+      {!isAdmin && !active && <p className="text-[10px] leading-relaxed text-slate-400">{hasProAccess ? 'Ao terminar o teste, o controle financeiro continua no Essencial. Apenas os recursos automáticos do Pro ficam bloqueados.' : 'Ganhos, gastos, metas, jornadas e relatórios continuam disponíveis. Faça upgrade para liberar o analisador automático.'}</p>}
       <button
         type="button"
         onClick={() => setPlansOpen(true)}
         className="w-full rounded-xl border border-blue-400/25 bg-blue-500/10 px-3 py-2.5 text-xs font-bold text-blue-200 transition active:scale-[0.98]"
       >
-        {active ? 'Gerenciar assinatura' : 'Conhecer planos'}
+        {isAdmin ? 'Ver planos do aplicativo' : active ? 'Gerenciar assinatura' : 'Conhecer o Pro'}
       </button>
     </div>
     <SubscriptionPlansModal open={plansOpen} onClose={() => setPlansOpen(false)} daysRemaining={daysRemaining} />

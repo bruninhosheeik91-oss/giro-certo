@@ -18,7 +18,6 @@ import { ProfileView } from './views/ProfileView';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bike, CheckCircle2, Plus, Smartphone, Target } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
-import { SubscriptionAccessGate } from './components/SubscriptionAccessGate';
 import { formatBRLInput, parseBRLInput } from './utils/calculations';
 
 const MainAppContent: React.FC = () => {
@@ -199,11 +198,9 @@ const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <SessionProvider>
-      <SubscriptionAccessGate>
-        <AppProvider>
-          <MainAppContent />
-        </AppProvider>
-      </SubscriptionAccessGate>
+      <AppProvider>
+        <MainAppContent />
+      </AppProvider>
     </SessionProvider>
   );
 }
