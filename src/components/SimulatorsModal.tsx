@@ -276,6 +276,7 @@ export const SimulatorsModal: React.FC = () => {
                           </div>
                           <button
                             type="button"
+                            disabled={Boolean(offer.convertedAt)}
                             onClick={() => {
                               const analyzedAt = new Date(offer.analyzedAt);
                               const date = `${analyzedAt.getFullYear()}-${String(analyzedAt.getMonth() + 1).padStart(2, '0')}-${String(analyzedAt.getDate()).padStart(2, '0')}`;
@@ -290,11 +291,12 @@ export const SimulatorsModal: React.FC = () => {
                                 vehicleId: activeVehicle.id,
                                 shiftId: activeShift?.shiftId,
                                 description: `Corrida analisada pelo Giro Certo · ${offer.totalKm.toFixed(1)} km`,
+                                rideOfferId: offer.id,
                               });
                             }}
-                            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[10px] font-bold text-emerald-300 active:scale-[0.99]"
+                            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[10px] font-bold text-emerald-300 disabled:border-slate-700 disabled:bg-slate-800/60 disabled:text-slate-500 active:scale-[0.99]"
                           >
-                            Corrida concluída · preencher ganho
+                            {offer.convertedAt ? '✓ Ganho registrado' : 'Corrida concluída · preencher ganho'}
                           </button>
                         </div>
                       ))}
