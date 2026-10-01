@@ -9,14 +9,12 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  ShieldCheck,
 } from 'lucide-react';
 import type { UseAuthState } from '../hooks/useAuthState';
 import { useKeyboardInset } from '../hooks/useKeyboardInset';
 
 export type AuthViewProps = {
   auth: UseAuthState;
-  onSkipLocalMode: () => void;
 };
 
 type AuthFormMode = 'login' | 'cadastro' | 'recuperacao' | 'nova-senha';
@@ -111,7 +109,7 @@ const Field: React.FC<{
   </div>
 );
 
-export const AuthView: React.FC<AuthViewProps> = ({ auth, onSkipLocalMode }) => {
+export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
   const [mode, setMode] = useState<AuthFormMode>(() => (auth.isRecovery ? 'nova-senha' : 'login'));
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -499,19 +497,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth, onSkipLocalMode }) => 
           )}
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={onSkipLocalMode}
-            className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 rounded"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-            Continuar no modo local (sem conta)
-          </button>
-          <p className="text-[10px] text-slate-600 text-center leading-relaxed">
-            No modo local os dados ficam só neste aparelho e não são sincronizados.
-          </p>
-        </div>
       </main>
     </div>
   );

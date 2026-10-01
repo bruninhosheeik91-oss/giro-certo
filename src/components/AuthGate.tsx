@@ -1,6 +1,5 @@
 import React from 'react';
 import type { UseAuthState } from '../hooks/useAuthState';
-import { hasLocalMode, skipLocalMode } from '../lib/localMode';
 import { AuthView } from './AuthView';
 
 type AuthGateProps = {
@@ -20,11 +19,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ auth, children }) => {
   }
 
   if (auth.isRecovery) {
-    return <AuthView auth={auth} onSkipLocalMode={skipLocalMode} />;
+    return <AuthView auth={auth} />;
   }
 
   if (auth.status === 'signedIn') return <>{children}</>;
-  if (hasLocalMode()) return <>{children}</>;
 
-  return <AuthView auth={auth} onSkipLocalMode={skipLocalMode} />;
+  return <AuthView auth={auth} />;
 };
