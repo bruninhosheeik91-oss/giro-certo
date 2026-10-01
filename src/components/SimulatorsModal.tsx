@@ -23,7 +23,7 @@ import {
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
-  const { isSimulatorsModalOpen, closeSimulatorsModal, activeVehicle, userProfile } = useApp();
+  const { isSimulatorsModalOpen, closeSimulatorsModal, openNewTransactionModal, activeVehicle, activeShift, userProfile } = useApp();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
 
   const criteria = userProfile.rideCriteria || {
@@ -274,6 +274,28 @@ export const SimulatorsModal: React.FC = () => {
                             <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{offer.minutes || '—'} min</strong>tempo</span>
                             <span className="text-[10px] text-slate-400"><strong className="block text-emerald-300">{formatBRL(offer.profit)}</strong>lucro</span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const analyzedAt = new Date(offer.analyzedAt);
+                              const date = `${analyzedAt.getFullYear()}-${String(analyzedAt.getMonth() + 1).padStart(2, '0')}-${String(analyzedAt.getDate()).padStart(2, '0')}`;
+                              const time = `${String(analyzedAt.getHours()).padStart(2, '0')}:${String(analyzedAt.getMinutes()).padStart(2, '0')}`;
+                              closeSimulatorsModal();
+                              openNewTransactionModal('ganho', {
+                                amount: offer.fare,
+                                app: offer.appName,
+                                ridesCount: 1,
+                                date,
+                                time,
+                                vehicleId: activeVehicle.id,
+                                shiftId: activeShift?.shiftId,
+                                description: `Corrida analisada pelo Giro Certo · ${offer.totalKm.toFixed(1)} km`,
+                              });
+                            }}
+                            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[10px] font-bold text-emerald-300 active:scale-[0.99]"
+                          >
+                            Corrida concluída · preencher ganho
+                          </button>
                         </div>
                       ))}
                       <p className="text-center text-[10px] text-slate-500">Histórico local. Não altera ganhos ou relatórios.</p>

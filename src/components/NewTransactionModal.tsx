@@ -41,6 +41,7 @@ export const NewTransactionModal: React.FC = () => {
     isNewTransactionModalOpen,
     closeNewTransactionModal,
     modalDefaultType,
+    newTransactionDraft,
     addTransaction,
     vehicles,
     activeVehicle,
@@ -141,8 +142,21 @@ export const NewTransactionModal: React.FC = () => {
       } else {
         setLinkedShiftId('');
       }
+
+      if (newTransactionDraft) {
+        if (newTransactionDraft.date) setDate(newTransactionDraft.date);
+        if (newTransactionDraft.time) setTime(newTransactionDraft.time);
+        if (newTransactionDraft.description) setDescription(newTransactionDraft.description);
+        if (typeof newTransactionDraft.amount === 'number') {
+          setBaseAmountStr(formatBRLInput(Math.round(newTransactionDraft.amount * 100).toString()));
+        }
+        if (typeof newTransactionDraft.app === 'string') setApp(newTransactionDraft.app);
+        if (typeof newTransactionDraft.ridesCount === 'number') setRidesCount(String(newTransactionDraft.ridesCount));
+        if (typeof newTransactionDraft.shiftId === 'string') setLinkedShiftId(newTransactionDraft.shiftId);
+        setGainType('individual');
+      }
     }
-  }, [isNewTransactionModalOpen, modalDefaultType, activeVehicle, registeredApps, activeShift]);
+  }, [isNewTransactionModalOpen, modalDefaultType, activeVehicle, registeredApps, activeShift, newTransactionDraft]);
 
   if (!isNewTransactionModalOpen) return null;
 
