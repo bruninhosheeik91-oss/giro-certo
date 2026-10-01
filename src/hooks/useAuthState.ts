@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import {
   getAuthRedirectUrl,
@@ -45,6 +45,44 @@ export interface UseAuthState {
   signOut: () => Promise<void>;
 }
 
+type CachedAuthIdentity = {
+  userId: string;
+  email: string | null;
+  authenticatedAt: number;
+};
+
+const AUTH_IDENTITY_CACHE_KEY = 'giro_certo_last_auth_identity_v1';
+
+function readCachedAuthIdentity(): CachedAuthIdentity | null {
+  try {
+    const raw = localStorage.getItem(AUTH_IDENTITY_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<CachedAuthIdentity>;
+    if (typeof parsed.userId !== 'string' || !parsed.userId) return null;
+    return {
+      userId: parsed.userId,
+      email: typeof parsed.email === 'string' ? parsed.email : null,
+      authenticatedAt:
+        typeof parsed.authenticatedAt === 'number' ? parsed.authenticatedAt : Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedAuthIdentity(identity: CachedAuthIdentity | null): void {
+  try {
+    if (identity) localStorage.setItem(AUTH_IDENTITY_CACHE_KEY, JSON.stringify(identity));
+    else localStorage.removeItem(AUTH_IDENTITY_CACHE_KEY);
+  } catch {
+    // O cache é apenas um fallback offline; falhar aqui não pode bloquear o login.
+  }
+}
+
+function isDeviceOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
 /** Converte o erro do Supabase em mensagem legível, sempre em português. */
 function toEmailError(error: unknown, fallback: string): EmailError | null {
   if (!error) return null;
@@ -58,7 +96,14 @@ function toEmailError(error: unknown, fallback: string): EmailError | null {
 
 export function useAuthState(): UseAuthState {
   const configured = isSupabaseConfigured();
-  const [status, setStatus] = useState<AuthStatus>(configured ? 'loading' : 'signedOut');
+  const cachedIdentityRef = useRef<CachedAuthIdentity | null>(readCachedAuthIdentity());
+  const [status, setStatus] = useState<AuthStatus>(() =>
+    configured
+      ? isDeviceOffline() && cachedIdentityRef.current
+        ? 'signedIn'
+        : 'loading'
+      : 'signedOut',
+  );
   const [session, setSession] = useState<AuthSession>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isRecovery, setIsRecovery] = useState<boolean>(() => configured && isRecoveryRedirect());
@@ -109,31 +154,58 @@ export function useAuthState(): UseAuthState {
     let cancelled = false;
     const recoveryRedirect = isRecoveryRedirect();
 
-    const applySession = (nextSession: AuthSession) => {
+    const applySession = (nextSession: AuthSession, allowOfflineFallback = false) => {
       if (cancelled) return;
+      if (nextSession) {
+        const identity: CachedAuthIdentity = {
+          userId: nextSession.user.id,
+          email: nextSession.user.email ?? null,
+          authenticatedAt: Date.now(),
+        };
+        cachedIdentityRef.current = identity;
+        writeCachedAuthIdentity(identity);
+        setSession(nextSession);
+        setStatus('signedIn');
+        return;
+      }
+      if (allowOfflineFallback && cachedIdentityRef.current) {
+        setSession(null);
+        setStatus('signedIn');
+        return;
+      }
+      cachedIdentityRef.current = null;
+      writeCachedAuthIdentity(null);
       setSession(nextSession);
-      setStatus(nextSession ? 'signedIn' : 'signedOut');
+      setStatus('signedOut');
     };
 
     void client.auth
       .getSession()
-      .then(({ data }) => {
-        applySession(data.session);
+      .then(({ data, error }) => {
+        applySession(data.session, Boolean(error));
         if (recoveryRedirect && data.session) setIsRecovery(true);
       })
       .catch(() => {
-        applySession(null);
+        applySession(null, true);
       });
 
     const { data: subscription } = client.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return;
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true);
       if (event === 'SIGNED_OUT') setIsRecovery(false);
-      applySession(nextSession);
+      applySession(nextSession, event === 'SIGNED_OUT' && isDeviceOffline());
     });
+
+    const handleOnline = () => {
+      void client.auth.getSession().then(({ data, error }) => {
+        applySession(data.session, Boolean(error));
+      });
+    };
+    window.addEventListener('online', handleOnline);
 
     return () => {
       cancelled = true;
+      window.removeEventListener('online', handleOnline);
       void subscription.subscription.unsubscribe();
     };
   }, []);
@@ -248,6 +320,8 @@ export function useAuthState(): UseAuthState {
     } catch {
       return;
     }
+    cachedIdentityRef.current = null;
+    writeCachedAuthIdentity(null);
     setSession(null);
     setIsRecovery(false);
     setStatus('signedOut');
@@ -255,9 +329,9 @@ export function useAuthState(): UseAuthState {
     clearRecoveryRedirect();
   }, []);
 
-  const userId = session?.user.id ?? null;
-  const email = session?.user.email ?? null;
-  const mode: AuthMode = session ? 'cloud' : 'local';
+  const userId = session?.user.id ?? (status === 'signedIn' ? cachedIdentityRef.current?.userId ?? null : null);
+  const email = session?.user.email ?? (status === 'signedIn' ? cachedIdentityRef.current?.email ?? null : null);
+  const mode: AuthMode = status === 'signedIn' && userId ? 'cloud' : 'local';
 
   return {
     status,
