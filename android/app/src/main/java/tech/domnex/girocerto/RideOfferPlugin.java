@@ -16,6 +16,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 @CapacitorPlugin(name = "RideOffer")
 public class RideOfferPlugin extends Plugin {
@@ -93,6 +94,29 @@ public class RideOfferPlugin extends Plugin {
         getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
             .edit().remove("offerHistory").apply();
         call.resolve();
+    }
+
+    @PluginMethod public void markOfferConverted(PluginCall call) {
+        String offerId = call.getString("offerId", "");
+        if (offerId.isEmpty()) { call.reject("Oferta inválida"); return; }
+        SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
+        try {
+            JSONArray stored = new JSONArray(prefs.getString("offerHistory", "[]"));
+            boolean found = false;
+            for (int index = 0; index < stored.length(); index++) {
+                JSONObject item = stored.getJSONObject(index);
+                if (offerId.equals(item.optString("id"))) {
+                    item.put("convertedAt", System.currentTimeMillis());
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) { call.reject("Oferta não encontrada"); return; }
+            prefs.edit().putString("offerHistory", stored.toString()).apply();
+            call.resolve();
+        } catch (Exception error) {
+            call.reject("Não foi possível atualizar a oferta");
+        }
     }
 
     @PluginMethod public void getLatestRideOffer(PluginCall call) {

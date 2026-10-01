@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { TransactionType, FuelType, MaintenanceCategory, OtherExpenseCategory } from '../types';
 import { formatBRL, formatBRLInput, parseBRLInput, parseDecimalInput } from '../utils/calculations';
 import { X, PlusCircle, Fuel, Wrench, Wallet, Check, Clock, Link, Unlink } from 'lucide-react';
+import { markRideOfferConverted } from '../lib/rideOffer';
 
 const MAINTENANCE_CATEGORIES: MaintenanceCategory[] = [
   'Troca de óleo',
@@ -67,6 +68,7 @@ export const NewTransactionModal: React.FC = () => {
   const [bonusAmountStr, setBonusAmountStr] = useState('');
   const [ridesCount, setRidesCount] = useState<string>('1');
   const [linkedShiftId, setLinkedShiftId] = useState<string>('');
+  const [sourceRideOfferId, setSourceRideOfferId] = useState<string | null>(null);
 
   // 2. Abastecer states
   const [fuelVehicleId, setFuelVehicleId] = useState<string>('');
@@ -116,6 +118,7 @@ export const NewTransactionModal: React.FC = () => {
       setTipAmountStr('');
       setBonusAmountStr('');
       setRidesCount('1');
+      setSourceRideOfferId(null);
       setDescription('');
       setErrors({});
       setShowDiscardConfirm(false);
@@ -153,6 +156,7 @@ export const NewTransactionModal: React.FC = () => {
         if (typeof newTransactionDraft.app === 'string') setApp(newTransactionDraft.app);
         if (typeof newTransactionDraft.ridesCount === 'number') setRidesCount(String(newTransactionDraft.ridesCount));
         if (typeof newTransactionDraft.shiftId === 'string') setLinkedShiftId(newTransactionDraft.shiftId);
+        if (typeof newTransactionDraft.rideOfferId === 'string') setSourceRideOfferId(newTransactionDraft.rideOfferId);
         setGainType('individual');
       }
     }
@@ -256,6 +260,7 @@ export const NewTransactionModal: React.FC = () => {
         time,
         description: description.trim() || undefined,
       });
+      if (sourceRideOfferId) void markRideOfferConverted(sourceRideOfferId);
     } else if (activeType === 'abastecimento') {
       const total = parseBRLInput(fuelTotalStr);
       const lit = parseDecimalInput(litersStr);
