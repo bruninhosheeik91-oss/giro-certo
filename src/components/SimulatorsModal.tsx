@@ -12,7 +12,9 @@ import { X, Calculator, Navigation, Target } from 'lucide-react';
 import {
   isRideOfferAccessGranted,
   isRideOfferNativeAvailable,
+  isRideOverlayGranted,
   openRideOfferAccessSettings,
+  openRideOverlaySettings,
   saveNativeRideCriteria,
 } from '../lib/rideOffer';
 
@@ -38,6 +40,7 @@ export const SimulatorsModal: React.FC = () => {
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
   const [notificationAccess, setNotificationAccess] = useState(false);
+  const [overlayAccess, setOverlayAccess] = useState(false);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -52,6 +55,7 @@ export const SimulatorsModal: React.FC = () => {
 
   useEffect(() => {
     void isRideOfferAccessGranted().then(setNotificationAccess);
+    void isRideOverlayGranted().then(setOverlayAccess);
     void saveNativeRideCriteria({
       minProfitPerKm: criteria.minProfitPerKm,
       minProfitPerHour: criteria.minProfitPerHour,
@@ -60,7 +64,10 @@ export const SimulatorsModal: React.FC = () => {
     });
 
     const refreshAccess = () => {
-      if (document.visibilityState === 'visible') void isRideOfferAccessGranted().then(setNotificationAccess);
+      if (document.visibilityState === 'visible') {
+        void isRideOfferAccessGranted().then(setNotificationAccess);
+        void isRideOverlayGranted().then(setOverlayAccess);
+      }
     };
     document.addEventListener('visibilitychange', refreshAccess);
     return () => {
@@ -158,16 +165,18 @@ export const SimulatorsModal: React.FC = () => {
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
               {isRideOfferNativeAvailable() && (
-                <div className={`p-3 rounded-xl border ${notificationAccess ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
-                  <div className="flex items-center justify-between gap-3">
+                <div className={`p-3 rounded-xl border ${notificationAccess && overlayAccess ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
+                  <div>
                     <div>
                       <p className="text-xs font-bold text-slate-100">Analisador automático de ofertas</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
-                        {notificationAccess
+                        {notificationAccess && overlayAccess
                           ? 'Ativo. A análise aparece sobre o app de corrida, sem abrir o Giro Certo.'
-                          : 'Ative para receber a análise por cima do Uber, 99 e apps compatíveis.'}
+                          : 'Conclua as duas autorizações para analisar Uber, 99 e apps compatíveis.'}
                       </p>
                     </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => void openRideOfferAccessSettings()}
@@ -177,7 +186,18 @@ export const SimulatorsModal: React.FC = () => {
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      {notificationAccess ? 'Configurar' : 'Ativar'}
+                      {notificationAccess ? '✓ Leitura ativa' : '1. Ler ofertas'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void openRideOverlaySettings()}
+                      className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
+                        overlayAccess
+                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
+                          : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      {overlayAccess ? '✓ Sobreposição ativa' : '2. Aparecer por cima'}
                     </button>
                   </div>
                 </div>
