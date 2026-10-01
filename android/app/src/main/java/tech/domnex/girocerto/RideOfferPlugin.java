@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
+import android.net.Uri;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -41,6 +42,20 @@ public class RideOfferPlugin extends Plugin {
 
     @PluginMethod public void openNotificationAccessSettings(PluginCall call) {
         Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
+        call.resolve();
+    }
+
+    @PluginMethod public void isOverlayPermissionGranted(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("granted", Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(getContext()));
+        call.resolve(result);
+    }
+
+    @PluginMethod public void openOverlaySettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:" + getContext().getPackageName()))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getContext().startActivity(intent);
         call.resolve();
     }
