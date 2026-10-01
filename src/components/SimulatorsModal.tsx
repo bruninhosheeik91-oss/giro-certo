@@ -8,7 +8,7 @@ import {
   parseBRLInput,
   parseDecimalInput,
 } from '../utils/calculations';
-import { X, Calculator, Navigation, Target, ShieldCheck } from 'lucide-react';
+import { X, Calculator, Navigation, Target, ShieldCheck, ChevronDown, History, Trash2 } from 'lucide-react';
 import {
   isRideOfferAccessGranted,
   isRideOfferNativeAvailable,
@@ -17,6 +17,9 @@ import {
   openRideOverlaySettings,
   saveNativeRideCriteria,
   testRideOverlay,
+  clearRideOfferHistory,
+  getRideOfferHistory,
+  type AnalyzedRideOffer,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
@@ -44,6 +47,8 @@ export const SimulatorsModal: React.FC = () => {
   const [overlayAccess, setOverlayAccess] = useState(false);
   const [overlayTestMessage, setOverlayTestMessage] = useState('');
   const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(null);
+  const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -77,6 +82,10 @@ export const SimulatorsModal: React.FC = () => {
       document.removeEventListener('visibilitychange', refreshAccess);
     };
   }, [criteria.minAcceptableValue, criteria.minProfitPerHour, criteria.minProfitPerKm, defaultCostPerKm]);
+
+  useEffect(() => {
+    if (isSimulatorsModalOpen) void getRideOfferHistory().then(setOfferHistory);
+  }, [isSimulatorsModalOpen]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -236,6 +245,42 @@ export const SimulatorsModal: React.FC = () => {
                   </button>
                   {overlayTestMessage && (
                     <p className="mt-2 text-center text-[10px] text-emerald-300">{overlayTestMessage}</p>
+                  )}
+                </div>
+              )}
+              {isRideOfferNativeAvailable() && offerHistory.length > 0 && (
+                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
+                  <button type="button" onClick={() => setHistoryOpen((value) => !value)} className="flex w-full items-center gap-2 p-3 text-left">
+                    <History className="h-4 w-4 text-blue-400" />
+                    <span className="text-xs font-bold text-slate-100">Ofertas analisadas</span>
+                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">{offerHistory.length}</span>
+                    <ChevronDown className={`ml-auto h-4 w-4 text-slate-500 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {historyOpen && (
+                    <div className="space-y-2 border-t border-slate-800 p-3">
+                      {offerHistory.slice(0, 10).map((offer) => (
+                        <div key={offer.id} className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`h-2 w-2 rounded-full ${offer.status === 'COMPENSA' ? 'bg-emerald-400' : offer.status === 'ATENÇÃO' ? 'bg-amber-400' : 'bg-rose-400'}`} />
+                              <span className="text-[11px] font-bold text-slate-200">{offer.appName}</span>
+                              <span className="text-[10px] text-slate-500">{new Date(offer.analyzedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <span className={`text-[10px] font-extrabold ${offer.status === 'COMPENSA' ? 'text-emerald-400' : offer.status === 'ATENÇÃO' ? 'text-amber-400' : 'text-rose-400'}`}>{offer.status}</span>
+                          </div>
+                          <div className="mt-2 grid grid-cols-4 gap-1 text-center">
+                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{formatBRL(offer.fare)}</strong>oferta</span>
+                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{offer.totalKm.toFixed(1)} km</strong>distância</span>
+                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{offer.minutes || '—'} min</strong>tempo</span>
+                            <span className="text-[10px] text-slate-400"><strong className="block text-emerald-300">{formatBRL(offer.profit)}</strong>lucro</span>
+                          </div>
+                        </div>
+                      ))}
+                      <p className="text-center text-[10px] text-slate-500">Histórico local. Não altera ganhos ou relatórios.</p>
+                      <button type="button" onClick={() => void clearRideOfferHistory().then(() => { setOfferHistory([]); setHistoryOpen(false); })} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300">
+                        <Trash2 className="h-3.5 w-3.5" /> Limpar histórico
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
