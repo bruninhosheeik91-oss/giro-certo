@@ -23,6 +23,8 @@ import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import java.util.Locale;
 import androidx.core.app.NotificationCompat;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class RideNotificationListenerService extends NotificationListenerService {
     public static final String ACTION_RIDE_OFFER = "tech.domnex.girocerto.RIDE_OFFER";
@@ -94,6 +96,8 @@ public class RideNotificationListenerService extends NotificationListenerService
         String icon = status.equals("COMPENSA") ? "✅ " : status.equals("ATENÇÃO") ? "⚠️ " : "❌ ";
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
+        saveHistory(prefs, appName, fare, totalKm, minutes, profit, profitPerKm, profitPerHour, status);
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
             RideOverlayView.show(this, icon + status, fare, body, status);
         }
@@ -112,6 +116,31 @@ public class RideNotificationListenerService extends NotificationListenerService
             .setTimeoutAfter(12000)
             .setAutoCancel(true);
         manager.notify(9021, notification.build());
+    }
+
+    private void saveHistory(SharedPreferences prefs, String appName, double fare, double totalKm,
+                             double minutes, double profit, double profitPerKm,
+                             double profitPerHour, String status) {
+        try {
+            JSONArray current = new JSONArray(prefs.getString("offerHistory", "[]"));
+            JSONArray updated = new JSONArray();
+            JSONObject item = new JSONObject();
+            item.put("id", String.valueOf(System.currentTimeMillis()));
+            item.put("appName", appName);
+            item.put("fare", fare);
+            item.put("totalKm", totalKm);
+            item.put("minutes", minutes);
+            item.put("profit", profit);
+            item.put("profitPerKm", profitPerKm);
+            item.put("profitPerHour", profitPerHour);
+            item.put("status", status);
+            item.put("analyzedAt", System.currentTimeMillis());
+            updated.put(item);
+            for (int index = 0; index < current.length() && updated.length() < 30; index++) {
+                updated.put(current.get(index));
+            }
+            prefs.edit().putString("offerHistory", updated.toString()).apply();
+        } catch (Exception ignored) { }
     }
 
     private void showOverlay(String title, double fare, String body, String status) {
