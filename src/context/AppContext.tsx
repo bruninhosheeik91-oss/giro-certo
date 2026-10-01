@@ -193,7 +193,8 @@ interface AppContextType {
   // Modals & UI
   isNewTransactionModalOpen: boolean;
   modalDefaultType: TransactionType;
-  openNewTransactionModal: (type?: TransactionType) => void;
+  newTransactionDraft: Partial<TransactionInput> | null;
+  openNewTransactionModal: (type?: TransactionType, draft?: Partial<TransactionInput>) => void;
   closeNewTransactionModal: () => void;
 
   isVehiclesModalOpen: boolean;
@@ -302,6 +303,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [isNewTransactionModalOpen, setIsNewTransactionModalOpen] = useState(false);
   const [modalDefaultType, setModalDefaultType] = useState<TransactionType>('ganho');
+  const [newTransactionDraft, setNewTransactionDraft] = useState<Partial<TransactionInput> | null>(null);
   const [isVehiclesModalOpen, setIsVehiclesModalOpen] = useState(false);
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [isSimulatorsModalOpen, setIsSimulatorsModalOpen] = useState(false);
@@ -1680,11 +1682,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Modal handlers
-  const openNewTransactionModal = (type: TransactionType = 'ganho') => {
+  const openNewTransactionModal = (
+    type: TransactionType = 'ganho',
+    draft?: Partial<TransactionInput>,
+  ) => {
     setModalDefaultType(type);
+    setNewTransactionDraft(draft ?? null);
     setIsNewTransactionModalOpen(true);
   };
-  const closeNewTransactionModal = () => setIsNewTransactionModalOpen(false);
+  const closeNewTransactionModal = () => {
+    setIsNewTransactionModalOpen(false);
+    setNewTransactionDraft(null);
+  };
 
   const openVehiclesModal = () => setIsVehiclesModalOpen(true);
   const closeVehiclesModal = () => setIsVehiclesModalOpen(false);
@@ -1969,6 +1978,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         prevMonthSummary,
         isNewTransactionModalOpen,
         modalDefaultType,
+        newTransactionDraft,
         openNewTransactionModal,
         closeNewTransactionModal,
         isVehiclesModalOpen,
