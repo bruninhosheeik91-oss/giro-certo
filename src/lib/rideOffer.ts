@@ -20,6 +20,7 @@ interface RideOfferPlugin {
   isOverlayPermissionGranted(): Promise<{ granted: boolean }>;
   openNotificationAccessSettings(): Promise<void>;
   openOverlaySettings(): Promise<void>;
+  testOverlay(): Promise<void>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
@@ -79,6 +80,11 @@ export async function isRideOverlayGranted(): Promise<boolean> {
 export async function openRideOverlaySettings(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.openOverlaySettings();
+}
+
+export async function testRideOverlay(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.testOverlay();
 }
 
 export async function saveNativeRideCriteria(options: {
