@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bike, CheckCircle2, Plus, Smartphone, Target } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
 import { formatBRLInput, parseBRLInput } from './utils/calculations';
+import { TrialExpiryNotice } from './components/TrialExpiryNotice';
 
 const MainAppContent: React.FC = () => {
   const {
@@ -141,6 +142,7 @@ const MainAppContent: React.FC = () => {
       <div className="w-full max-w-md min-h-screen flex flex-col relative overflow-x-hidden bg-[#090d16] border-x border-slate-800/80 shadow-2xl shadow-black">
         {/* Top Header */}
         <Header />
+        <TrialExpiryNotice />
 
         {/* Tab Content with Safe-Area bottom spacing */}
         <main className="flex-1 px-4 pt-3 pb-[calc(7.2rem+env(safe-area-inset-bottom,0px))] overflow-y-auto">

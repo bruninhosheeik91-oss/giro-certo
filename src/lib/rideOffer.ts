@@ -40,6 +40,7 @@ interface RideOfferPlugin {
   markOfferConverted(options: { offerId: string }): Promise<void>;
   getAnalyzerEnabled(): Promise<{ enabled: boolean }>;
   setAnalyzerEnabled(options: { enabled: boolean }): Promise<{ enabled: boolean }>;
+  setProEntitlement(options: { enabled: boolean; expiresAt: number }): Promise<void>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
@@ -56,7 +57,10 @@ interface RideOfferPlugin {
 const RideOffer = registerPlugin<RideOfferPlugin>('RideOffer');
 
 function parseNumber(value: string): number {
-  const normalized = value.replace(/\s/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.');
+  const normalized = value
+    .replace(/\s/g, '')
+    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.');
   return Number.parseFloat(normalized);
 }
 
@@ -129,6 +133,11 @@ export async function getRideAnalyzerEnabled(): Promise<boolean> {
 export async function setRideAnalyzerEnabled(enabled: boolean): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
   return (await RideOffer.setAnalyzerEnabled({ enabled })).enabled;
+}
+
+export async function setRideProEntitlement(enabled: boolean, expiresAt: number): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.setProEntitlement({ enabled, expiresAt });
 }
 
 export async function saveNativeRideCriteria(options: {

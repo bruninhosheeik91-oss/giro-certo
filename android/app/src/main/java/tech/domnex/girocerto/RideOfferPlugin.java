@@ -64,6 +64,10 @@ public class RideOfferPlugin extends Plugin {
     }
 
     @PluginMethod public void testOverlay(PluginCall call) {
+        if (!hasValidProEntitlement()) {
+            call.reject("Recurso exclusivo do Giro Certo Pro");
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(getContext())) {
             call.reject("Permissão para aparecer sobre outros apps não concedida");
             return;
@@ -122,19 +126,40 @@ public class RideOfferPlugin extends Plugin {
     @PluginMethod public void getAnalyzerEnabled(PluginCall call) {
         boolean enabled = getContext()
             .getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
-            .getBoolean("analyzerEnabled", true);
+            .getBoolean("analyzerEnabled", false) && hasValidProEntitlement();
         JSObject result = new JSObject();
         result.put("enabled", enabled);
         call.resolve(result);
     }
 
     @PluginMethod public void setAnalyzerEnabled(PluginCall call) {
-        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", true));
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false)) && hasValidProEntitlement();
         getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean("analyzerEnabled", enabled).apply();
         JSObject result = new JSObject();
         result.put("enabled", enabled);
         call.resolve(result);
+    }
+
+    @PluginMethod public void setProEntitlement(PluginCall call) {
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        long expiresAt = call.getLong("expiresAt", 0L);
+        SharedPreferences.Editor editor = getContext()
+            .getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("proEntitlement", enabled)
+            .putLong("proEntitlementExpiresAt", expiresAt);
+        if (!enabled) editor.putBoolean("analyzerEnabled", false);
+        editor.apply();
+        call.resolve();
+    }
+
+    private boolean hasValidProEntitlement() {
+        SharedPreferences prefs = getContext()
+            .getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
+        if (!prefs.getBoolean("proEntitlement", false)) return false;
+        long expiresAt = prefs.getLong("proEntitlementExpiresAt", 0L);
+        return expiresAt == 0L || expiresAt > System.currentTimeMillis();
     }
 
     @PluginMethod public void getLatestRideOffer(PluginCall call) {

@@ -36,7 +36,10 @@ public class RideNotificationListenerService extends NotificationListenerService
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        if (!prefs.getBoolean("analyzerEnabled", true)) return;
+        long entitlementEnd = prefs.getLong("proEntitlementExpiresAt", 0L);
+        boolean hasPro = prefs.getBoolean("proEntitlement", false)
+            && (entitlementEnd == 0L || entitlementEnd > System.currentTimeMillis());
+        if (!hasPro || !prefs.getBoolean("analyzerEnabled", false)) return;
         String packageName = sbn.getPackageName();
         if (!isSupportedRideApp(packageName)) return;
 

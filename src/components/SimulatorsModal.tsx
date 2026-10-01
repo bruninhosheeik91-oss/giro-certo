@@ -8,7 +8,18 @@ import {
   parseBRLInput,
   parseDecimalInput,
 } from '../utils/calculations';
-import { X, Calculator, Navigation, Target, ShieldCheck, ChevronDown, History, Trash2, Crown, LockKeyhole } from 'lucide-react';
+import {
+  X,
+  Calculator,
+  Navigation,
+  Target,
+  ShieldCheck,
+  ChevronDown,
+  History,
+  Trash2,
+  Crown,
+  LockKeyhole,
+} from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 import {
@@ -24,11 +35,25 @@ import {
   type AnalyzedRideOffer,
   getRideAnalyzerEnabled,
   setRideAnalyzerEnabled,
+  setRideProEntitlement,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
-  const { isSimulatorsModalOpen, closeSimulatorsModal, openNewTransactionModal, activeVehicle, activeShift, userProfile } = useApp();
-  const { hasProAccess, loading: subscriptionLoading, daysRemaining } = useSubscription();
+  const {
+    isSimulatorsModalOpen,
+    closeSimulatorsModal,
+    openNewTransactionModal,
+    activeVehicle,
+    activeShift,
+    userProfile,
+  } = useApp();
+  const {
+    hasProAccess,
+    loading: subscriptionLoading,
+    daysRemaining,
+    expiresAt,
+    reason,
+  } = useSubscription();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
   const [plansOpen, setPlansOpen] = useState(false);
 
@@ -52,7 +77,9 @@ export const SimulatorsModal: React.FC = () => {
   const [notificationAccess, setNotificationAccess] = useState(false);
   const [overlayAccess, setOverlayAccess] = useState(false);
   const [overlayTestMessage, setOverlayTestMessage] = useState('');
-  const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(null);
+  const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(
+    null,
+  );
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [analyzerEnabled, setAnalyzerEnabled] = useState(true);
@@ -89,18 +116,26 @@ export const SimulatorsModal: React.FC = () => {
     return () => {
       document.removeEventListener('visibilitychange', refreshAccess);
     };
-  }, [criteria.minAcceptableValue, criteria.minProfitPerHour, criteria.minProfitPerKm, defaultCostPerKm]);
+  }, [
+    criteria.minAcceptableValue,
+    criteria.minProfitPerHour,
+    criteria.minProfitPerKm,
+    defaultCostPerKm,
+  ]);
 
   useEffect(() => {
     if (isSimulatorsModalOpen) void getRideOfferHistory().then(setOfferHistory);
   }, [isSimulatorsModalOpen]);
 
   useEffect(() => {
+    if (subscriptionLoading) return;
+    const entitlementEnd = reason === 'owner' ? 0 : expiresAt ? Date.parse(expiresAt) : 0;
+    void setRideProEntitlement(hasProAccess, entitlementEnd);
     if (!subscriptionLoading && !hasProAccess && analyzerEnabled) {
       setAnalyzerEnabled(false);
       void setRideAnalyzerEnabled(false);
     }
-  }, [analyzerEnabled, hasProAccess, subscriptionLoading]);
+  }, [analyzerEnabled, expiresAt, hasProAccess, reason, subscriptionLoading]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -218,10 +253,13 @@ export const SimulatorsModal: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <p className="text-xs font-bold text-white">Analisador automático</p>
-                        <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-300">PRO</span>
+                        <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-300">
+                          PRO
+                        </span>
                       </div>
                       <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                        Analise ofertas sobre a tela da Uber, 99 e apps compatíveis sem sair do aplicativo de corrida.
+                        Analise ofertas sobre a tela da Uber, 99 e apps compatíveis sem sair do
+                        aplicativo de corrida.
                       </p>
                     </div>
                   </div>
@@ -236,10 +274,14 @@ export const SimulatorsModal: React.FC = () => {
                 </div>
               )}
               {isRideOfferNativeAvailable() && hasProAccess && (
-                <div className={`p-3 rounded-xl border ${notificationAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
+                <div
+                  className={`p-3 rounded-xl border ${notificationAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
+                >
                   <div>
                     <div>
-                      <p className="text-xs font-bold text-slate-100">Analisador automático de ofertas</p>
+                      <p className="text-xs font-bold text-slate-100">
+                        Analisador automático de ofertas
+                      </p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
                         {notificationAccess && overlayAccess && analyzerEnabled
                           ? 'Ativo. A análise aparece sobre o app de corrida, sem abrir o Giro Certo.'
@@ -276,8 +318,12 @@ export const SimulatorsModal: React.FC = () => {
                   {notificationAccess && overlayAccess && (
                     <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
                       <span>
-                        <span className="block text-[11px] font-bold text-slate-200">Analisador em segundo plano</span>
-                        <span className="block text-[9px] text-slate-500">Pause sem remover as permissões</span>
+                        <span className="block text-[11px] font-bold text-slate-200">
+                          Analisador em segundo plano
+                        </span>
+                        <span className="block text-[9px] text-slate-500">
+                          Pause sem remover as permissões
+                        </span>
                       </span>
                       <input
                         type="checkbox"
@@ -297,43 +343,95 @@ export const SimulatorsModal: React.FC = () => {
                     onClick={() => {
                       setOverlayTestMessage('');
                       void testRideOverlay()
-                        .then(() => setOverlayTestMessage('Cartão de teste exibido por 12 segundos.'))
-                        .catch(() => setOverlayTestMessage('Não foi possível exibir. Confira as permissões.'));
+                        .then(() =>
+                          setOverlayTestMessage('Cartão de teste exibido por 12 segundos.'),
+                        )
+                        .catch(() =>
+                          setOverlayTestMessage('Não foi possível exibir. Confira as permissões.'),
+                        );
                     }}
                     className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/50 py-2 text-[11px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99]"
                   >
                     Testar cartão flutuante
                   </button>
                   {overlayTestMessage && (
-                    <p className="mt-2 text-center text-[10px] text-emerald-300">{overlayTestMessage}</p>
+                    <p className="mt-2 text-center text-[10px] text-emerald-300">
+                      {overlayTestMessage}
+                    </p>
                   )}
                 </div>
               )}
               {isRideOfferNativeAvailable() && hasProAccess && offerHistory.length > 0 && (
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
-                  <button type="button" onClick={() => setHistoryOpen((value) => !value)} className="flex w-full items-center gap-2 p-3 text-left">
+                  <button
+                    type="button"
+                    onClick={() => setHistoryOpen((value) => !value)}
+                    className="flex w-full items-center gap-2 p-3 text-left"
+                  >
                     <History className="h-4 w-4 text-blue-400" />
                     <span className="text-xs font-bold text-slate-100">Ofertas analisadas</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">{offerHistory.length}</span>
-                    <ChevronDown className={`ml-auto h-4 w-4 text-slate-500 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
+                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                      {offerHistory.length}
+                    </span>
+                    <ChevronDown
+                      className={`ml-auto h-4 w-4 text-slate-500 transition-transform ${historyOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   {historyOpen && (
                     <div className="space-y-2 border-t border-slate-800 p-3">
                       {offerHistory.slice(0, 10).map((offer) => (
-                        <div key={offer.id} className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5">
+                        <div
+                          key={offer.id}
+                          className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5"
+                        >
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
-                              <span className={`h-2 w-2 rounded-full ${offer.status === 'COMPENSA' ? 'bg-emerald-400' : offer.status === 'ATENÇÃO' ? 'bg-amber-400' : 'bg-rose-400'}`} />
-                              <span className="text-[11px] font-bold text-slate-200">{offer.appName}</span>
-                              <span className="text-[10px] text-slate-500">{new Date(offer.analyzedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                              <span
+                                className={`h-2 w-2 rounded-full ${offer.status === 'COMPENSA' ? 'bg-emerald-400' : offer.status === 'ATENÇÃO' ? 'bg-amber-400' : 'bg-rose-400'}`}
+                              />
+                              <span className="text-[11px] font-bold text-slate-200">
+                                {offer.appName}
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                {new Date(offer.analyzedAt).toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
                             </div>
-                            <span className={`text-[10px] font-extrabold ${offer.status === 'COMPENSA' ? 'text-emerald-400' : offer.status === 'ATENÇÃO' ? 'text-amber-400' : 'text-rose-400'}`}>{offer.status}</span>
+                            <span
+                              className={`text-[10px] font-extrabold ${offer.status === 'COMPENSA' ? 'text-emerald-400' : offer.status === 'ATENÇÃO' ? 'text-amber-400' : 'text-rose-400'}`}
+                            >
+                              {offer.status}
+                            </span>
                           </div>
                           <div className="mt-2 grid grid-cols-4 gap-1 text-center">
-                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{formatBRL(offer.fare)}</strong>oferta</span>
-                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{offer.totalKm.toFixed(1)} km</strong>distância</span>
-                            <span className="text-[10px] text-slate-400"><strong className="block text-slate-200">{offer.minutes || '—'} min</strong>tempo</span>
-                            <span className="text-[10px] text-slate-400"><strong className="block text-emerald-300">{formatBRL(offer.profit)}</strong>lucro</span>
+                            <span className="text-[10px] text-slate-400">
+                              <strong className="block text-slate-200">
+                                {formatBRL(offer.fare)}
+                              </strong>
+                              oferta
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              <strong className="block text-slate-200">
+                                {offer.totalKm.toFixed(1)} km
+                              </strong>
+                              distância
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              <strong className="block text-slate-200">
+                                {offer.minutes || '—'} min
+                              </strong>
+                              tempo
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              <strong className="block text-emerald-300">
+                                {formatBRL(offer.profit)}
+                              </strong>
+                              lucro
+                            </span>
                           </div>
                           <button
                             type="button"
@@ -357,12 +455,25 @@ export const SimulatorsModal: React.FC = () => {
                             }}
                             className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[10px] font-bold text-emerald-300 disabled:border-slate-700 disabled:bg-slate-800/60 disabled:text-slate-500 active:scale-[0.99]"
                           >
-                            {offer.convertedAt ? '✓ Ganho registrado' : 'Corrida concluída · preencher ganho'}
+                            {offer.convertedAt
+                              ? '✓ Ganho registrado'
+                              : 'Corrida concluída · preencher ganho'}
                           </button>
                         </div>
                       ))}
-                      <p className="text-center text-[10px] text-slate-500">Histórico local. Não altera ganhos ou relatórios.</p>
-                      <button type="button" onClick={() => void clearRideOfferHistory().then(() => { setOfferHistory([]); setHistoryOpen(false); })} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300">
+                      <p className="text-center text-[10px] text-slate-500">
+                        Histórico local. Não altera ganhos ou relatórios.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void clearRideOfferHistory().then(() => {
+                            setOfferHistory([]);
+                            setHistoryOpen(false);
+                          })
+                        }
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300"
+                      >
                         <Trash2 className="h-3.5 w-3.5" /> Limpar histórico
                       </button>
                     </div>
@@ -785,23 +896,45 @@ export const SimulatorsModal: React.FC = () => {
 
         {permissionTarget && (
           <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm">
-            <div role="dialog" aria-modal="true" aria-labelledby="ride-consent-title" className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ride-consent-title"
+              className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl"
+            >
               <div className="mb-3 flex items-center gap-2 text-emerald-400">
                 <ShieldCheck className="h-5 w-5" />
-                <h3 id="ride-consent-title" className="text-sm font-bold text-white">Antes de ativar</h3>
+                <h3 id="ride-consent-title" className="text-sm font-bold text-white">
+                  Antes de ativar
+                </h3>
               </div>
               <p className="text-xs leading-relaxed text-slate-300">
-                O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para identificar valor, distância e tempo da oferta. A análise aparece em um cartão sobre o aplicativo que estiver aberto.
+                O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para
+                identificar valor, distância e tempo da oferta. A análise aparece em um cartão sobre
+                o aplicativo que estiver aberto.
               </p>
               <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-200">
-                O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase, não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
+                O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase,
+                não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
               </div>
               <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
                 Você pode retirar as autorizações a qualquer momento nas configurações do Android.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setPermissionTarget(null)} className="rounded-xl border border-slate-700 py-2.5 text-xs font-bold text-slate-300">Agora não</button>
-                <button type="button" onClick={continuePermission} className="rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950">Li e quero continuar</button>
+                <button
+                  type="button"
+                  onClick={() => setPermissionTarget(null)}
+                  className="rounded-xl border border-slate-700 py-2.5 text-xs font-bold text-slate-300"
+                >
+                  Agora não
+                </button>
+                <button
+                  type="button"
+                  onClick={continuePermission}
+                  className="rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950"
+                >
+                  Li e quero continuar
+                </button>
               </div>
             </div>
           </div>

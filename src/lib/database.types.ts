@@ -439,6 +439,14 @@ export type Database = {
         Args: Record<never, never>;
         Returns: Json;
       };
+      get_my_subscription_access: {
+        Args: Record<never, never>;
+        Returns: Json;
+      };
+      has_pro_feature_access: {
+        Args: Record<never, never>;
+        Returns: boolean;
+      };
       delete_my_account: {
         Args: { p_confirmation: string };
         Returns: boolean;
