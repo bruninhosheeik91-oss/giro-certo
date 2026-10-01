@@ -52,6 +52,17 @@ public class RideOfferPlugin extends Plugin {
         call.resolve(result);
     }
 
+    @PluginMethod public void saveRideCriteria(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
+        prefs.edit()
+            .putFloat("minProfitPerKm", call.getFloat("minProfitPerKm", 0.8f))
+            .putFloat("minProfitPerHour", call.getFloat("minProfitPerHour", 25f))
+            .putFloat("minAcceptableValue", call.getFloat("minAcceptableValue", 8f))
+            .putFloat("costPerKm", call.getFloat("costPerKm", 0.28f))
+            .apply();
+        call.resolve();
+    }
+
     private JSObject offerFromIntent(Intent intent) {
         JSObject offer = new JSObject();
         offer.put("packageName", intent.getStringExtra("packageName"));

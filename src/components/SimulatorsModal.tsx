@@ -10,19 +10,14 @@ import {
 } from '../utils/calculations';
 import { X, Calculator, Navigation, Target } from 'lucide-react';
 import {
-  getLatestRideOffer,
   isRideOfferAccessGranted,
   isRideOfferNativeAvailable,
-  listenForRideOffers,
   openRideOfferAccessSettings,
-  parseRideOfferNotification,
-  type RideOfferDraft,
+  saveNativeRideCriteria,
 } from '../lib/rideOffer';
 
-const LAST_RIDE_OFFER_KEY = 'giro_certo_last_ride_offer_v1';
-
 export const SimulatorsModal: React.FC = () => {
-  const { isSimulatorsModalOpen, openSimulatorsModal, closeSimulatorsModal, activeVehicle, userProfile } = useApp();
+  const { isSimulatorsModalOpen, closeSimulatorsModal, activeVehicle, userProfile } = useApp();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
 
   const criteria = userProfile.rideCriteria || {
@@ -43,7 +38,6 @@ export const SimulatorsModal: React.FC = () => {
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
   const [notificationAccess, setNotificationAccess] = useState(false);
-  const [detectedOffer, setDetectedOffer] = useState<RideOfferDraft | null>(null);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -57,36 +51,22 @@ export const SimulatorsModal: React.FC = () => {
   );
 
   useEffect(() => {
-    let disposed = false;
-    let handle: Awaited<ReturnType<typeof listenForRideOffers>> = null;
-
-    const applyOffer = (raw: Parameters<typeof parseRideOfferNotification>[0]) => {
-      if (disposed || raw.receivedAt <= Number(localStorage.getItem(LAST_RIDE_OFFER_KEY) ?? 0)) return;
-      const offer = parseRideOfferNotification(raw);
-      localStorage.setItem(LAST_RIDE_OFFER_KEY, String(raw.receivedAt));
-      setDetectedOffer(offer);
-      if (offer.fareOffered !== undefined) setFareOffered(String(offer.fareOffered));
-      if (offer.distanceToPickup !== undefined) setDistanceToPickup(String(offer.distanceToPickup));
-      if (offer.tripDistance !== undefined) setTripDistance(String(offer.tripDistance));
-      if (offer.estimatedMinutes !== undefined) setEstimatedMinutes(String(offer.estimatedMinutes));
-      setActiveTab('corrida');
-      openSimulatorsModal();
-    };
-
-    void isRideOfferAccessGranted().then((granted) => !disposed && setNotificationAccess(granted));
-    void getLatestRideOffer().then((offer) => offer && applyOffer(offer));
-    void listenForRideOffers(applyOffer).then((listenerHandle) => { handle = listenerHandle; });
+    void isRideOfferAccessGranted().then(setNotificationAccess);
+    void saveNativeRideCriteria({
+      minProfitPerKm: criteria.minProfitPerKm,
+      minProfitPerHour: criteria.minProfitPerHour,
+      minAcceptableValue: criteria.minAcceptableValue,
+      costPerKm: Number(defaultCostPerKm),
+    });
 
     const refreshAccess = () => {
       if (document.visibilityState === 'visible') void isRideOfferAccessGranted().then(setNotificationAccess);
     };
     document.addEventListener('visibilitychange', refreshAccess);
     return () => {
-      disposed = true;
       document.removeEventListener('visibilitychange', refreshAccess);
-      void handle?.remove();
     };
-  }, [openSimulatorsModal]);
+  }, [criteria.minAcceptableValue, criteria.minProfitPerHour, criteria.minProfitPerKm, defaultCostPerKm]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -184,8 +164,8 @@ export const SimulatorsModal: React.FC = () => {
                       <p className="text-xs font-bold text-slate-100">Analisador automático de ofertas</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
                         {notificationAccess
-                          ? 'Ativo. As ofertas reconhecidas abrem aqui para sua conferência.'
-                          : 'Ative o acesso às notificações para preencher corridas automaticamente.'}
+                          ? 'Ativo. A análise aparece sobre o app de corrida, sem abrir o Giro Certo.'
+                          : 'Ative para receber a análise por cima do Uber, 99 e apps compatíveis.'}
                       </p>
                     </div>
                     {!notificationAccess && (
@@ -194,11 +174,6 @@ export const SimulatorsModal: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  {detectedOffer && (
-                    <p className="mt-2 border-t border-slate-700/60 pt-2 text-[10px] text-emerald-300">
-                      Oferta detectada no {detectedOffer.appName}. Confira os dados antes de decidir.
-                    </p>
-                  )}
                 </div>
               )}
               {/* Inputs Card */}
