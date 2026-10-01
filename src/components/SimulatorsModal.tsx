@@ -16,6 +16,7 @@ import {
   openRideOfferAccessSettings,
   openRideOverlaySettings,
   saveNativeRideCriteria,
+  testRideOverlay,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
@@ -41,6 +42,7 @@ export const SimulatorsModal: React.FC = () => {
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
   const [notificationAccess, setNotificationAccess] = useState(false);
   const [overlayAccess, setOverlayAccess] = useState(false);
+  const [overlayTestMessage, setOverlayTestMessage] = useState('');
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -200,6 +202,22 @@ export const SimulatorsModal: React.FC = () => {
                       {overlayAccess ? '✓ Sobreposição ativa' : '2. Aparecer por cima'}
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    disabled={!notificationAccess || !overlayAccess}
+                    onClick={() => {
+                      setOverlayTestMessage('');
+                      void testRideOverlay()
+                        .then(() => setOverlayTestMessage('Cartão de teste exibido por 12 segundos.'))
+                        .catch(() => setOverlayTestMessage('Não foi possível exibir. Confira as permissões.'));
+                    }}
+                    className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/50 py-2 text-[11px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99]"
+                  >
+                    Testar cartão flutuante
+                  </button>
+                  {overlayTestMessage && (
+                    <p className="mt-2 text-center text-[10px] text-emerald-300">{overlayTestMessage}</p>
+                  )}
                 </div>
               )}
               {/* Inputs Card */}
