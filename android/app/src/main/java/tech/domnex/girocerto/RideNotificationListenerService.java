@@ -49,12 +49,17 @@ public class RideNotificationListenerService extends NotificationListenerService
         long receivedAt = System.currentTimeMillis();
         String appName = resolveAppName(packageName);
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        String fingerprint = Integer.toHexString((packageName + "|" + title + "|" + text).hashCode());
+        if (fingerprint.equals(prefs.getString("lastFingerprint", ""))
+            && receivedAt - prefs.getLong("lastFingerprintAt", 0) < 60000) return;
         prefs.edit()
             .putString("packageName", packageName)
             .putString("appName", appName)
             .putString("title", title)
             .putString("text", text)
             .putLong("receivedAt", receivedAt)
+            .putString("lastFingerprint", fingerprint)
+            .putLong("lastFingerprintAt", receivedAt)
             .apply();
 
         showRideAnalysis(appName, title + " " + text, prefs);
@@ -90,7 +95,7 @@ public class RideNotificationListenerService extends NotificationListenerService
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
-            showOverlay(icon + status, fare, body, status);
+            RideOverlayView.show(this, icon + status, fare, body, status);
         }
 
         NotificationManager manager = getSystemService(NotificationManager.class);

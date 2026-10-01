@@ -60,6 +60,21 @@ public class RideOfferPlugin extends Plugin {
         call.resolve();
     }
 
+    @PluginMethod public void testOverlay(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(getContext())) {
+            call.reject("Permissão para aparecer sobre outros apps não concedida");
+            return;
+        }
+        RideOverlayView.show(
+            getContext(),
+            "✅ TESTE · COMPENSA",
+            28.50,
+            "99 • Lucro R$ 24,72 • R$ 2,35/km • R$ 59,33/h",
+            "COMPENSA"
+        );
+        call.resolve();
+    }
+
     @PluginMethod public void getLatestRideOffer(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
         JSObject result = new JSObject();
