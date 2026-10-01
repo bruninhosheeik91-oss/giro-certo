@@ -35,6 +35,8 @@ public class RideNotificationListenerService extends NotificationListenerService
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean("analyzerEnabled", true)) return;
         String packageName = sbn.getPackageName();
         if (!isSupportedRideApp(packageName)) return;
 
@@ -50,7 +52,6 @@ public class RideNotificationListenerService extends NotificationListenerService
 
         long receivedAt = System.currentTimeMillis();
         String appName = resolveAppName(packageName);
-        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         String fingerprint = Integer.toHexString((packageName + "|" + title + "|" + text).hashCode());
         if (fingerprint.equals(prefs.getString("lastFingerprint", ""))
             && receivedAt - prefs.getLong("lastFingerprintAt", 0) < 60000) return;
