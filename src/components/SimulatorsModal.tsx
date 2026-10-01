@@ -8,7 +8,9 @@ import {
   parseBRLInput,
   parseDecimalInput,
 } from '../utils/calculations';
-import { X, Calculator, Navigation, Target, ShieldCheck, ChevronDown, History, Trash2 } from 'lucide-react';
+import { X, Calculator, Navigation, Target, ShieldCheck, ChevronDown, History, Trash2, Crown, LockKeyhole } from 'lucide-react';
+import { useSubscription } from '../hooks/useSubscription';
+import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 import {
   isRideOfferAccessGranted,
   isRideOfferNativeAvailable,
@@ -26,7 +28,9 @@ import {
 
 export const SimulatorsModal: React.FC = () => {
   const { isSimulatorsModalOpen, closeSimulatorsModal, openNewTransactionModal, activeVehicle, activeShift, userProfile } = useApp();
+  const { hasProAccess, loading: subscriptionLoading, daysRemaining } = useSubscription();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
+  const [plansOpen, setPlansOpen] = useState(false);
 
   const criteria = userProfile.rideCriteria || {
     minProfitPerKm: 0.8,
@@ -90,6 +94,13 @@ export const SimulatorsModal: React.FC = () => {
   useEffect(() => {
     if (isSimulatorsModalOpen) void getRideOfferHistory().then(setOfferHistory);
   }, [isSimulatorsModalOpen]);
+
+  useEffect(() => {
+    if (!subscriptionLoading && !hasProAccess && analyzerEnabled) {
+      setAnalyzerEnabled(false);
+      void setRideAnalyzerEnabled(false);
+    }
+  }, [analyzerEnabled, hasProAccess, subscriptionLoading]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -198,7 +209,33 @@ export const SimulatorsModal: React.FC = () => {
           {activeTab === 'corrida' ? (
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
-              {isRideOfferNativeAvailable() && (
+              {isRideOfferNativeAvailable() && !subscriptionLoading && !hasProAccess && (
+                <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
+                      <LockKeyhole className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-white">Analisador automático</p>
+                        <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-300">PRO</span>
+                      </div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                        Analise ofertas sobre a tela da Uber, 99 e apps compatíveis sem sair do aplicativo de corrida.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPlansOpen(true)}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-3 py-2.5 text-[11px] font-bold text-slate-950 active:scale-[0.99]"
+                  >
+                    <Crown className="h-4 w-4" />
+                    Conhecer o Giro Certo Pro
+                  </button>
+                </div>
+              )}
+              {isRideOfferNativeAvailable() && hasProAccess && (
                 <div className={`p-3 rounded-xl border ${notificationAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}>
                   <div>
                     <div>
@@ -272,7 +309,7 @@ export const SimulatorsModal: React.FC = () => {
                   )}
                 </div>
               )}
-              {isRideOfferNativeAvailable() && offerHistory.length > 0 && (
+              {isRideOfferNativeAvailable() && hasProAccess && offerHistory.length > 0 && (
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
                   <button type="button" onClick={() => setHistoryOpen((value) => !value)} className="flex w-full items-center gap-2 p-3 text-left">
                     <History className="h-4 w-4 text-blue-400" />
@@ -769,6 +806,11 @@ export const SimulatorsModal: React.FC = () => {
             </div>
           </div>
         )}
+        <SubscriptionPlansModal
+          open={plansOpen}
+          onClose={() => setPlansOpen(false)}
+          daysRemaining={daysRemaining}
+        />
       </div>
     </div>
   );
