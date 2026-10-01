@@ -168,11 +168,17 @@ export const SimulatorsModal: React.FC = () => {
                           : 'Ative para receber a análise por cima do Uber, 99 e apps compatíveis.'}
                       </p>
                     </div>
-                    {!notificationAccess && (
-                      <button type="button" onClick={() => void openRideOfferAccessSettings()} className="shrink-0 rounded-lg bg-blue-500 px-3 py-2 text-[11px] font-bold text-white active:scale-95">
-                        Ativar
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => void openRideOfferAccessSettings()}
+                      className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold active:scale-95 ${
+                        notificationAccess
+                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
+                          : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      {notificationAccess ? 'Configurar' : 'Ativar'}
+                    </button>
                   </div>
                 </div>
               )}
