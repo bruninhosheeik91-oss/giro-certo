@@ -497,6 +497,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
           )}
         </div>
 
+        <p className="mt-8 text-center text-[10px] tracking-wide text-slate-600">
+          Desenvolvido por <span className="font-semibold text-sky-400">Domnex Tech</span>
+        </p>
+
       </main>
     </div>
   );
