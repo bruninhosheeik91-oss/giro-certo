@@ -16,12 +16,39 @@ import { ShiftView } from './views/ShiftView';
 import { ReportsView } from './views/ReportsView';
 import { ProfileView } from './views/ProfileView';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bike, CheckCircle2, Plus } from 'lucide-react';
+import { Bike, CheckCircle2, Plus, Smartphone, Target } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
 import { SubscriptionAccessGate } from './components/SubscriptionAccessGate';
+import { formatBRLInput, parseBRLInput } from './utils/calculations';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, toastMessage, ready, mode, vehicles, openVehiclesModal } = useApp();
+  const {
+    activeTab,
+    toastMessage,
+    ready,
+    mode,
+    vehicles,
+    openVehiclesModal,
+    userProfile,
+    updateUserProfile,
+    registeredApps,
+    toggleRegisteredApp,
+  } = useApp();
+  const [firstGoal, setFirstGoal] = React.useState(() =>
+    formatBRLInput(Math.round(userProfile.monthlyGoal * 100).toString()),
+  );
+
+  React.useEffect(() => {
+    setFirstGoal(formatBRLInput(Math.round(userProfile.monthlyGoal * 100).toString()));
+  }, [userProfile.monthlyGoal]);
+
+  const continueFirstAccess = () => {
+    const monthlyGoal = parseBRLInput(firstGoal);
+    if (monthlyGoal > 0 && monthlyGoal !== userProfile.monthlyGoal) {
+      updateUserProfile({ monthlyGoal });
+    }
+    openVehiclesModal();
+  };
 
   // Sem esta trava, o logout/troca de conta renderiza um frame com os dados do
   // usuário anterior antes do efeito de hidratação trocar o escopo.
@@ -36,22 +63,72 @@ const MainAppContent: React.FC = () => {
   if (mode === 'cloud' && vehicles.length === 0) {
     return (
       <div className="min-h-screen w-full flex justify-center items-center bg-[#060910] px-5 text-slate-100">
-        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#0f172a] p-7 text-center shadow-2xl shadow-black">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#0f172a] p-6 shadow-2xl shadow-black">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
             <Bike className="h-8 w-8" />
           </div>
-          <h1 className="text-xl font-bold text-white">Cadastre seu primeiro veículo</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            Sua conta está pronta e começa limpa. Adicione a moto, o carro ou a bicicleta que você
-            usa para trabalhar.
+          <h1 className="text-center text-xl font-bold text-white">Bem-vindo ao Giro Certo</h1>
+          <p className="mt-2 text-center text-sm leading-relaxed text-slate-400">
+            Sua conta começa limpa. Faça uma configuração rápida para acompanhar seus resultados.
           </p>
+
+          <div className="mt-6 space-y-5 text-left">
+            <section>
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-200">
+                <Target className="h-4 w-4 text-emerald-400" />
+                1. Defina sua meta mensal
+              </div>
+              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-3 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/15">
+                <span className="text-sm font-semibold text-slate-500">R$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={firstGoal}
+                  onChange={(event) => setFirstGoal(formatBRLInput(event.target.value))}
+                  aria-label="Meta mensal"
+                  placeholder="5.400,00"
+                  className="w-full bg-transparent px-2 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600"
+                />
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-200">
+                <Smartphone className="h-4 w-4 text-sky-400" />
+                2. Selecione os aplicativos que utiliza
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {registeredApps.map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    onClick={() => toggleRegisteredApp(app.id)}
+                    aria-pressed={app.isActive}
+                    className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition active:scale-95 ${
+                      app.isActive
+                        ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                        : 'border-slate-700 bg-slate-900 text-slate-500'
+                    }`}
+                  >
+                    {app.name}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+              <Bike className="h-4 w-4 text-amber-400" />
+              3. Cadastre seu primeiro veículo
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={openVehiclesModal}
+            onClick={continueFirstAccess}
             className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 transition active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
-            Cadastrar veículo
+            Continuar para o veículo
           </button>
         </div>
         <VehiclesModal />
