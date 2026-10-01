@@ -8,7 +8,7 @@ import {
   parseBRLInput,
   parseDecimalInput,
 } from '../utils/calculations';
-import { X, Calculator, Navigation, Target } from 'lucide-react';
+import { X, Calculator, Navigation, Target, ShieldCheck } from 'lucide-react';
 import {
   isRideOfferAccessGranted,
   isRideOfferNativeAvailable,
@@ -43,6 +43,7 @@ export const SimulatorsModal: React.FC = () => {
   const [notificationAccess, setNotificationAccess] = useState(false);
   const [overlayAccess, setOverlayAccess] = useState(false);
   const [overlayTestMessage, setOverlayTestMessage] = useState('');
+  const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(null);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -104,6 +105,24 @@ export const SimulatorsModal: React.FC = () => {
     costPerKm: parseDecimalInput(goalCostPerKm) || 0.25,
     reservePerKm: parseDecimalInput(reservePerKm) || 0.12,
   });
+
+  const continuePermission = () => {
+    const target = permissionTarget;
+    setPermissionTarget(null);
+    localStorage.setItem('giro_certo_ride_analyzer_consent_v1', new Date().toISOString());
+    if (target === 'notifications') void openRideOfferAccessSettings();
+    if (target === 'overlay') void openRideOverlaySettings();
+  };
+
+  const requestPermission = (target: 'notifications' | 'overlay') => {
+    const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v1'));
+    if (consented) {
+      if (target === 'notifications') void openRideOfferAccessSettings();
+      else void openRideOverlaySettings();
+      return;
+    }
+    setPermissionTarget(target);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -181,7 +200,7 @@ export const SimulatorsModal: React.FC = () => {
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => void openRideOfferAccessSettings()}
+                      onClick={() => requestPermission('notifications')}
                       className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold active:scale-95 ${
                         notificationAccess
                           ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
@@ -192,7 +211,7 @@ export const SimulatorsModal: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void openRideOverlaySettings()}
+                      onClick={() => requestPermission('overlay')}
                       className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
                         overlayAccess
                           ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
@@ -633,6 +652,30 @@ export const SimulatorsModal: React.FC = () => {
             </div>
           )}
         </div>
+
+        {permissionTarget && (
+          <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm">
+            <div role="dialog" aria-modal="true" aria-labelledby="ride-consent-title" className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
+              <div className="mb-3 flex items-center gap-2 text-emerald-400">
+                <ShieldCheck className="h-5 w-5" />
+                <h3 id="ride-consent-title" className="text-sm font-bold text-white">Antes de ativar</h3>
+              </div>
+              <p className="text-xs leading-relaxed text-slate-300">
+                O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para identificar valor, distância e tempo da oferta. A análise aparece em um cartão sobre o aplicativo que estiver aberto.
+              </p>
+              <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-200">
+                O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase, não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
+              </div>
+              <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                Você pode retirar as autorizações a qualquer momento nas configurações do Android.
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setPermissionTarget(null)} className="rounded-xl border border-slate-700 py-2.5 text-xs font-bold text-slate-300">Agora não</button>
+                <button type="button" onClick={continuePermission} className="rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950">Li e quero continuar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
