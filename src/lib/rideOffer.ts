@@ -26,6 +26,7 @@ export interface AnalyzedRideOffer {
   profitPerHour: number;
   status: 'COMPENSA' | 'ATENÇÃO' | 'NÃO COMPENSA';
   analyzedAt: number;
+  convertedAt?: number;
 }
 
 interface RideOfferPlugin {
@@ -36,6 +37,7 @@ interface RideOfferPlugin {
   testOverlay(): Promise<void>;
   getOfferHistory(): Promise<{ offers: AnalyzedRideOffer[] }>;
   clearOfferHistory(): Promise<void>;
+  markOfferConverted(options: { offerId: string }): Promise<void>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
@@ -110,6 +112,11 @@ export async function getRideOfferHistory(): Promise<AnalyzedRideOffer[]> {
 export async function clearRideOfferHistory(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.clearOfferHistory();
+}
+
+export async function markRideOfferConverted(offerId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.markOfferConverted({ offerId });
 }
 
 export async function saveNativeRideCriteria(options: {
