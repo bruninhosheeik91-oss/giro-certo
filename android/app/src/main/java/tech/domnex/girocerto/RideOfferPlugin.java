@@ -10,10 +10,12 @@ import android.os.Build;
 import android.provider.Settings;
 import android.net.Uri;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import org.json.JSONArray;
 
 @CapacitorPlugin(name = "RideOffer")
 public class RideOfferPlugin extends Plugin {
@@ -72,6 +74,24 @@ public class RideOfferPlugin extends Plugin {
             "99 • Lucro R$ 24,72 • R$ 2,35/km • R$ 59,33/h",
             "COMPENSA"
         );
+        call.resolve();
+    }
+
+    @PluginMethod public void getOfferHistory(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
+        JSArray offers = new JSArray();
+        try {
+            JSONArray stored = new JSONArray(prefs.getString("offerHistory", "[]"));
+            for (int index = 0; index < stored.length(); index++) offers.put(stored.get(index));
+        } catch (Exception ignored) { }
+        JSObject result = new JSObject();
+        result.put("offers", offers);
+        call.resolve(result);
+    }
+
+    @PluginMethod public void clearOfferHistory(PluginCall call) {
+        getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+            .edit().remove("offerHistory").apply();
         call.resolve();
     }
 
