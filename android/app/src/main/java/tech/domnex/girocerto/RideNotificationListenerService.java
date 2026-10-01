@@ -7,6 +7,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Build;
+import android.provider.Settings;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
@@ -17,6 +28,8 @@ public class RideNotificationListenerService extends NotificationListenerService
     public static final String ACTION_RIDE_OFFER = "tech.domnex.girocerto.RIDE_OFFER";
     public static final String PREFS = "giro_certo_ride_offers";
     private static final String CHANNEL_ID = "giro_certo_ofertas";
+    private WindowManager windowManager;
+    private View overlayView;
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
@@ -76,6 +89,10 @@ public class RideNotificationListenerService extends NotificationListenerService
         String icon = status.equals("COMPENSA") ? "✅ " : status.equals("ATENÇÃO") ? "⚠️ " : "❌ ";
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+            showOverlay(icon + status, fare, body, status);
+        }
+
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(new NotificationChannel(CHANNEL_ID, "Análise de ofertas", NotificationManager.IMPORTANCE_HIGH));
@@ -90,6 +107,75 @@ public class RideNotificationListenerService extends NotificationListenerService
             .setTimeoutAfter(12000)
             .setAutoCancel(true);
         manager.notify(9021, notification.build());
+    }
+
+    private void showOverlay(String title, double fare, String body, String status) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            removeOverlay();
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setPadding(dp(16), dp(12), dp(16), dp(12));
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(Color.rgb(15, 23, 42));
+            background.setCornerRadius(dp(16));
+            int accent = status.equals("COMPENSA") ? Color.rgb(16, 185, 129)
+                : status.equals("ATENÇÃO") ? Color.rgb(245, 158, 11) : Color.rgb(244, 63, 94);
+            background.setStroke(dp(2), accent);
+            card.setBackground(background);
+            card.setElevation(dp(12));
+
+            TextView heading = new TextView(this);
+            heading.setText(title + "  •  " + String.format(Locale.forLanguageTag("pt-BR"), "R$ %.2f", fare));
+            heading.setTextColor(accent);
+            heading.setTextSize(16);
+            heading.setTypeface(null, android.graphics.Typeface.BOLD);
+            card.addView(heading);
+
+            TextView details = new TextView(this);
+            details.setText(body);
+            details.setTextColor(Color.rgb(226, 232, 240));
+            details.setTextSize(12);
+            details.setPadding(0, dp(5), 0, 0);
+            card.addView(details);
+
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                getResources().getDisplayMetrics().widthPixels - dp(24),
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    : WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT);
+            params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+            params.y = dp(72);
+            overlayView = card;
+            try {
+                windowManager.addView(card, params);
+                new Handler(Looper.getMainLooper()).postDelayed(this::removeOverlay, 12000);
+            } catch (RuntimeException ignored) {
+                overlayView = null;
+            }
+        });
+    }
+
+    private void removeOverlay() {
+        if (windowManager != null && overlayView != null) {
+            try { windowManager.removeView(overlayView); } catch (RuntimeException ignored) { }
+        }
+        overlayView = null;
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    @Override public void onDestroy() {
+        removeOverlay();
+        super.onDestroy();
     }
 
     private double firstMatch(String content, String regex) {
