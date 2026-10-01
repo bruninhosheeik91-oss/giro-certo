@@ -193,7 +193,10 @@ export function useAuthState(): UseAuthState {
       if (cancelled) return;
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true);
       if (event === 'SIGNED_OUT') setIsRecovery(false);
-      applySession(nextSession, event === 'SIGNED_OUT' && isDeviceOffline());
+      // Na abertura offline o Supabase pode emitir INITIAL_SESSION sem sessão
+      // antes de concluir a tentativa de refresh. Qualquer evento vazio enquanto
+      // o aparelho estiver offline deve manter a identidade já autenticada.
+      applySession(nextSession, !nextSession && isDeviceOffline());
     });
 
     const handleOnline = () => {
