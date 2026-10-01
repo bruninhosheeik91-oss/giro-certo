@@ -15,12 +15,27 @@ export interface RideOfferDraft extends NativeRideOffer {
   estimatedMinutes?: number;
 }
 
+export interface AnalyzedRideOffer {
+  id: string;
+  appName: string;
+  fare: number;
+  totalKm: number;
+  minutes: number;
+  profit: number;
+  profitPerKm: number;
+  profitPerHour: number;
+  status: 'COMPENSA' | 'ATENÇÃO' | 'NÃO COMPENSA';
+  analyzedAt: number;
+}
+
 interface RideOfferPlugin {
   isNotificationAccessGranted(): Promise<{ granted: boolean }>;
   isOverlayPermissionGranted(): Promise<{ granted: boolean }>;
   openNotificationAccessSettings(): Promise<void>;
   openOverlaySettings(): Promise<void>;
   testOverlay(): Promise<void>;
+  getOfferHistory(): Promise<{ offers: AnalyzedRideOffer[] }>;
+  clearOfferHistory(): Promise<void>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
@@ -85,6 +100,16 @@ export async function openRideOverlaySettings(): Promise<void> {
 export async function testRideOverlay(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.testOverlay();
+}
+
+export async function getRideOfferHistory(): Promise<AnalyzedRideOffer[]> {
+  if (!Capacitor.isNativePlatform()) return [];
+  return (await RideOffer.getOfferHistory()).offers;
+}
+
+export async function clearRideOfferHistory(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.clearOfferHistory();
 }
 
 export async function saveNativeRideCriteria(options: {
