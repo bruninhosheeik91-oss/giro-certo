@@ -19,6 +19,12 @@ interface RideOfferPlugin {
   isNotificationAccessGranted(): Promise<{ granted: boolean }>;
   openNotificationAccessSettings(): Promise<void>;
   getLatestRideOffer(): Promise<{ offer?: NativeRideOffer }>;
+  saveRideCriteria(options: {
+    minProfitPerKm: number;
+    minProfitPerHour: number;
+    minAcceptableValue: number;
+    costPerKm: number;
+  }): Promise<void>;
   addListener(
     eventName: 'rideOffer',
     listener: (offer: NativeRideOffer) => void,
@@ -61,6 +67,16 @@ export async function isRideOfferAccessGranted(): Promise<boolean> {
 export async function openRideOfferAccessSettings(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.openNotificationAccessSettings();
+}
+
+export async function saveNativeRideCriteria(options: {
+  minProfitPerKm: number;
+  minProfitPerHour: number;
+  minAcceptableValue: number;
+  costPerKm: number;
+}): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.saveRideCriteria(options);
 }
 
 export async function getLatestRideOffer(): Promise<NativeRideOffer | null> {
