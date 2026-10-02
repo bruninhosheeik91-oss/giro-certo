@@ -50,6 +50,7 @@ import { flushQueue, supabaseGateway } from '../lib/syncEngine';
 import { createUuid } from '../lib/uuid';
 import { clearLocalMode } from '../lib/localMode';
 import { getSupabaseClient } from '../lib/auth';
+import { setRideProEntitlement } from '../lib/rideOffer';
 import { activePauseId } from '../repositories/mappers';
 import {
   calculatePeriodSummary,
@@ -643,7 +644,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const signOut = useCallback(async (): Promise<void> => {
     if (mode === 'cloud') await syncNow();
-    await session.signOut();
+    try {
+      await setRideProEntitlement(false, 0);
+    } finally {
+      await session.signOut();
+    }
   }, [mode, session, syncNow]);
 
   const enableCloudMode = useCallback(() => {
@@ -667,6 +672,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!client) return;
     const { data } = client.auth.onAuthStateChange((event) => {
       if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') void syncNow();
+      if (event === 'SIGNED_OUT') void setRideProEntitlement(false, 0);
     });
     return () => {
       void data.subscription.unsubscribe();
