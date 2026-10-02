@@ -1,4 +1,8 @@
 -- O Essencial permanece disponível. Somente recursos Pro consultam estas funções.
+INSERT INTO public.subscriptions (user_id)
+SELECT id FROM auth.users
+ON CONFLICT (user_id) DO NOTHING;
+
 CREATE OR REPLACE FUNCTION public.get_my_subscription_access()
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 DECLARE
