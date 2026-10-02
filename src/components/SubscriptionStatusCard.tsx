@@ -6,14 +6,14 @@ import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 export const SubscriptionStatusCard: React.FC = () => {
   const { subscription, loading, daysRemaining, tier, reason } = useSubscription();
   const [plansOpen, setPlansOpen] = useState(false);
-  if (loading || !subscription) return null;
+  if (loading) return null;
   const isPro = tier === 'pro';
   const isTrial = reason === 'trial';
   const subtitle =
     reason === 'owner'
       ? 'Acesso administrativo completo'
       : reason === 'subscription'
-        ? subscription.plan === 'annual'
+        ? subscription?.plan === 'annual'
           ? 'Plano anual ativo'
           : 'Plano mensal ativo'
         : isTrial
