@@ -19,6 +19,7 @@ import {
   Trash2,
   Crown,
   LockKeyhole,
+  RefreshCw,
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
@@ -361,7 +362,7 @@ export const SimulatorsModal: React.FC = () => {
                   )}
                 </div>
               )}
-              {isRideOfferNativeAvailable() && hasProAccess && offerHistory.length > 0 && (
+              {isRideOfferNativeAvailable() && hasProAccess && (
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
                   <button
                     type="button"
@@ -379,6 +380,17 @@ export const SimulatorsModal: React.FC = () => {
                   </button>
                   {historyOpen && (
                     <div className="space-y-2 border-t border-slate-800 p-3">
+                      {offerHistory.length === 0 && (
+                        <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950/40 p-3 text-center">
+                          <p className="text-[11px] font-bold text-slate-300">
+                            Nenhuma oferta real analisada
+                          </p>
+                          <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+                            O teste do cartão não entra aqui. Este histórico é preenchido quando uma
+                            oferta compatível da 99, Uber ou outro app é reconhecida.
+                          </p>
+                        </div>
+                      )}
                       {offerHistory.slice(0, 10).map((offer) => (
                         <div
                           key={offer.id}
@@ -464,18 +476,25 @@ export const SimulatorsModal: React.FC = () => {
                       <p className="text-center text-[10px] text-slate-500">
                         Histórico local. Não altera ganhos ou relatórios.
                       </p>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void clearRideOfferHistory().then(() => {
-                            setOfferHistory([]);
-                            setHistoryOpen(false);
-                          })
-                        }
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Limpar histórico
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void getRideOfferHistory().then(setOfferHistory)}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/20 py-2 text-[10px] font-bold text-blue-300"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" /> Atualizar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={offerHistory.length === 0}
+                          onClick={() =>
+                            void clearRideOfferHistory().then(() => setOfferHistory([]))
+                          }
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Limpar histórico
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
