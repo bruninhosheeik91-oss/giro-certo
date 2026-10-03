@@ -8,6 +8,10 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_REDIRECT_URL?: string;
   /** Ativa o bloqueio após o período gratuito somente quando a cobrança estiver pronta. */
   readonly VITE_SUBSCRIPTION_ENFORCEMENT?: string;
+  /** Canal desta compilação: google_play ou direct (APK). */
+  readonly VITE_DISTRIBUTION_CHANNEL?: string;
+  readonly VITE_GOOGLE_PLAY_BILLING_ENABLED?: string;
+  readonly VITE_MERCADO_PAGO_BILLING_ENABLED?: string;
 }
 
 interface ImportMeta {

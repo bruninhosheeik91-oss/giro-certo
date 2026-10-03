@@ -4,7 +4,8 @@ import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 
 export const SubscriptionStatusCard: React.FC = () => {
-  const { subscription, loading, daysRemaining, tier, reason } = useSubscription();
+  const { loading, daysRemaining, tier, reason, plan, provider, cancelAtPeriodEnd } =
+    useSubscription();
   const [plansOpen, setPlansOpen] = useState(false);
   if (loading) return null;
   const isPro = tier === 'pro';
@@ -13,7 +14,7 @@ export const SubscriptionStatusCard: React.FC = () => {
     reason === 'owner'
       ? 'Acesso administrativo completo'
       : reason === 'subscription'
-        ? subscription?.plan === 'annual'
+        ? plan === 'annual'
           ? 'Plano anual ativo'
           : 'Plano mensal ativo'
         : isTrial
@@ -44,6 +45,17 @@ export const SubscriptionStatusCard: React.FC = () => {
               ? 'Você tem acesso aos recursos Essencial e Pro.'
               : 'Ganhos, gastos, jornadas, metas, contas e relatórios continuam disponíveis sem prazo.'}
         </p>
+        {reason === 'subscription' && (
+          <p className="text-[10px] text-blue-300">
+            Cobrança via{' '}
+            {provider === 'google_play'
+              ? 'Google Play'
+              : provider === 'mercado_pago'
+                ? 'Mercado Pago'
+                : 'provedor em validação'}
+            {cancelAtPeriodEnd ? ' • cancelamento agendado' : ''}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => setPlansOpen(true)}

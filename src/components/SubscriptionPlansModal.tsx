@@ -1,15 +1,19 @@
 import React from 'react';
-import { Check, Crown, ShieldCheck, Sparkles, X } from 'lucide-react';
-
-export const SUBSCRIPTION_PRODUCTS = {
-  monthly: 'giro_certo_monthly',
-  annual: 'giro_certo_annual',
-} as const;
+import { Check, Crown, LockKeyhole, ShieldCheck, Sparkles, X } from 'lucide-react';
+import {
+  BILLING_PLANS,
+  type BillingPlanId,
+  formatBillingPrice,
+  getBillingProvider,
+  getDistributionChannel,
+  isBillingEnabled,
+} from '../lib/billingCatalog';
 
 interface SubscriptionPlansModalProps {
   open: boolean;
   onClose: () => void;
   daysRemaining?: number;
+  onSubscribe?: (planId: BillingPlanId) => void;
 }
 
 const essentialBenefits = [
@@ -29,8 +33,13 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
   open,
   onClose,
   daysRemaining,
+  onSubscribe,
 }) => {
   if (!open) return null;
+  const channel = getDistributionChannel();
+  const provider = getBillingProvider(channel);
+  const checkoutEnabled = isBillingEnabled(channel);
+  const providerLabel = provider === 'google_play' ? 'Google Play' : 'Mercado Pago';
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
@@ -101,14 +110,51 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                 </div>
               ))}
             </div>
+            <div className="mt-4 grid gap-2">
+              {BILLING_PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="rounded-xl border border-emerald-400/20 bg-slate-950/40 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-white">{plan.title}</p>
+                      <p className="text-lg font-extrabold text-emerald-300">
+                        {formatBillingPrice(plan.price)}
+                        <span className="ml-1 text-[10px] font-medium text-slate-400">
+                          {plan.periodLabel}
+                        </span>
+                      </p>
+                      {plan.savingsLabel && (
+                        <p className="text-[10px] text-emerald-300">{plan.savingsLabel}</p>
+                      )}
+                    </div>
+                    {plan.id === 'annual' && (
+                      <span className="rounded-lg bg-amber-400/15 px-2 py-1 text-[9px] font-bold text-amber-300">
+                        MELHOR VALOR
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!checkoutEnabled || !onSubscribe}
+                    onClick={() => onSubscribe?.(plan.id)}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {!checkoutEnabled && <LockKeyhole className="h-3.5 w-3.5" />}
+                    {checkoutEnabled && onSubscribe ? `Assinar com ${providerLabel}` : 'Em breve'}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="mt-5 flex items-start gap-2 rounded-xl bg-slate-950/50 p-3 text-[10px] leading-relaxed text-slate-400">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
           <span>
-            Preços e cobrança ainda não estão ativos. Eles serão definidos antes da publicação na
-            Google Play.
+            Os preços já estão definidos. A cobrança via {providerLabel} será liberada depois da
+            ativação e validação da conta do provedor.
           </span>
         </div>
       </div>

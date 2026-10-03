@@ -8,6 +8,9 @@ export interface SubscriptionAccess {
   hasProAccess: boolean;
   daysRemaining: number;
   expiresAt: string | null;
+  plan: 'trial' | 'monthly' | 'annual' | null;
+  provider: 'google_play' | 'mercado_pago' | 'apple' | null;
+  cancelAtPeriodEnd: boolean;
 }
 
 interface SubscriptionAccessInput {
@@ -26,7 +29,16 @@ export function deriveSubscriptionAccess({
   now = Date.now(),
 }: SubscriptionAccessInput): SubscriptionAccess {
   if (isOwner) {
-    return { tier: 'pro', reason: 'owner', hasProAccess: true, daysRemaining: 0, expiresAt: null };
+    return {
+      tier: 'pro',
+      reason: 'owner',
+      hasProAccess: true,
+      daysRemaining: 0,
+      expiresAt: null,
+      plan: null,
+      provider: null,
+      cancelAtPeriodEnd: false,
+    };
   }
 
   const trialEnd = trialEndsAt ? Date.parse(trialEndsAt) : 0;
@@ -37,6 +49,9 @@ export function deriveSubscriptionAccess({
       hasProAccess: false,
       daysRemaining: Math.max(1, Math.ceil((trialEnd - now) / 86_400_000)),
       expiresAt: trialEndsAt ?? null,
+      plan: 'trial',
+      provider: null,
+      cancelAtPeriodEnd: false,
     };
   }
 
@@ -48,6 +63,9 @@ export function deriveSubscriptionAccess({
       hasProAccess: true,
       daysRemaining: 0,
       expiresAt: currentPeriodEnd ?? null,
+      plan: null,
+      provider: null,
+      cancelAtPeriodEnd: false,
     };
   }
 
@@ -57,6 +75,9 @@ export function deriveSubscriptionAccess({
     hasProAccess: false,
     daysRemaining: 0,
     expiresAt: null,
+    plan: null,
+    provider: null,
+    cancelAtPeriodEnd: false,
   };
 }
 
