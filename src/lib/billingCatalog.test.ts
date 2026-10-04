@@ -16,10 +16,10 @@ describe('billing catalog', () => {
     expect(formatBillingPrice(19.9)).toBe('R$ 19,90');
   });
 
-  it('uses Mercado Pago for direct builds and Play Billing for store builds', () => {
+  it('uses Stripe for direct builds and Play Billing for store builds', () => {
     expect(getDistributionChannel(undefined)).toBe('direct');
     expect(getDistributionChannel('google_play')).toBe('google_play');
-    expect(getBillingProvider('direct')).toBe('mercado_pago');
+    expect(getBillingProvider('direct')).toBe('stripe');
     expect(getBillingProvider('google_play')).toBe('google_play');
   });
 

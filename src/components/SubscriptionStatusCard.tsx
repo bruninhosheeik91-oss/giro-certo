@@ -50,9 +50,11 @@ export const SubscriptionStatusCard: React.FC = () => {
             Cobrança via{' '}
             {provider === 'google_play'
               ? 'Google Play'
-              : provider === 'mercado_pago'
-                ? 'Mercado Pago'
-                : 'provedor em validação'}
+              : provider === 'stripe'
+                ? 'Stripe'
+                : provider === 'mercado_pago'
+                  ? 'Mercado Pago'
+                  : 'provedor em validação'}
             {cancelAtPeriodEnd ? ' • cancelamento agendado' : ''}
           </p>
         )}

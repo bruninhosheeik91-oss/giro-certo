@@ -11,7 +11,7 @@ interface ImportMetaEnv {
   /** Canal desta compilação: google_play ou direct (APK). */
   readonly VITE_DISTRIBUTION_CHANNEL?: string;
   readonly VITE_GOOGLE_PLAY_BILLING_ENABLED?: string;
-  readonly VITE_MERCADO_PAGO_BILLING_ENABLED?: string;
+  readonly VITE_STRIPE_BILLING_ENABLED?: string;
 }
 
 interface ImportMeta {

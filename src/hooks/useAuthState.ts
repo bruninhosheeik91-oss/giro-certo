@@ -5,11 +5,7 @@ import {
   clearRecoveryRedirect,
   isRecoveryRedirect,
 } from '../lib/authRedirects';
-import {
-  consumeRecoveryPending,
-  markRecoveryPending,
-  parseAuthLink,
-} from '../lib/authDeepLink';
+import { consumeRecoveryPending, markRecoveryPending, parseAuthLink } from '../lib/authDeepLink';
 import {
   getSupabaseClient,
   isSupabaseConfigured,
@@ -17,6 +13,7 @@ import {
   type EmailError,
 } from '../lib/auth';
 import { translateAuthError } from '../lib/authMessages';
+import { recordBillingReturn } from '../lib/billingReturn';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 export type AuthMode = 'local' | 'cloud';
@@ -223,7 +220,9 @@ export function useAuthState(): UseAuthState {
     // aberto, então o link que o abriu precisa ser lido da tela inicial.
     void CapacitorApp.getLaunchUrl()
       .then((result) => {
-        if (!cancelled && result?.url) void handleAuthUrl(result.url);
+        if (!cancelled && result?.url && !recordBillingReturn(result.url)) {
+          void handleAuthUrl(result.url);
+        }
       })
       .catch(() => {
         // Sem plugin nativo não há deep link; a URL da página é lida abaixo.
@@ -232,7 +231,7 @@ export function useAuthState(): UseAuthState {
     if (parseAuthLink(window.location.href)) void handleAuthUrl(window.location.href);
 
     void CapacitorApp.addListener('appUrlOpen', ({ url }) => {
-      void handleAuthUrl(url);
+      if (!recordBillingReturn(url)) void handleAuthUrl(url);
     })
       .then((listenerHandle) => {
         remove = () => void listenerHandle.remove();
@@ -332,8 +331,12 @@ export function useAuthState(): UseAuthState {
     clearRecoveryRedirect();
   }, []);
 
-  const userId = session?.user.id ?? (status === 'signedIn' ? cachedIdentityRef.current?.userId ?? null : null);
-  const email = session?.user.email ?? (status === 'signedIn' ? cachedIdentityRef.current?.email ?? null : null);
+  const userId =
+    session?.user.id ??
+    (status === 'signedIn' ? (cachedIdentityRef.current?.userId ?? null) : null);
+  const email =
+    session?.user.email ??
+    (status === 'signedIn' ? (cachedIdentityRef.current?.email ?? null) : null);
   const mode: AuthMode = status === 'signedIn' && userId ? 'cloud' : 'local';
 
   return {

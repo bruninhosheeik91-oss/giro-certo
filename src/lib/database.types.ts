@@ -358,7 +358,7 @@ export type Database = {
           trial_started_at: string;
           trial_ends_at: string;
           current_period_end: string | null;
-          provider: 'google_play' | 'mercado_pago' | 'apple' | null;
+          provider: 'google_play' | 'stripe' | 'mercado_pago' | 'apple' | null;
           product_id: string | null;
           provider_subscription_id: string | null;
           provider_customer_id: string | null;
@@ -374,7 +374,7 @@ export type Database = {
           trial_started_at?: string;
           trial_ends_at?: string;
           current_period_end?: string | null;
-          provider?: 'google_play' | 'mercado_pago' | 'apple' | null;
+          provider?: 'google_play' | 'stripe' | 'mercado_pago' | 'apple' | null;
           product_id?: string | null;
           provider_subscription_id?: string | null;
           provider_customer_id?: string | null;

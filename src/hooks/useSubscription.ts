@@ -6,11 +6,29 @@ import {
   shouldShowTrialExpiryNotice,
   type SubscriptionAccess,
 } from '../lib/subscriptionAccess';
+import { consumeBillingReturn } from '../lib/billingReturn';
 
 export function useSubscription() {
   const { userId, mode } = useSession();
   const [serverAccess, setServerAccess] = useState<SubscriptionAccess | null>(null);
   const [loading, setLoading] = useState(mode === 'cloud');
+  const [refreshRevision, setRefreshRevision] = useState(0);
+
+  useEffect(() => {
+    const timers: number[] = [];
+    const refresh = () => {
+      setRefreshRevision((value) => value + 1);
+      // O retorno do Checkout pode chegar alguns instantes antes do webhook.
+      timers.push(window.setTimeout(() => setRefreshRevision((value) => value + 1), 2_000));
+      timers.push(window.setTimeout(() => setRefreshRevision((value) => value + 1), 5_000));
+    };
+    window.addEventListener('giro-certo:billing-return', refresh);
+    if (consumeBillingReturn()) refresh();
+    return () => {
+      window.removeEventListener('giro-certo:billing-return', refresh);
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
 
   useEffect(() => {
     if (mode !== 'cloud' || !userId) {
@@ -46,6 +64,7 @@ export function useSubscription() {
               : null,
           provider:
             value.provider === 'google_play' ||
+            value.provider === 'stripe' ||
             value.provider === 'mercado_pago' ||
             value.provider === 'apple'
               ? value.provider
@@ -58,7 +77,7 @@ export function useSubscription() {
     return () => {
       active = false;
     };
-  }, [mode, userId]);
+  }, [mode, refreshRevision, userId]);
 
   return useMemo(() => {
     const access =

@@ -9,7 +9,7 @@ export interface SubscriptionAccess {
   daysRemaining: number;
   expiresAt: string | null;
   plan: 'trial' | 'monthly' | 'annual' | null;
-  provider: 'google_play' | 'mercado_pago' | 'apple' | null;
+  provider: 'google_play' | 'stripe' | 'mercado_pago' | 'apple' | null;
   cancelAtPeriodEnd: boolean;
 }
 

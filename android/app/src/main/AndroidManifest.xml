@@ -19,6 +19,12 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/custom_url_scheme" android:host="@string/billing_redirect_host" />
+            </intent-filter>
 
             <!-- Retorno de e-mail: confirmação de cadastro e recuperação de senha.
                  O host é fixo porque é o mesmo do Redirect URL cadastrado no

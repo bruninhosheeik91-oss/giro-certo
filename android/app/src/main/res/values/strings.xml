@@ -5,4 +5,5 @@
     <string name="package_name">tech.domnex.girocerto</string>
     <string name="custom_url_scheme">tech.domnex.girocerto</string>
     <string name="auth_redirect_host" translatable="false">login-callback</string>
+    <string name="billing_redirect_host" translatable="false">billing-result</string>
 </resources>

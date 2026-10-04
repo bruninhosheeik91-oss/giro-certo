@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Crown, LockKeyhole, ShieldCheck, Sparkles, X } from 'lucide-react';
 import {
   BILLING_PLANS,
@@ -8,6 +8,7 @@ import {
   getDistributionChannel,
   isBillingEnabled,
 } from '../lib/billingCatalog';
+import { startStripeCheckout } from '../lib/stripeCheckout';
 
 interface SubscriptionPlansModalProps {
   open: boolean;
@@ -35,11 +36,26 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
   daysRemaining,
   onSubscribe,
 }) => {
+  const [checkoutPlan, setCheckoutPlan] = useState<BillingPlanId | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   if (!open) return null;
   const channel = getDistributionChannel();
   const provider = getBillingProvider(channel);
   const checkoutEnabled = isBillingEnabled(channel);
-  const providerLabel = provider === 'google_play' ? 'Google Play' : 'Mercado Pago';
+  const providerLabel = provider === 'google_play' ? 'Google Play' : 'Stripe';
+  const canSubscribe = checkoutEnabled && (provider === 'stripe' || Boolean(onSubscribe));
+
+  const subscribe = async (planId: BillingPlanId) => {
+    setCheckoutError(null);
+    setCheckoutPlan(planId);
+    try {
+      if (provider === 'stripe') await startStripeCheckout(planId);
+      else onSubscribe?.(planId);
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Não foi possível assinar.');
+      setCheckoutPlan(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
@@ -137,15 +153,24 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                   </div>
                   <button
                     type="button"
-                    disabled={!checkoutEnabled || !onSubscribe}
-                    onClick={() => onSubscribe?.(plan.id)}
+                    disabled={!canSubscribe || checkoutPlan !== null}
+                    onClick={() => void subscribe(plan.id)}
                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {!checkoutEnabled && <LockKeyhole className="h-3.5 w-3.5" />}
-                    {checkoutEnabled && onSubscribe ? `Assinar com ${providerLabel}` : 'Em breve'}
+                    {checkoutPlan === plan.id
+                      ? 'Abrindo pagamento...'
+                      : canSubscribe
+                        ? `Assinar com ${providerLabel}`
+                        : 'Em breve'}
                   </button>
                 </div>
               ))}
+              {checkoutError && (
+                <p className="rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-[10px] text-red-200">
+                  {checkoutError}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -153,8 +178,9 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
         <div className="mt-5 flex items-start gap-2 rounded-xl bg-slate-950/50 p-3 text-[10px] leading-relaxed text-slate-400">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
           <span>
-            Os preços já estão definidos. A cobrança via {providerLabel} será liberada depois da
-            ativação e validação da conta do provedor.
+            {checkoutEnabled
+              ? `O pagamento é processado com segurança pela ${providerLabel}. O Giro Certo não armazena os dados do seu cartão.`
+              : `Os preços já estão definidos. A cobrança via ${providerLabel} será liberada depois da ativação e validação da conta do provedor.`}
           </span>
         </div>
       </div>

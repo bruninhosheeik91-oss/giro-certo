@@ -1,5 +1,5 @@
 export type BillingPlanId = 'monthly' | 'annual';
-export type BillingProvider = 'google_play' | 'mercado_pago';
+export type BillingProvider = 'google_play' | 'stripe';
 export type DistributionChannel = 'google_play' | 'direct';
 
 export interface BillingPlan {
@@ -47,13 +47,13 @@ export function getDistributionChannel(
 }
 
 export function getBillingProvider(channel: DistributionChannel): BillingProvider {
-  return channel === 'google_play' ? 'google_play' : 'mercado_pago';
+  return channel === 'google_play' ? 'google_play' : 'stripe';
 }
 
 export function isBillingEnabled(
   channel: DistributionChannel,
   googlePlayEnabled = import.meta.env.VITE_GOOGLE_PLAY_BILLING_ENABLED,
-  mercadoPagoEnabled = import.meta.env.VITE_MERCADO_PAGO_BILLING_ENABLED,
+  stripeEnabled = import.meta.env.VITE_STRIPE_BILLING_ENABLED,
 ): boolean {
-  return channel === 'google_play' ? googlePlayEnabled === 'true' : mercadoPagoEnabled === 'true';
+  return channel === 'google_play' ? googlePlayEnabled === 'true' : stripeEnabled === 'true';
 }
