@@ -27,12 +27,19 @@ Deno.serve(async (request) => {
     const subscription = await stripe.subscriptions.retrieve(current.provider_subscription_id);
     const item = subscription.items.data[0];
     if (!item) return json({ error: 'Item da assinatura não encontrado.' }, 409);
-    const schedule = await stripe.subscriptionSchedules.create({ from_subscription: subscription.id });
-    await stripe.subscriptionSchedules.update(schedule.id, {
+    const existingSchedule =
+      typeof subscription.schedule === 'string'
+        ? subscription.schedule
+        : subscription.schedule?.id;
+    const scheduleId = existingSchedule ??
+      (await stripe.subscriptionSchedules.create({ from_subscription: subscription.id })).id;
+    const annualEnd = new Date(item.current_period_end * 1000);
+    annualEnd.setUTCFullYear(annualEnd.getUTCFullYear() + 1);
+    await stripe.subscriptionSchedules.update(scheduleId, {
       end_behavior: 'release',
       phases: [
         { start_date: item.current_period_start, end_date: item.current_period_end, items: [{ price: item.price.id, quantity: item.quantity ?? 1 }], proration_behavior: 'none' },
-        { start_date: item.current_period_end, items: [{ price: annualPrice, quantity: item.quantity ?? 1 }], iterations: 1, proration_behavior: 'none' },
+        { start_date: item.current_period_end, end_date: Math.floor(annualEnd.getTime() / 1000), items: [{ price: annualPrice, quantity: item.quantity ?? 1 }], proration_behavior: 'none' },
       ],
     });
     const changeAt = new Date(item.current_period_end * 1000).toISOString();
