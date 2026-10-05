@@ -33,7 +33,7 @@ final class AnalyzerControlNotification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(new NotificationChannel(
                 CHANNEL_ID,
-                "Controle do analisador",
+                "Controle do Copiloto Giro Certo",
                 NotificationManager.IMPORTANCE_LOW
             ));
         }
@@ -57,7 +57,7 @@ final class AnalyzerControlNotification {
 
         NotificationCompat.Builder notification = new NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(enabled ? "Analisador ligado" : "Analisador desligado")
+            .setContentTitle(enabled ? "Copiloto Giro Certo ligado" : "Copiloto Giro Certo desligado")
             .setContentText(enabled ? "Monitorando ofertas da 99" : "Toque em Ligar para monitorar ofertas")
             .setContentIntent(openPendingIntent)
             .setOngoing(true)

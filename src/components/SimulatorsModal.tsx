@@ -269,7 +269,7 @@ export const SimulatorsModal: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-bold text-white">Analisador automático</p>
+                        <p className="text-xs font-bold text-white">Copiloto Giro Certo</p>
                         <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-300">
                           PRO
                         </span>
@@ -296,9 +296,7 @@ export const SimulatorsModal: React.FC = () => {
                 >
                   <div>
                     <div>
-                      <p className="text-xs font-bold text-slate-100">
-                        Analisador automático de ofertas
-                      </p>
+                      <p className="text-xs font-bold text-slate-100">Copiloto Giro Certo</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
                         {accessibilityAccess && overlayAccess && analyzerEnabled
                           ? 'Ativo. Lê as ofertas visíveis da 99 e mostra a análise sobre o aplicativo.'
@@ -347,7 +345,7 @@ export const SimulatorsModal: React.FC = () => {
                     <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
                       <span>
                         <span className="block text-[11px] font-bold text-slate-200">
-                          Analisador em segundo plano
+                          Copiloto em segundo plano
                         </span>
                         <span className="block text-[9px] text-slate-500">
                           Pause sem remover as permissões
