@@ -43,4 +43,18 @@ describe('parseRideOfferNotification', () => {
     expect(parsed.tripDistance).toBe(6.9);
     expect(parsed.estimatedMinutes).toBe(17);
   });
+
+  it('converte a coleta exibida em metros pela 99', () => {
+    const parsed = parseRideOfferNotification({
+      packageName: 'com.taxis99',
+      appName: '99',
+      title: 'Entrega Moto · R$ 7,50',
+      text: '4 min (947 m) · 11 min (7,4 km) · Aceitar',
+      receivedAt: 4,
+    });
+
+    expect(parsed.distanceToPickup).toBe(0.947);
+    expect(parsed.tripDistance).toBe(7.4);
+    expect(parsed.estimatedMinutes).toBe(15);
+  });
 });

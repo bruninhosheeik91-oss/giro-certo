@@ -86,15 +86,19 @@ export function parseRideOfferNotification(offer: NativeRideOffer): RideOfferDra
   const minuteValues = Array.from(content.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:min|minutos?)\b/gi))
     .map((match) => parseNumber(match[1]))
     .filter(Number.isFinite);
-  const kmValues = Array.from(content.matchAll(/(\d+(?:[.,]\d+)?)\s*km\b/gi))
-    .map((match) => parseNumber(match[1]))
+  const distanceValues = Array.from(content.matchAll(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/gi))
+    .map((match) => {
+      const value = parseNumber(match[1]);
+      return match[2].toLowerCase() === 'm' ? value / 1000 : value;
+    })
     .filter(Number.isFinite);
 
   return {
     ...offer,
     fareOffered: fareMatch ? parseNumber(fareMatch[1]) : undefined,
-    distanceToPickup: kmValues[0],
-    tripDistance: kmValues[1] ?? (kmValues.length === 1 ? kmValues[0] : undefined),
+    distanceToPickup: distanceValues[0],
+    tripDistance:
+      distanceValues[1] ?? (distanceValues.length === 1 ? distanceValues[0] : undefined),
     estimatedMinutes:
       minuteValues.length > 0 ? minuteValues.reduce((total, value) => total + value, 0) : undefined,
   };

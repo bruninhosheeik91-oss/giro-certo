@@ -85,6 +85,8 @@ public class RideNotificationListenerService extends NotificationListenerService
         java.util.regex.Matcher kmMatcher = java.util.regex.Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*km", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
         double totalKm = 0;
         while (kmMatcher.find()) totalKm += decimal(kmMatcher.group(1));
+        java.util.regex.Matcher meterMatcher = java.util.regex.Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*m\\b", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
+        while (meterMatcher.find()) totalKm += decimal(meterMatcher.group(1)) / 1000d;
         double minutes = sumMatches(content, "(\\d+(?:[.,]\\d+)?)\\s*(?:min|minutos?)");
         if (fare <= 0 || totalKm <= 0) {
             String missing = fare <= 0 && totalKm <= 0 ? "valor e distância" : fare <= 0 ? "valor" : "distância";
