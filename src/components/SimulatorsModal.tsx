@@ -25,9 +25,11 @@ import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 import {
   isRideOfferAccessGranted,
+  isRideAccessibilityGranted,
   isRideOfferNativeAvailable,
   isRideOverlayGranted,
   openRideOfferAccessSettings,
+  openRideAccessibilitySettings,
   openRideOverlaySettings,
   saveNativeRideCriteria,
   testRideOverlay,
@@ -37,6 +39,9 @@ import {
   getRideAnalyzerEnabled,
   setRideAnalyzerEnabled,
   setRideProEntitlement,
+  requestAnalyzerNotificationPermission,
+  getAnalyzerDiagnostic,
+  type AnalyzerDiagnostic,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
@@ -76,14 +81,16 @@ export const SimulatorsModal: React.FC = () => {
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
   const [notificationAccess, setNotificationAccess] = useState(false);
+  const [accessibilityAccess, setAccessibilityAccess] = useState(false);
   const [overlayAccess, setOverlayAccess] = useState(false);
   const [overlayTestMessage, setOverlayTestMessage] = useState('');
-  const [permissionTarget, setPermissionTarget] = useState<'notifications' | 'overlay' | null>(
-    null,
-  );
+  const [permissionTarget, setPermissionTarget] = useState<
+    'accessibility' | 'notifications' | 'overlay' | null
+  >(null);
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [analyzerEnabled, setAnalyzerEnabled] = useState(true);
+  const [analyzerDiagnostic, setAnalyzerDiagnostic] = useState<AnalyzerDiagnostic | null>(null);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -98,6 +105,7 @@ export const SimulatorsModal: React.FC = () => {
 
   useEffect(() => {
     void isRideOfferAccessGranted().then(setNotificationAccess);
+    void isRideAccessibilityGranted().then(setAccessibilityAccess);
     void isRideOverlayGranted().then(setOverlayAccess);
     void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
     void saveNativeRideCriteria({
@@ -110,7 +118,10 @@ export const SimulatorsModal: React.FC = () => {
     const refreshAccess = () => {
       if (document.visibilityState === 'visible') {
         void isRideOfferAccessGranted().then(setNotificationAccess);
+        void isRideAccessibilityGranted().then(setAccessibilityAccess);
         void isRideOverlayGranted().then(setOverlayAccess);
+        void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
+        void getAnalyzerDiagnostic().then(setAnalyzerDiagnostic);
       }
     };
     document.addEventListener('visibilitychange', refreshAccess);
@@ -125,7 +136,10 @@ export const SimulatorsModal: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (isSimulatorsModalOpen) void getRideOfferHistory().then(setOfferHistory);
+    if (isSimulatorsModalOpen) {
+      void getRideOfferHistory().then(setOfferHistory);
+      void getAnalyzerDiagnostic().then(setAnalyzerDiagnostic);
+    }
   }, [isSimulatorsModalOpen]);
 
   useEffect(() => {
@@ -171,13 +185,15 @@ export const SimulatorsModal: React.FC = () => {
     setPermissionTarget(null);
     localStorage.setItem('giro_certo_ride_analyzer_consent_v1', new Date().toISOString());
     if (target === 'notifications') void openRideOfferAccessSettings();
+    if (target === 'accessibility') void openRideAccessibilitySettings();
     if (target === 'overlay') void openRideOverlaySettings();
   };
 
-  const requestPermission = (target: 'notifications' | 'overlay') => {
+  const requestPermission = (target: 'accessibility' | 'notifications' | 'overlay') => {
     const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v1'));
     if (consented) {
       if (target === 'notifications') void openRideOfferAccessSettings();
+      else if (target === 'accessibility') void openRideAccessibilitySettings();
       else void openRideOverlaySettings();
       return;
     }
@@ -276,7 +292,7 @@ export const SimulatorsModal: React.FC = () => {
               )}
               {isRideOfferNativeAvailable() && hasProAccess && (
                 <div
-                  className={`p-3 rounded-xl border ${notificationAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
+                  className={`p-3 rounded-xl border ${accessibilityAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
                 >
                   <div>
                     <div>
@@ -284,15 +300,26 @@ export const SimulatorsModal: React.FC = () => {
                         Analisador automático de ofertas
                       </p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
-                        {notificationAccess && overlayAccess && analyzerEnabled
-                          ? 'Ativo. A análise aparece sobre o app de corrida, sem abrir o Giro Certo.'
-                          : notificationAccess && overlayAccess
+                        {accessibilityAccess && overlayAccess && analyzerEnabled
+                          ? 'Ativo. Lê as ofertas visíveis da 99 e mostra a análise sobre o aplicativo.'
+                          : accessibilityAccess && overlayAccess
                             ? 'Pausado. Reative o interruptor para voltar a analisar ofertas.'
-                            : 'Conclua as duas autorizações para analisar Uber, 99 e apps compatíveis.'}
+                            : 'Autorize a leitura da tela da 99 e a sobreposição do resultado.'}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => requestPermission('accessibility')}
+                      className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
+                        accessibilityAccess
+                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
+                          : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      {accessibilityAccess ? '✓ Tela da 99 ativa' : '1. Ler tela da 99'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => requestPermission('notifications')}
@@ -302,7 +329,7 @@ export const SimulatorsModal: React.FC = () => {
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      {notificationAccess ? '✓ Leitura ativa' : '1. Ler ofertas'}
+                      {notificationAccess ? '✓ Notificações ativas' : '2. Outros apps'}
                     </button>
                     <button
                       type="button"
@@ -313,10 +340,10 @@ export const SimulatorsModal: React.FC = () => {
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      {overlayAccess ? '✓ Sobreposição ativa' : '2. Aparecer por cima'}
+                      {overlayAccess ? '✓ Sobreposição ativa' : '3. Exibir resultado'}
                     </button>
                   </div>
-                  {notificationAccess && overlayAccess && (
+                  {accessibilityAccess && overlayAccess && (
                     <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
                       <span>
                         <span className="block text-[11px] font-bold text-slate-200">
@@ -332,7 +359,11 @@ export const SimulatorsModal: React.FC = () => {
                         onChange={(event) => {
                           const enabled = event.target.checked;
                           setAnalyzerEnabled(enabled);
-                          void setRideAnalyzerEnabled(enabled).then(setAnalyzerEnabled);
+                          const apply = async () => {
+                            if (enabled) await requestAnalyzerNotificationPermission();
+                            setAnalyzerEnabled(await setRideAnalyzerEnabled(enabled));
+                          };
+                          void apply();
                         }}
                         className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-500"
                       />
@@ -340,7 +371,7 @@ export const SimulatorsModal: React.FC = () => {
                   )}
                   <button
                     type="button"
-                    disabled={!notificationAccess || !overlayAccess}
+                    disabled={!accessibilityAccess || !overlayAccess}
                     onClick={() => {
                       setOverlayTestMessage('');
                       void testRideOverlay()
@@ -359,6 +390,18 @@ export const SimulatorsModal: React.FC = () => {
                     <p className="mt-2 text-center text-[10px] text-emerald-300">
                       {overlayTestMessage}
                     </p>
+                  )}
+                  {analyzerDiagnostic && (
+                    <div
+                      className={`mt-2 rounded-lg border px-3 py-2 text-[10px] ${
+                        analyzerDiagnostic.analyzed
+                          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
+                          : 'border-amber-500/20 bg-amber-500/10 text-amber-200'
+                      }`}
+                    >
+                      <span className="font-bold">Última detecção: </span>
+                      {analyzerDiagnostic.message}
+                    </div>
                   )}
                 </div>
               )}
@@ -928,9 +971,11 @@ export const SimulatorsModal: React.FC = () => {
                 </h3>
               </div>
               <p className="text-xs leading-relaxed text-slate-300">
-                O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para
-                identificar valor, distância e tempo da oferta. A análise aparece em um cartão sobre
-                o aplicativo que estiver aberto.
+                {permissionTarget === 'accessibility'
+                  ? 'O Giro Certo usará a acessibilidade somente para ler valor, distância e tempo exibidos na tela de ofertas da 99.'
+                  : permissionTarget === 'notifications'
+                    ? 'O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para identificar ofertas compatíveis.'
+                    : 'O Giro Certo exibirá o resultado da análise em um cartão sobre o aplicativo de corrida.'}
               </p>
               <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-200">
                 O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase,

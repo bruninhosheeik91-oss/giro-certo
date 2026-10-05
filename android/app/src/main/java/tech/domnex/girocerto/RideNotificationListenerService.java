@@ -68,7 +68,7 @@ public class RideNotificationListenerService extends NotificationListenerService
             .putLong("lastFingerprintAt", receivedAt)
             .apply();
 
-        showRideAnalysis(appName, title + " " + text, prefs);
+        analyzeOfferContent(this, appName, title + " " + text, "notification");
 
         Intent intent = new Intent(ACTION_RIDE_OFFER).setPackage(getPackageName());
         intent.putExtra("packageName", packageName);
@@ -79,13 +79,18 @@ public class RideNotificationListenerService extends NotificationListenerService
         sendBroadcast(intent);
     }
 
-    private void showRideAnalysis(String appName, String content, SharedPreferences prefs) {
+    static boolean analyzeOfferContent(android.content.Context context, String appName, String content, String source) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, MODE_PRIVATE);
         double fare = firstMatch(content, "R\\$\\s*([\\d.]+(?:,\\d{1,2})?)");
         java.util.regex.Matcher kmMatcher = java.util.regex.Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*km", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
         double totalKm = 0;
         while (kmMatcher.find()) totalKm += decimal(kmMatcher.group(1));
-        double minutes = firstMatch(content, "(\\d+(?:[.,]\\d+)?)\\s*(?:min|minutos?)");
-        if (fare <= 0 || totalKm <= 0) return;
+        double minutes = sumMatches(content, "(\\d+(?:[.,]\\d+)?)\\s*(?:min|minutos?)");
+        if (fare <= 0 || totalKm <= 0) {
+            String missing = fare <= 0 && totalKm <= 0 ? "valor e distância" : fare <= 0 ? "valor" : "distância";
+            saveDiagnostic(prefs, false, source, "Oferta detectada, mas faltou " + missing + ".", content);
+            return false;
+        }
 
         double cost = totalKm * prefs.getFloat("costPerKm", 0.28f);
         double profit = fare - cost;
@@ -101,16 +106,17 @@ public class RideNotificationListenerService extends NotificationListenerService
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
         saveHistory(prefs, appName, fare, totalKm, minutes, profit, profitPerKm, profitPerHour, status);
+        saveDiagnostic(prefs, true, source, "Oferta analisada com sucesso.", content);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
-            RideOverlayView.show(this, icon + status, fare, body, status);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)) {
+            RideOverlayView.show(context, icon + status, fare, body, status);
         }
 
-        NotificationManager manager = getSystemService(NotificationManager.class);
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(new NotificationChannel(CHANNEL_ID, "Análise de ofertas", NotificationManager.IMPORTANCE_HIGH));
         }
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(icon + status + " — " + String.format(Locale.forLanguageTag("pt-BR"), "R$ %.2f", fare))
             .setContentText(body)
@@ -120,9 +126,10 @@ public class RideNotificationListenerService extends NotificationListenerService
             .setTimeoutAfter(12000)
             .setAutoCancel(true);
         manager.notify(9021, notification.build());
+        return true;
     }
 
-    private void saveHistory(SharedPreferences prefs, String appName, double fare, double totalKm,
+    private static void saveHistory(SharedPreferences prefs, String appName, double fare, double totalKm,
                              double minutes, double profit, double profitPerKm,
                              double profitPerHour, String status) {
         try {
@@ -145,6 +152,17 @@ public class RideNotificationListenerService extends NotificationListenerService
             }
             prefs.edit().putString("offerHistory", updated.toString()).apply();
         } catch (Exception ignored) { }
+    }
+
+    private static void saveDiagnostic(SharedPreferences prefs, boolean analyzed, String source,
+                                       String message, String content) {
+        prefs.edit()
+            .putBoolean("diagnosticAnalyzed", analyzed)
+            .putString("diagnosticSource", source)
+            .putString("diagnosticMessage", message)
+            .putString("diagnosticPreview", content.length() > 500 ? content.substring(0, 500) : content)
+            .putLong("diagnosticAt", System.currentTimeMillis())
+            .apply();
     }
 
     private void showOverlay(String title, double fare, String body, String status) {
@@ -216,12 +234,19 @@ public class RideNotificationListenerService extends NotificationListenerService
         super.onDestroy();
     }
 
-    private double firstMatch(String content, String regex) {
+    private static double firstMatch(String content, String regex) {
         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
         return matcher.find() ? decimal(matcher.group(1)) : 0;
     }
 
-    private double decimal(String value) {
+    private static double sumMatches(String content, String regex) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
+        double total = 0;
+        while (matcher.find()) total += decimal(matcher.group(1));
+        return total;
+    }
+
+    private static double decimal(String value) {
         String normalized = value.contains(",") ? value.replace(".", "").replace(',', '.') : value;
         try { return Double.parseDouble(normalized); }
         catch (NumberFormatException ignored) { return 0; }

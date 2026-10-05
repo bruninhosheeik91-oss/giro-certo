@@ -29,13 +29,25 @@ export interface AnalyzedRideOffer {
   convertedAt?: number;
 }
 
+export interface AnalyzerDiagnostic {
+  analyzed: boolean;
+  source: 'notification' | 'accessibility' | string;
+  message: string;
+  preview: string;
+  at: number;
+}
+
 interface RideOfferPlugin {
   isNotificationAccessGranted(): Promise<{ granted: boolean }>;
   isOverlayPermissionGranted(): Promise<{ granted: boolean }>;
   openNotificationAccessSettings(): Promise<void>;
+  isAccessibilityAccessGranted(): Promise<{ granted: boolean }>;
+  openAccessibilitySettings(): Promise<void>;
+  requestAnalyzerNotificationPermission(): Promise<{ granted: boolean }>;
   openOverlaySettings(): Promise<void>;
   testOverlay(): Promise<void>;
   getOfferHistory(): Promise<{ offers: AnalyzedRideOffer[] }>;
+  getAnalyzerDiagnostic(): Promise<{ diagnostic?: AnalyzerDiagnostic }>;
   clearOfferHistory(): Promise<void>;
   markOfferConverted(options: { offerId: string }): Promise<void>;
   getAnalyzerEnabled(): Promise<{ enabled: boolean }>;
@@ -67,7 +79,9 @@ function parseNumber(value: string): number {
 export function parseRideOfferNotification(offer: NativeRideOffer): RideOfferDraft {
   const content = `${offer.title} ${offer.text}`.replace(/\s+/g, ' ').trim();
   const fareMatch = content.match(/R\$\s*([\d.]+(?:,\d{1,2})?)/i);
-  const minuteMatch = content.match(/(\d+(?:[.,]\d+)?)\s*(?:min|minutos?)\b/i);
+  const minuteValues = Array.from(content.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:min|minutos?)\b/gi))
+    .map((match) => parseNumber(match[1]))
+    .filter(Number.isFinite);
   const kmValues = Array.from(content.matchAll(/(\d+(?:[.,]\d+)?)\s*km\b/gi))
     .map((match) => parseNumber(match[1]))
     .filter(Number.isFinite);
@@ -77,7 +91,8 @@ export function parseRideOfferNotification(offer: NativeRideOffer): RideOfferDra
     fareOffered: fareMatch ? parseNumber(fareMatch[1]) : undefined,
     distanceToPickup: kmValues[0],
     tripDistance: kmValues[1] ?? (kmValues.length === 1 ? kmValues[0] : undefined),
-    estimatedMinutes: minuteMatch ? parseNumber(minuteMatch[1]) : undefined,
+    estimatedMinutes:
+      minuteValues.length > 0 ? minuteValues.reduce((total, value) => total + value, 0) : undefined,
   };
 }
 
@@ -93,6 +108,21 @@ export async function isRideOfferAccessGranted(): Promise<boolean> {
 export async function openRideOfferAccessSettings(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await RideOffer.openNotificationAccessSettings();
+}
+
+export async function isRideAccessibilityGranted(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  return (await RideOffer.isAccessibilityAccessGranted()).granted;
+}
+
+export async function openRideAccessibilitySettings(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await RideOffer.openAccessibilitySettings();
+}
+
+export async function requestAnalyzerNotificationPermission(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  return (await RideOffer.requestAnalyzerNotificationPermission()).granted;
 }
 
 export async function isRideOverlayGranted(): Promise<boolean> {
@@ -113,6 +143,11 @@ export async function testRideOverlay(): Promise<void> {
 export async function getRideOfferHistory(): Promise<AnalyzedRideOffer[]> {
   if (!Capacitor.isNativePlatform()) return [];
   return (await RideOffer.getOfferHistory()).offers;
+}
+
+export async function getAnalyzerDiagnostic(): Promise<AnalyzerDiagnostic | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  return (await RideOffer.getAnalyzerDiagnostic()).diagnostic ?? null;
 }
 
 export async function clearRideOfferHistory(): Promise<void> {

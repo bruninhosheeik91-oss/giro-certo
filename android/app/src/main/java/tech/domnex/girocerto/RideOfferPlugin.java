@@ -1,5 +1,6 @@
 package tech.domnex.girocerto;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,11 +15,17 @@ import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-@CapacitorPlugin(name = "RideOffer")
+@CapacitorPlugin(
+    name = "RideOffer",
+    permissions = @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS })
+)
 public class RideOfferPlugin extends Plugin {
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -47,6 +54,42 @@ public class RideOfferPlugin extends Plugin {
         Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getContext().startActivity(intent);
         call.resolve();
+    }
+
+    @PluginMethod public void isAccessibilityAccessGranted(PluginCall call) {
+        String enabled = Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        ComponentName component = new ComponentName(getContext(), RideAccessibilityService.class);
+        JSObject result = new JSObject();
+        result.put("granted", enabled != null && enabled.contains(component.flattenToString()));
+        call.resolve(result);
+    }
+
+    @PluginMethod public void openAccessibilitySettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
+        call.resolve();
+    }
+
+    @PluginMethod public void requestAnalyzerNotificationPermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+            || getPermissionState("notifications") == PermissionState.GRANTED) {
+            resolveNotificationPermission(call, true);
+            return;
+        }
+        requestPermissionForAlias("notifications", call, "notificationPermissionCallback");
+    }
+
+    @PermissionCallback
+    private void notificationPermissionCallback(PluginCall call) {
+        boolean granted = getPermissionState("notifications") == PermissionState.GRANTED;
+        resolveNotificationPermission(call, granted);
+    }
+
+    private void resolveNotificationPermission(PluginCall call, boolean granted) {
+        if (granted) AnalyzerControlNotification.refresh(getContext());
+        JSObject result = new JSObject();
+        result.put("granted", granted);
+        call.resolve(result);
     }
 
     @PluginMethod public void isOverlayPermissionGranted(PluginCall call) {
@@ -94,6 +137,22 @@ public class RideOfferPlugin extends Plugin {
         call.resolve(result);
     }
 
+    @PluginMethod public void getAnalyzerDiagnostic(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE);
+        JSObject diagnostic = new JSObject();
+        long at = prefs.getLong("diagnosticAt", 0L);
+        if (at > 0L) {
+            diagnostic.put("analyzed", prefs.getBoolean("diagnosticAnalyzed", false));
+            diagnostic.put("source", prefs.getString("diagnosticSource", ""));
+            diagnostic.put("message", prefs.getString("diagnosticMessage", ""));
+            diagnostic.put("preview", prefs.getString("diagnosticPreview", ""));
+            diagnostic.put("at", at);
+        }
+        JSObject result = new JSObject();
+        result.put("diagnostic", at > 0L ? diagnostic : null);
+        call.resolve(result);
+    }
+
     @PluginMethod public void clearOfferHistory(PluginCall call) {
         getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
             .edit().remove("offerHistory").apply();
@@ -136,6 +195,7 @@ public class RideOfferPlugin extends Plugin {
         boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false)) && hasValidProEntitlement();
         getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean("analyzerEnabled", enabled).apply();
+        AnalyzerControlNotification.refresh(getContext());
         JSObject result = new JSObject();
         result.put("enabled", enabled);
         call.resolve(result);
@@ -151,6 +211,7 @@ public class RideOfferPlugin extends Plugin {
             .putLong("proEntitlementExpiresAt", expiresAt);
         if (!enabled) editor.putBoolean("analyzerEnabled", false);
         editor.apply();
+        AnalyzerControlNotification.refresh(getContext());
         call.resolve();
     }
 

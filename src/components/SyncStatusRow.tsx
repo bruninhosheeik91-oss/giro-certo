@@ -69,9 +69,9 @@ export const SyncStatusRow: React.FC = () => {
         <AlertTriangle className="w-3 h-3 text-rose-400" />
         <span className="text-rose-300">
           {syncQueue.blocked > 0
-            ? `${syncQueue.blocked} alteração${syncQueue.blocked > 1 ? 'ões' : 'ão'} não enviada${
-                syncQueue.blocked > 1 ? 's' : ''
-              }`
+            ? syncQueue.blocked > 1
+              ? `${syncQueue.blocked} alterações não enviadas`
+              : '1 alteração não enviada'
             : 'Falha ao sincronizar'}
         </span>
         <button

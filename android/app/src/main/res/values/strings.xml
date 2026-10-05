@@ -6,4 +6,5 @@
     <string name="custom_url_scheme">tech.domnex.girocerto</string>
     <string name="auth_redirect_host" translatable="false">login-callback</string>
     <string name="billing_redirect_host" translatable="false">billing-result</string>
+    <string name="ride_accessibility_description">Lê somente os dados visíveis das ofertas da 99 para calcular a viabilidade da corrida. Não toca nem aceita corridas.</string>
 </resources>
