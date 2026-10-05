@@ -88,7 +88,7 @@ public class RideNotificationListenerService extends NotificationListenerService
         double minutes = sumMatches(content, "(\\d+(?:[.,]\\d+)?)\\s*(?:min|minutos?)");
         if (fare <= 0 || totalKm <= 0) {
             String missing = fare <= 0 && totalKm <= 0 ? "valor e distância" : fare <= 0 ? "valor" : "distância";
-            saveDiagnostic(prefs, false, source, "Oferta detectada, mas faltou " + missing + ".", content);
+            recordDiagnostic(prefs, false, source, "Oferta detectada, mas faltou " + missing + ".", content);
             return false;
         }
 
@@ -106,7 +106,7 @@ public class RideNotificationListenerService extends NotificationListenerService
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
         saveHistory(prefs, appName, fare, totalKm, minutes, profit, profitPerKm, profitPerHour, status);
-        saveDiagnostic(prefs, true, source, "Oferta analisada com sucesso.", content);
+        recordDiagnostic(prefs, true, source, "Oferta analisada com sucesso.", content);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)) {
             RideOverlayView.show(context, icon + status, fare, body, status);
@@ -154,8 +154,8 @@ public class RideNotificationListenerService extends NotificationListenerService
         } catch (Exception ignored) { }
     }
 
-    private static void saveDiagnostic(SharedPreferences prefs, boolean analyzed, String source,
-                                       String message, String content) {
+    static void recordDiagnostic(SharedPreferences prefs, boolean analyzed, String source,
+                                 String message, String content) {
         prefs.edit()
             .putBoolean("diagnosticAnalyzed", analyzed)
             .putString("diagnosticSource", source)
