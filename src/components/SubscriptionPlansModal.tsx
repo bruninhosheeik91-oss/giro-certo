@@ -14,6 +14,8 @@ interface SubscriptionPlansModalProps {
   open: boolean;
   onClose: () => void;
   daysRemaining?: number;
+  activePlan?: BillingPlanId | null;
+  subscriptionActive?: boolean;
   onSubscribe?: (planId: BillingPlanId) => void;
 }
 
@@ -34,6 +36,8 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
   open,
   onClose,
   daysRemaining,
+  activePlan = null,
+  subscriptionActive = false,
   onSubscribe,
 }) => {
   const [checkoutPlan, setCheckoutPlan] = useState<BillingPlanId | null>(null);
@@ -68,7 +72,9 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
             <div>
               <h2 className="text-base font-bold text-white">Giro Certo Pro</h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                {daysRemaining !== undefined && daysRemaining > 0
+                {subscriptionActive
+                  ? `Seu plano ${activePlan === 'annual' ? 'Pro Anual' : 'Pro Mensal'} está ativo.`
+                  : daysRemaining !== undefined && daysRemaining > 0
                   ? `Sua apresentação termina em ${daysRemaining} dia${daysRemaining === 1 ? '' : 's'}. O analisador exige assinatura Pro.`
                   : 'Compare os recursos disponíveis em cada plano.'}
               </p>
@@ -145,20 +151,28 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                         <p className="text-[10px] text-emerald-300">{plan.savingsLabel}</p>
                       )}
                     </div>
-                    {plan.id === 'annual' && (
+                    {subscriptionActive && activePlan === plan.id ? (
+                      <span className="rounded-lg bg-emerald-400/15 px-2 py-1 text-[9px] font-bold text-emerald-300">
+                        PLANO ATUAL
+                      </span>
+                    ) : plan.id === 'annual' ? (
                       <span className="rounded-lg bg-amber-400/15 px-2 py-1 text-[9px] font-bold text-amber-300">
                         MELHOR VALOR
                       </span>
-                    )}
+                    ) : null}
                   </div>
                   <button
                     type="button"
-                    disabled={!canSubscribe || checkoutPlan !== null}
+                    disabled={subscriptionActive || !canSubscribe || checkoutPlan !== null}
                     onClick={() => void subscribe(plan.id)}
                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {!checkoutEnabled && <LockKeyhole className="h-3.5 w-3.5" />}
-                    {checkoutPlan === plan.id
+                    {subscriptionActive
+                      ? activePlan === plan.id
+                        ? 'Plano atual'
+                        : 'Você já possui um plano ativo'
+                      : checkoutPlan === plan.id
                       ? 'Abrindo pagamento...'
                       : canSubscribe
                         ? `Assinar com ${providerLabel}`

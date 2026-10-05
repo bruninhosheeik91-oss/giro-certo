@@ -70,6 +70,8 @@ export const SubscriptionStatusCard: React.FC = () => {
         open={plansOpen}
         onClose={() => setPlansOpen(false)}
         daysRemaining={daysRemaining}
+        activePlan={plan === 'monthly' || plan === 'annual' ? plan : null}
+        subscriptionActive={reason === 'subscription'}
       />
     </>
   );
