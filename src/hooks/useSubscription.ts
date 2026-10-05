@@ -70,6 +70,8 @@ export function useSubscription() {
               ? value.provider
               : null,
           cancelAtPeriodEnd: value.cancelAtPeriodEnd === true,
+          pendingPlan: value.pendingPlan === 'annual' ? 'annual' : null,
+          pendingChangeAt: typeof value.pendingChangeAt === 'string' ? value.pendingChangeAt : null,
         });
       }
       setLoading(false);

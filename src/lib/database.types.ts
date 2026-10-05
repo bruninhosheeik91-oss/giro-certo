@@ -364,6 +364,8 @@ export type Database = {
           provider_customer_id: string | null;
           cancel_at_period_end: boolean;
           last_verified_at: string | null;
+          pending_plan: 'monthly' | 'annual' | null;
+          pending_change_at: string | null;
           created_at: string;
           updated_at: string;
         },
@@ -380,6 +382,8 @@ export type Database = {
           provider_customer_id?: string | null;
           cancel_at_period_end?: boolean;
           last_verified_at?: string | null;
+          pending_plan?: 'monthly' | 'annual' | null;
+          pending_change_at?: string | null;
           created_at?: string;
           updated_at?: string;
         }

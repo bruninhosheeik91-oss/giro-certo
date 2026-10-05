@@ -8,7 +8,7 @@ import {
   getDistributionChannel,
   isBillingEnabled,
 } from '../lib/billingCatalog';
-import { startStripeCheckout } from '../lib/stripeCheckout';
+import { scheduleStripeAnnual, startStripeCheckout } from '../lib/stripeCheckout';
 
 interface SubscriptionPlansModalProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface SubscriptionPlansModalProps {
   daysRemaining?: number;
   activePlan?: BillingPlanId | null;
   subscriptionActive?: boolean;
+  pendingPlan?: 'annual' | null;
   onSubscribe?: (planId: BillingPlanId) => void;
 }
 
@@ -38,10 +39,12 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
   daysRemaining,
   activePlan = null,
   subscriptionActive = false,
+  pendingPlan = null,
   onSubscribe,
 }) => {
   const [checkoutPlan, setCheckoutPlan] = useState<BillingPlanId | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [annualScheduled, setAnnualScheduled] = useState(pendingPlan === 'annual');
   if (!open) return null;
   const channel = getDistributionChannel();
   const provider = getBillingProvider(channel);
@@ -57,6 +60,19 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
       else onSubscribe?.(planId);
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : 'Não foi possível assinar.');
+      setCheckoutPlan(null);
+    }
+  };
+
+  const scheduleAnnual = async () => {
+    setCheckoutError(null);
+    setCheckoutPlan('annual');
+    try {
+      await scheduleStripeAnnual();
+      setAnnualScheduled(true);
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Não foi possível alterar o plano.');
+    } finally {
       setCheckoutPlan(null);
     }
   };
@@ -163,12 +179,18 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                   </div>
                   <button
                     type="button"
-                    disabled={subscriptionActive || !canSubscribe || checkoutPlan !== null}
-                    onClick={() => void subscribe(plan.id)}
+                    disabled={(subscriptionActive && (activePlan !== 'monthly' || plan.id === 'monthly' || annualScheduled)) || !canSubscribe || checkoutPlan !== null}
+                    onClick={() => void (subscriptionActive && activePlan === 'monthly' && plan.id === 'annual' ? scheduleAnnual() : subscribe(plan.id))}
                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {!checkoutEnabled && <LockKeyhole className="h-3.5 w-3.5" />}
-                    {subscriptionActive
+                    {subscriptionActive && activePlan === 'monthly' && plan.id === 'annual'
+                      ? annualScheduled
+                        ? 'Anual agendado para a próxima renovação'
+                        : checkoutPlan === 'annual'
+                          ? 'Agendando mudança...'
+                          : 'Mudar para o anual na renovação'
+                      : subscriptionActive
                       ? activePlan === plan.id
                         ? 'Plano atual'
                         : 'Você já possui um plano ativo'
@@ -180,6 +202,11 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                   </button>
                 </div>
               ))}
+              {annualScheduled && (
+                <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-[10px] text-emerald-200">
+                  Mudança confirmada. O mensal continua ativo até o vencimento e depois passa para o anual.
+                </p>
+              )}
               {checkoutError && (
                 <p className="rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-[10px] text-red-200">
                   {checkoutError}

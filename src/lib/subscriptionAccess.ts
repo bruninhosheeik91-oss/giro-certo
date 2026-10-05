@@ -11,6 +11,8 @@ export interface SubscriptionAccess {
   plan: 'trial' | 'monthly' | 'annual' | null;
   provider: 'google_play' | 'stripe' | 'mercado_pago' | 'apple' | null;
   cancelAtPeriodEnd: boolean;
+  pendingPlan: 'annual' | null;
+  pendingChangeAt: string | null;
 }
 
 interface SubscriptionAccessInput {
@@ -38,6 +40,8 @@ export function deriveSubscriptionAccess({
       plan: null,
       provider: null,
       cancelAtPeriodEnd: false,
+      pendingPlan: null,
+      pendingChangeAt: null,
     };
   }
 
@@ -52,6 +56,8 @@ export function deriveSubscriptionAccess({
       plan: 'trial',
       provider: null,
       cancelAtPeriodEnd: false,
+      pendingPlan: null,
+      pendingChangeAt: null,
     };
   }
 
@@ -66,6 +72,8 @@ export function deriveSubscriptionAccess({
       plan: null,
       provider: null,
       cancelAtPeriodEnd: false,
+      pendingPlan: null,
+      pendingChangeAt: null,
     };
   }
 
@@ -78,6 +86,8 @@ export function deriveSubscriptionAccess({
     plan: null,
     provider: null,
     cancelAtPeriodEnd: false,
+    pendingPlan: null,
+    pendingChangeAt: null,
   };
 }
 

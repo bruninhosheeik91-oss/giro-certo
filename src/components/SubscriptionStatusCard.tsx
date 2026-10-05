@@ -4,7 +4,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 
 export const SubscriptionStatusCard: React.FC = () => {
-  const { loading, daysRemaining, tier, reason, plan, provider, cancelAtPeriodEnd } =
+  const { loading, daysRemaining, tier, reason, plan, provider, cancelAtPeriodEnd, pendingPlan } =
     useSubscription();
   const [plansOpen, setPlansOpen] = useState(false);
   if (loading) return null;
@@ -72,6 +72,7 @@ export const SubscriptionStatusCard: React.FC = () => {
         daysRemaining={daysRemaining}
         activePlan={plan === 'monthly' || plan === 'annual' ? plan : null}
         subscriptionActive={reason === 'subscription'}
+        pendingPlan={pendingPlan}
       />
     </>
   );

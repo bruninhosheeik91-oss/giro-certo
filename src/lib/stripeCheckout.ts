@@ -21,3 +21,11 @@ export async function startStripeCheckout(plan: BillingPlanId): Promise<void> {
 
   window.location.assign(data.url);
 }
+
+export async function scheduleStripeAnnual(): Promise<void> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Entre na sua conta para alterar o plano.');
+  const { data, error } = await client.functions.invoke<{ scheduled?: boolean; error?: string }>('schedule-stripe-annual', { body: {} });
+  if (error) throw new Error('Não foi possível agendar a mudança.');
+  if (data?.error) throw new Error(data.error);
+}
