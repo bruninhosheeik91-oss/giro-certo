@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.hardware.HardwareBuffer;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.accessibility.AccessibilityEvent;
@@ -21,14 +23,36 @@ import java.util.Set;
 public class RideAccessibilityService extends AccessibilityService {
     private static final long OCR_INTERVAL_MS = 2500L;
     private final TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean ocrRunning;
     private long lastOcrAt;
+    private String activeRidePackage = "";
+    private final Runnable ocrLoop = new Runnable() {
+        @Override public void run() {
+            SharedPreferences prefs = getSharedPreferences(RideNotificationListenerService.PREFS, MODE_PRIVATE);
+            if (!isNinetyNine(activeRidePackage) || !hasValidEntitlement(prefs)
+                || !prefs.getBoolean("analyzerEnabled", false)) return;
+            requestOcr(prefs);
+            handler.postDelayed(this, 1000L);
+        }
+    };
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         CharSequence packageValue = event.getPackageName();
         String packageName = packageValue == null ? "" : packageValue.toString().toLowerCase(Locale.ROOT);
-        if (!isNinetyNine(packageName)) return;
+        if (!isNinetyNine(packageName)) {
+            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                && !packageName.contains("systemui")) {
+                activeRidePackage = "";
+                handler.removeCallbacks(ocrLoop);
+            }
+            return;
+        }
+
+        activeRidePackage = packageName;
+        handler.removeCallbacks(ocrLoop);
+        handler.post(ocrLoop);
 
         SharedPreferences prefs = getSharedPreferences(RideNotificationListenerService.PREFS, MODE_PRIVATE);
         if (!hasValidEntitlement(prefs) || !prefs.getBoolean("analyzerEnabled", false)) return;
@@ -73,6 +97,14 @@ public class RideAccessibilityService extends AccessibilityService {
                         if (searchable.contains("aceitar") && searchable.contains("r$")
                             && searchable.contains("km")) {
                             analyzeOnce(prefs, content, "ocr");
+                        } else {
+                            RideNotificationListenerService.recordDiagnostic(
+                                prefs,
+                                false,
+                                "ocr",
+                                "Tela da 99 lida, mas nenhuma oferta compatível foi reconhecida.",
+                                content
+                            );
                         }
                     })
                     .addOnCompleteListener(task -> {
@@ -142,6 +174,7 @@ public class RideAccessibilityService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+        handler.removeCallbacks(ocrLoop);
         recognizer.close();
         super.onDestroy();
     }

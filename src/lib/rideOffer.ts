@@ -45,7 +45,11 @@ interface RideOfferPlugin {
   openAccessibilitySettings(): Promise<void>;
   requestAnalyzerNotificationPermission(): Promise<{ granted: boolean }>;
   openOverlaySettings(): Promise<void>;
-  testOverlay(): Promise<void>;
+  testOverlay(options: {
+    fare: number;
+    body: string;
+    status: 'COMPENSA' | 'ATENÇÃO' | 'NÃO COMPENSA';
+  }): Promise<void>;
   getOfferHistory(): Promise<{ offers: AnalyzedRideOffer[] }>;
   getAnalyzerDiagnostic(): Promise<{ diagnostic?: AnalyzerDiagnostic }>;
   clearOfferHistory(): Promise<void>;
@@ -135,9 +139,13 @@ export async function openRideOverlaySettings(): Promise<void> {
   await RideOffer.openOverlaySettings();
 }
 
-export async function testRideOverlay(): Promise<void> {
+export async function testRideOverlay(options: {
+  fare: number;
+  body: string;
+  status: 'COMPENSA' | 'ATENÇÃO' | 'NÃO COMPENSA';
+}): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  await RideOffer.testOverlay();
+  await RideOffer.testOverlay(options);
 }
 
 export async function getRideOfferHistory(): Promise<AnalyzedRideOffer[]> {

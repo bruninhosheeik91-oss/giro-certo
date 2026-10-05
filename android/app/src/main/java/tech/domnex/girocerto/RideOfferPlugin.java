@@ -115,12 +115,16 @@ public class RideOfferPlugin extends Plugin {
             call.reject("Permissão para aparecer sobre outros apps não concedida");
             return;
         }
+        double fare = call.getDouble("fare", 28.50);
+        String body = call.getString("body", "Teste do cartão flutuante");
+        String status = call.getString("status", "COMPENSA");
+        String icon = status.equals("COMPENSA") ? "✅ " : status.equals("ATENÇÃO") ? "⚠️ " : "❌ ";
         RideOverlayView.show(
             getContext(),
-            "✅ TESTE · COMPENSA",
-            28.50,
-            "99 • Lucro R$ 24,72 • R$ 2,35/km • R$ 59,33/h",
-            "COMPENSA"
+            icon + "TESTE · " + status,
+            fare,
+            body,
+            status
         );
         call.resolve();
     }

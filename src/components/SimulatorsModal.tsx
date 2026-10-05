@@ -374,7 +374,17 @@ export const SimulatorsModal: React.FC = () => {
                     disabled={!accessibilityAccess || !overlayAccess}
                     onClick={() => {
                       setOverlayTestMessage('');
-                      void testRideOverlay()
+                      const overlayStatus =
+                        rideResult.status === 'Compensa'
+                          ? 'COMPENSA'
+                          : rideResult.status === 'Atenção'
+                            ? 'ATENÇÃO'
+                            : 'NÃO COMPENSA';
+                      void testRideOverlay({
+                        fare: parseBRLInput(fareOffered),
+                        status: overlayStatus,
+                        body: `Simulador • Lucro ${formatBRL(rideResult.estimatedProfit)} • ${formatBRL(rideResult.profitPerKm)}/km • ${formatBRL(rideResult.profitPerHour)}/h`,
+                      })
                         .then(() =>
                           setOverlayTestMessage('Cartão de teste exibido por 12 segundos.'),
                         )
@@ -384,7 +394,7 @@ export const SimulatorsModal: React.FC = () => {
                     }}
                     className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/50 py-2 text-[11px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99]"
                   >
-                    Testar cartão flutuante
+                    Testar cartão com estes valores
                   </button>
                   {overlayTestMessage && (
                     <p className="mt-2 text-center text-[10px] text-emerald-300">
