@@ -31,18 +31,14 @@ export interface AnalyzedRideOffer {
 
 export interface AnalyzerDiagnostic {
   analyzed: boolean;
-  source: 'notification' | 'accessibility' | string;
+  source: 'notification' | 'screen_capture' | string;
   message: string;
   preview: string;
   at: number;
 }
 
 interface RideOfferPlugin {
-  isNotificationAccessGranted(): Promise<{ granted: boolean }>;
   isOverlayPermissionGranted(): Promise<{ granted: boolean }>;
-  openNotificationAccessSettings(): Promise<void>;
-  isAccessibilityAccessGranted(): Promise<{ granted: boolean }>;
-  openAccessibilitySettings(): Promise<void>;
   requestAnalyzerNotificationPermission(): Promise<{ granted: boolean }>;
   openOverlaySettings(): Promise<void>;
   testOverlay(options: {
@@ -106,26 +102,6 @@ export function parseRideOfferNotification(offer: NativeRideOffer): RideOfferDra
 
 export function isRideOfferNativeAvailable(): boolean {
   return Capacitor.isNativePlatform();
-}
-
-export async function isRideOfferAccessGranted(): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) return false;
-  return (await RideOffer.isNotificationAccessGranted()).granted;
-}
-
-export async function openRideOfferAccessSettings(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return;
-  await RideOffer.openNotificationAccessSettings();
-}
-
-export async function isRideAccessibilityGranted(): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) return false;
-  return (await RideOffer.isAccessibilityAccessGranted()).granted;
-}
-
-export async function openRideAccessibilitySettings(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return;
-  await RideOffer.openAccessibilitySettings();
 }
 
 export async function requestAnalyzerNotificationPermission(): Promise<boolean> {

@@ -1,8 +1,8 @@
 package tech.domnex.girocerto;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -10,6 +10,9 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
 import android.net.Uri;
+import android.media.projection.MediaProjectionManager;
+import androidx.activity.result.ActivityResult;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
@@ -17,6 +20,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import org.json.JSONArray;
@@ -40,34 +44,6 @@ public class RideOfferPlugin extends Plugin {
         } else {
             getContext().registerReceiver(receiver, filter);
         }
-    }
-
-    @PluginMethod public void isNotificationAccessGranted(PluginCall call) {
-        String enabled = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
-        ComponentName component = new ComponentName(getContext(), RideNotificationListenerService.class);
-        JSObject result = new JSObject();
-        result.put("granted", enabled != null && enabled.contains(component.flattenToString()));
-        call.resolve(result);
-    }
-
-    @PluginMethod public void openNotificationAccessSettings(PluginCall call) {
-        Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getContext().startActivity(intent);
-        call.resolve();
-    }
-
-    @PluginMethod public void isAccessibilityAccessGranted(PluginCall call) {
-        String enabled = Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-        ComponentName component = new ComponentName(getContext(), RideAccessibilityService.class);
-        JSObject result = new JSObject();
-        result.put("granted", enabled != null && enabled.contains(component.flattenToString()));
-        call.resolve(result);
-    }
-
-    @PluginMethod public void openAccessibilitySettings(PluginCall call) {
-        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getContext().startActivity(intent);
-        call.resolve();
     }
 
     @PluginMethod public void requestAnalyzerNotificationPermission(PluginCall call) {
@@ -196,13 +172,56 @@ public class RideOfferPlugin extends Plugin {
     }
 
     @PluginMethod public void setAnalyzerEnabled(PluginCall call) {
-        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false)) && hasValidProEntitlement();
+        boolean requested = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        if (!requested) {
+            stopScreenCapture();
+            JSObject result = new JSObject();
+            result.put("enabled", false);
+            call.resolve(result);
+            return;
+        }
+        if (!hasValidProEntitlement()) {
+            call.reject("Recurso exclusivo do Giro Certo Pro");
+            return;
+        }
+        MediaProjectionManager manager =
+            (MediaProjectionManager) getContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        startActivityForResult(call, manager.createScreenCaptureIntent(), "screenCaptureResult");
+    }
+
+    @ActivityCallback
+    private void screenCaptureResult(PluginCall call, ActivityResult activityResult) {
+        if (call == null) return;
+        Intent data = activityResult.getData();
+        if (activityResult.getResultCode() != Activity.RESULT_OK || data == null) {
+            getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+                .edit().putBoolean("analyzerEnabled", false).apply();
+            AnalyzerControlNotification.refresh(getContext());
+            JSObject result = new JSObject();
+            result.put("enabled", false);
+            call.resolve(result);
+            return;
+        }
+        Intent serviceIntent = new Intent(getContext(), RideScreenCaptureService.class)
+            .setAction(RideScreenCaptureService.ACTION_START)
+            .putExtra(RideScreenCaptureService.EXTRA_RESULT_CODE, activityResult.getResultCode())
+            .putExtra(RideScreenCaptureService.EXTRA_RESULT_DATA, data);
+        ContextCompat.startForegroundService(getContext(), serviceIntent);
         getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
-            .edit().putBoolean("analyzerEnabled", enabled).apply();
+            .edit().putBoolean("analyzerEnabled", true).apply();
         AnalyzerControlNotification.refresh(getContext());
         JSObject result = new JSObject();
-        result.put("enabled", enabled);
+        result.put("enabled", true);
         call.resolve(result);
+    }
+
+    private void stopScreenCapture() {
+        getContext().getSharedPreferences(RideNotificationListenerService.PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean("analyzerEnabled", false).apply();
+        Intent intent = new Intent(getContext(), RideScreenCaptureService.class)
+            .setAction(RideScreenCaptureService.ACTION_STOP);
+        getContext().startService(intent);
+        AnalyzerControlNotification.refresh(getContext());
     }
 
     @PluginMethod public void setProEntitlement(PluginCall call) {
@@ -215,6 +234,7 @@ public class RideOfferPlugin extends Plugin {
             .putLong("proEntitlementExpiresAt", expiresAt);
         if (!enabled) editor.putBoolean("analyzerEnabled", false);
         editor.apply();
+        if (!enabled) stopScreenCapture();
         AnalyzerControlNotification.refresh(getContext());
         call.resolve();
     }
