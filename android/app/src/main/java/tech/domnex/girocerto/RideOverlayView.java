@@ -2,6 +2,7 @@ package tech.domnex.girocerto;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
@@ -136,7 +137,7 @@ public final class RideOverlayView {
             if (destination != null && !destination.trim().isEmpty()) {
                 TextView streetHint = label(
                     context,
-                    "TOQUE PARA VER A RUA DO DESTINO",
+                    "TOQUE PARA ABRIR O DESTINO NO GOOGLE MAPS",
                     9,
                     Color.rgb(147, 197, 253),
                     Typeface.BOLD
@@ -144,7 +145,7 @@ public final class RideOverlayView {
                 streetHint.setLetterSpacing(0.06f);
                 streetHint.setPadding(0, dp(context, 6), 0, 0);
                 content.addView(streetHint);
-                shell.setContentDescription("Abrir imagem da rua do destino");
+                shell.setContentDescription("Abrir destino no Google Maps");
             }
 
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(
@@ -163,14 +164,20 @@ public final class RideOverlayView {
             enableDragging(shell, manager, params, () -> {
                 if (destination == null || destination.trim().isEmpty()) return;
                 removeCurrent();
-                Intent intent = new Intent(context, StreetViewCardActivity.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    .putExtra("title", title)
-                    .putExtra("fare", fare)
-                    .putExtra("body", body)
-                    .putExtra("status", status)
-                    .putExtra("destination", destination);
-                try { context.startActivity(intent); } catch (RuntimeException ignored) { }
+                Intent mapsIntent = new Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("geo:0,0?q=" + Uri.encode(destination))
+                ).setPackage("com.google.android.apps.maps")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    context.startActivity(mapsIntent);
+                } catch (RuntimeException unavailable) {
+                    Intent browserIntent = new Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(destination))
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    try { context.startActivity(browserIntent); } catch (RuntimeException ignored) { }
+                }
             });
 
             try {
