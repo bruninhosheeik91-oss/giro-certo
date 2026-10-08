@@ -183,14 +183,14 @@ export const SimulatorsModal: React.FC = () => {
   const continuePermission = () => {
     const target = permissionTarget;
     setPermissionTarget(null);
-    localStorage.setItem('giro_certo_ride_analyzer_consent_v1', new Date().toISOString());
+    localStorage.setItem('giro_certo_ride_analyzer_consent_v2', new Date().toISOString());
     if (target === 'notifications') void openRideOfferAccessSettings();
     if (target === 'accessibility') void openRideAccessibilitySettings();
     if (target === 'overlay') void openRideOverlaySettings();
   };
 
   const requestPermission = (target: 'accessibility' | 'notifications' | 'overlay') => {
-    const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v1'));
+    const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v2'));
     if (consented) {
       if (target === 'notifications') void openRideOfferAccessSettings();
       else if (target === 'accessibility') void openRideAccessibilitySettings();
@@ -989,6 +989,16 @@ export const SimulatorsModal: React.FC = () => {
                 O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase,
                 não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
               </div>
+              {permissionTarget === 'accessibility' && (
+                <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-100">
+                  <strong className="block text-amber-300">
+                    Atenção sobre aplicativos bancários
+                  </strong>
+                  CAIXA e FGTS podem bloquear o acesso enquanto a acessibilidade do Giro Certo
+                  estiver ativada. Antes de usar esses aplicativos, desligue o analisador. Em alguns
+                  aparelhos também poderá ser necessário reiniciar o celular.
+                </div>
+              )}
               <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
                 Você pode retirar as autorizações a qualquer momento nas configurações do Android.
               </p>
