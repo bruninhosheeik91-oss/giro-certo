@@ -24,8 +24,12 @@ import {
 import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 import {
+  isRideOfferAccessGranted,
+  isRideAccessibilityGranted,
   isRideOfferNativeAvailable,
   isRideOverlayGranted,
+  openRideOfferAccessSettings,
+  openRideAccessibilitySettings,
   openRideOverlaySettings,
   saveNativeRideCriteria,
   testRideOverlay,
@@ -76,10 +80,12 @@ export const SimulatorsModal: React.FC = () => {
   const [estimatedMinutes, setEstimatedMinutes] = useState('25');
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
+  const [notificationAccess, setNotificationAccess] = useState(false);
+  const [accessibilityAccess, setAccessibilityAccess] = useState(false);
   const [overlayAccess, setOverlayAccess] = useState(false);
   const [overlayTestMessage, setOverlayTestMessage] = useState('');
   const [permissionTarget, setPermissionTarget] = useState<
-    'capture' | 'overlay' | null
+    'accessibility' | 'notifications' | 'overlay' | null
   >(null);
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -98,6 +104,8 @@ export const SimulatorsModal: React.FC = () => {
   );
 
   useEffect(() => {
+    void isRideOfferAccessGranted().then(setNotificationAccess);
+    void isRideAccessibilityGranted().then(setAccessibilityAccess);
     void isRideOverlayGranted().then(setOverlayAccess);
     void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
     void saveNativeRideCriteria({
@@ -109,6 +117,8 @@ export const SimulatorsModal: React.FC = () => {
 
     const refreshAccess = () => {
       if (document.visibilityState === 'visible') {
+        void isRideOfferAccessGranted().then(setNotificationAccess);
+        void isRideAccessibilityGranted().then(setAccessibilityAccess);
         void isRideOverlayGranted().then(setOverlayAccess);
         void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
         void getAnalyzerDiagnostic().then(setAnalyzerDiagnostic);
@@ -170,34 +180,21 @@ export const SimulatorsModal: React.FC = () => {
     reservePerKm: parseDecimalInput(reservePerKm) || 0.12,
   });
 
-  const startScreenCapture = async () => {
-    setOverlayTestMessage('');
-    try {
-      const notificationsGranted = await requestAnalyzerNotificationPermission();
-      if (!notificationsGranted) {
-        setOverlayTestMessage('Autorize as notificações para controlar o Copiloto com segurança.');
-        return;
-      }
-      setAnalyzerEnabled(await setRideAnalyzerEnabled(true));
-    } catch {
-      setAnalyzerEnabled(false);
-      setOverlayTestMessage('A captura da tela não foi autorizada.');
-    }
-  };
-
   const continuePermission = () => {
     const target = permissionTarget;
     setPermissionTarget(null);
-    localStorage.setItem('giro_certo_screen_capture_consent_v2', new Date().toISOString());
+    localStorage.setItem('giro_certo_ride_analyzer_consent_v1', new Date().toISOString());
+    if (target === 'notifications') void openRideOfferAccessSettings();
+    if (target === 'accessibility') void openRideAccessibilitySettings();
     if (target === 'overlay') void openRideOverlaySettings();
-    if (target === 'capture') void startScreenCapture();
   };
 
-  const requestPermission = (target: 'capture' | 'overlay') => {
-    const consented = Boolean(localStorage.getItem('giro_certo_screen_capture_consent_v2'));
+  const requestPermission = (target: 'accessibility' | 'notifications' | 'overlay') => {
+    const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v1'));
     if (consented) {
-      if (target === 'overlay') void openRideOverlaySettings();
-      else void startScreenCapture();
+      if (target === 'notifications') void openRideOfferAccessSettings();
+      else if (target === 'accessibility') void openRideAccessibilitySettings();
+      else void openRideOverlaySettings();
       return;
     }
     setPermissionTarget(target);
@@ -295,35 +292,42 @@ export const SimulatorsModal: React.FC = () => {
               )}
               {isRideOfferNativeAvailable() && hasProAccess && (
                 <div
-                  className={`p-3 rounded-xl border ${analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
+                  className={`p-3 rounded-xl border ${accessibilityAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
                 >
                   <div>
                     <div>
                       <p className="text-xs font-bold text-slate-100">Copiloto Giro Certo</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
-                        {analyzerEnabled
-                          ? 'Jornada ativa. O OCR analisa automaticamente as ofertas visíveis da 99.'
-                          : 'Inicie uma sessão de análise antes de abrir o aplicativo de corrida.'}
+                        {accessibilityAccess && overlayAccess && analyzerEnabled
+                          ? 'Ativo. Lê as ofertas visíveis da 99 e mostra a análise sobre o aplicativo.'
+                          : accessibilityAccess && overlayAccess
+                            ? 'Pausado. Reative o interruptor para voltar a analisar ofertas.'
+                            : 'Autorize a leitura da tela da 99 e a sobreposição do resultado.'}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (analyzerEnabled) {
-                          void setRideAnalyzerEnabled(false).then(setAnalyzerEnabled);
-                        } else {
-                          requestPermission('capture');
-                        }
-                      }}
+                      onClick={() => requestPermission('accessibility')}
                       className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
-                        analyzerEnabled
+                        accessibilityAccess
                           ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      {analyzerEnabled ? '■ Encerrar jornada' : '▶ 1. Iniciar jornada'}
+                      {accessibilityAccess ? '✓ Tela da 99 ativa' : '1. Ler tela da 99'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => requestPermission('notifications')}
+                      className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold active:scale-95 ${
+                        notificationAccess
+                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
+                          : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      {notificationAccess ? '✓ Notificações ativas' : '2. Outros apps'}
                     </button>
                     <button
                       type="button"
@@ -334,22 +338,38 @@ export const SimulatorsModal: React.FC = () => {
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      {overlayAccess ? '✓ Resultado flutuante' : '2. Exibir resultado'}
+                      {overlayAccess ? '✓ Sobreposição ativa' : '3. Exibir resultado'}
                     </button>
                   </div>
-                  {analyzerEnabled && (
-                    <div className="mt-2 rounded-lg border border-emerald-500/20 bg-slate-950/40 px-3 py-2">
-                      <span className="block text-[11px] font-bold text-emerald-300">
-                        Captura protegida em andamento
+                  {accessibilityAccess && overlayAccess && (
+                    <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+                      <span>
+                        <span className="block text-[11px] font-bold text-slate-200">
+                          Copiloto em segundo plano
+                        </span>
+                        <span className="block text-[9px] text-slate-500">
+                          Pause sem remover as permissões
+                        </span>
                       </span>
-                      <span className="block text-[9px] text-slate-500">
-                        Desligue pela notificação ou encerre a jornada no Giro Certo.
-                      </span>
-                    </div>
+                      <input
+                        type="checkbox"
+                        checked={analyzerEnabled}
+                        onChange={(event) => {
+                          const enabled = event.target.checked;
+                          setAnalyzerEnabled(enabled);
+                          const apply = async () => {
+                            if (enabled) await requestAnalyzerNotificationPermission();
+                            setAnalyzerEnabled(await setRideAnalyzerEnabled(enabled));
+                          };
+                          void apply();
+                        }}
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-500"
+                      />
+                    </label>
                   )}
                   <button
                     type="button"
-                    disabled={!overlayAccess}
+                    disabled={!accessibilityAccess || !overlayAccess}
                     onClick={() => {
                       setOverlayTestMessage('');
                       const overlayStatus =
@@ -959,14 +979,15 @@ export const SimulatorsModal: React.FC = () => {
                 </h3>
               </div>
               <p className="text-xs leading-relaxed text-slate-300">
-                {permissionTarget === 'capture'
-                  ? 'O Android compartilhará a tela com o Giro Certo durante esta jornada para reconhecer valor, distância e tempo das ofertas por OCR. A acessibilidade não será utilizada.'
-                  : 'O Giro Certo exibirá o resultado da análise em um cartão sobre o aplicativo de corrida.'}
+                {permissionTarget === 'accessibility'
+                  ? 'O Giro Certo usará a acessibilidade somente para ler valor, distância e tempo exibidos na tela de ofertas da 99.'
+                  : permissionTarget === 'notifications'
+                    ? 'O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para identificar ofertas compatíveis.'
+                    : 'O Giro Certo exibirá o resultado da análise em um cartão sobre o aplicativo de corrida.'}
               </p>
               <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-200">
-                A imagem é processada temporariamente no próprio celular e descartada após o OCR.
-                Ela não é enviada ao Supabase, não é usada para publicidade e o Giro Certo não
-                aceita corridas automaticamente.
+                O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase,
+                não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
               </div>
               <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
                 Você pode retirar as autorizações a qualquer momento nas configurações do Android.

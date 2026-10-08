@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat;
 final class AnalyzerControlNotification {
     static final String ACTION_TOGGLE = "tech.domnex.girocerto.TOGGLE_ANALYZER";
     private static final String CHANNEL_ID = "giro_certo_analyzer_control";
-    static final int NOTIFICATION_ID = 9020;
+    private static final int NOTIFICATION_ID = 9020;
 
     private AnalyzerControlNotification() { }
 
@@ -39,18 +39,6 @@ final class AnalyzerControlNotification {
         }
 
         boolean enabled = prefs.getBoolean("analyzerEnabled", false);
-        manager.notify(NOTIFICATION_ID, build(context, enabled));
-    }
-
-    static android.app.Notification build(Context context, boolean enabled) {
-        NotificationManager manager = context.getSystemService(NotificationManager.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(new NotificationChannel(
-                CHANNEL_ID,
-                "Controle do Copiloto Giro Certo",
-                NotificationManager.IMPORTANCE_LOW
-            ));
-        }
         Intent openIntent = new Intent(context, MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent openPendingIntent = PendingIntent.getActivity(
@@ -67,7 +55,7 @@ final class AnalyzerControlNotification {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        return new NotificationCompat.Builder(context, CHANNEL_ID)
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(enabled ? "Copiloto Giro Certo ligado" : "Copiloto Giro Certo desligado")
             .setContentText(enabled ? "Monitorando ofertas da 99" : "Toque em Ligar para monitorar ofertas")
@@ -80,8 +68,8 @@ final class AnalyzerControlNotification {
                 enabled ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
                 enabled ? "Desligar" : "Ligar",
                 togglePendingIntent
-            )
-            .build();
+            );
+        manager.notify(NOTIFICATION_ID, notification.build());
     }
 
     private static boolean hasValidEntitlement(SharedPreferences prefs) {

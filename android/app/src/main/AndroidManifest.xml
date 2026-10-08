@@ -37,12 +37,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ScreenCapturePermissionActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:theme="@style/AppTheme.NoActionBar" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -52,9 +46,27 @@
         </provider>
 
         <service
-            android:name=".RideScreenCaptureService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
+            android:name=".RideNotificationListenerService"
+            android:label="Analisador de ofertas do Giro Certo"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".RideAccessibilityService"
+            android:label="Analisador de ofertas da 99"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/ride_accessibility_service" />
+        </service>
 
         <receiver
             android:name=".AnalyzerToggleReceiver"
@@ -66,6 +78,4 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 </manifest>
