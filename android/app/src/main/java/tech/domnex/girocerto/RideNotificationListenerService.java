@@ -88,6 +88,7 @@ public class RideNotificationListenerService extends NotificationListenerService
         java.util.regex.Matcher meterMatcher = java.util.regex.Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*m\\b", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(content);
         while (meterMatcher.find()) totalKm += decimal(meterMatcher.group(1)) / 1000d;
         double minutes = sumMatches(content, "(\\d+(?:[.,]\\d+)?)\\s*(?:min|minutos?)");
+        String destination = extractDestination(content);
         if (fare <= 0 || totalKm <= 0) {
             String missing = fare <= 0 && totalKm <= 0 ? "valor e distância" : fare <= 0 ? "valor" : "distância";
             recordDiagnostic(prefs, false, source, "Oferta detectada, mas faltou " + missing + ".", content);
@@ -107,11 +108,11 @@ public class RideNotificationListenerService extends NotificationListenerService
         String icon = status.equals("COMPENSA") ? "✅ " : status.equals("ATENÇÃO") ? "⚠️ " : "❌ ";
         String body = String.format(Locale.forLanguageTag("pt-BR"), "%s • Lucro R$ %.2f • R$ %.2f/km%s", appName, profit, profitPerKm, minutes > 0 ? String.format(Locale.forLanguageTag("pt-BR"), " • R$ %.2f/h", profitPerHour) : "");
 
-        saveHistory(prefs, appName, fare, totalKm, minutes, profit, profitPerKm, profitPerHour, status);
+        saveHistory(prefs, appName, fare, totalKm, minutes, profit, profitPerKm, profitPerHour, status, destination);
         recordDiagnostic(prefs, true, source, "Oferta analisada com sucesso.", content);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)) {
-            RideOverlayView.show(context, icon + status, fare, body, status);
+            RideOverlayView.show(context, icon + status, fare, body, status, destination);
         }
 
         NotificationManager manager = context.getSystemService(NotificationManager.class);
@@ -133,7 +134,7 @@ public class RideNotificationListenerService extends NotificationListenerService
 
     private static void saveHistory(SharedPreferences prefs, String appName, double fare, double totalKm,
                              double minutes, double profit, double profitPerKm,
-                             double profitPerHour, String status) {
+                             double profitPerHour, String status, String destination) {
         try {
             JSONArray current = new JSONArray(prefs.getString("offerHistory", "[]"));
             JSONArray updated = new JSONArray();
@@ -147,6 +148,7 @@ public class RideNotificationListenerService extends NotificationListenerService
             item.put("profitPerKm", profitPerKm);
             item.put("profitPerHour", profitPerHour);
             item.put("status", status);
+            item.put("destination", destination);
             item.put("analyzedAt", System.currentTimeMillis());
             updated.put(item);
             for (int index = 0; index < current.length() && updated.length() < 30; index++) {
@@ -252,6 +254,27 @@ public class RideNotificationListenerService extends NotificationListenerService
         String normalized = value.contains(",") ? value.replace(".", "").replace(',', '.') : value;
         try { return Double.parseDouble(normalized); }
         catch (NumberFormatException ignored) { return 0; }
+    }
+
+    static String extractDestination(String content) {
+        if (content == null || content.trim().isEmpty()) return "";
+        String normalized = content.replace(" · ", "\n").replace('•', '\n');
+        java.util.regex.Matcher leg = java.util.regex.Pattern.compile(
+            "(?i)\\d+(?:[.,]\\d+)?\\s*(?:min|minutos?)\\s*\\([^)]*(?:km|m)\\)"
+        ).matcher(normalized);
+        int addressStart = -1;
+        while (leg.find()) addressStart = leg.end();
+        if (addressStart < 0 || addressStart >= normalized.length()) return "";
+
+        String tail = normalized.substring(addressStart)
+            .replaceAll("(?is)\\b(?:aceitar|recusar|ignorar|confirmar)\\b.*$", "")
+            .replaceAll("(?im)^\\s*(?:cart[aã]o verif\\.?|perfil premium|taxa de servi[cç]o.*|tarifa base.*)\\s*$", "")
+            .replaceAll("\\s*\\n\\s*", ", ")
+            .replaceAll("(?:,\\s*){2,}", ", ")
+            .replaceAll("^[,\\s.-]+|[,\\s.-]+$", "")
+            .trim();
+        if (tail.length() < 5 || tail.matches(".*(?i)R\\$.*")) return "";
+        return tail.length() > 220 ? tail.substring(0, 220).trim() : tail;
     }
 
     private boolean isSupportedRideApp(String packageName) {

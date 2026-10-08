@@ -9,5 +9,6 @@ coverage/
 
 # Android release signing — nunca versionar chaves ou senhas
 android/keystore.properties
+android/maps.properties
 *.jks
 *.keystore

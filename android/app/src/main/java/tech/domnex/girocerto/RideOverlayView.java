@@ -1,6 +1,7 @@
 package tech.domnex.girocerto;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
@@ -23,6 +24,10 @@ public final class RideOverlayView {
     private RideOverlayView() { }
 
     public static void show(Context context, String title, double fare, String body, String status) {
+        show(context, title, fare, body, status, "");
+    }
+
+    public static void show(Context context, String title, double fare, String body, String status, String destination) {
         new Handler(Looper.getMainLooper()).post(() -> {
             removeCurrent();
             WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -128,6 +133,20 @@ public final class RideOverlayView {
             footer.setPadding(0, dp(context, 7), 0, 0);
             content.addView(footer);
 
+            if (destination != null && !destination.trim().isEmpty()) {
+                TextView streetHint = label(
+                    context,
+                    "TOQUE PARA VER A RUA DO DESTINO",
+                    9,
+                    Color.rgb(147, 197, 253),
+                    Typeface.BOLD
+                );
+                streetHint.setLetterSpacing(0.06f);
+                streetHint.setPadding(0, dp(context, 6), 0, 0);
+                content.addView(streetHint);
+                shell.setContentDescription("Abrir imagem da rua do destino");
+            }
+
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 context.getResources().getDisplayMetrics().widthPixels - dp(context, 28),
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -141,7 +160,18 @@ public final class RideOverlayView {
             );
             params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
             params.y = dp(context, 68);
-            enableDragging(shell, manager, params);
+            enableDragging(shell, manager, params, () -> {
+                if (destination == null || destination.trim().isEmpty()) return;
+                removeCurrent();
+                Intent intent = new Intent(context, StreetViewCardActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    .putExtra("title", title)
+                    .putExtra("fare", fare)
+                    .putExtra("body", body)
+                    .putExtra("status", status)
+                    .putExtra("destination", destination);
+                try { context.startActivity(intent); } catch (RuntimeException ignored) { }
+            });
 
             try {
                 manager.addView(shell, params);
@@ -161,7 +191,7 @@ public final class RideOverlayView {
         return view;
     }
 
-    private static void enableDragging(View view, WindowManager manager, WindowManager.LayoutParams params) {
+    private static void enableDragging(View view, WindowManager manager, WindowManager.LayoutParams params, Runnable onTap) {
         view.setOnTouchListener(new View.OnTouchListener() {
             private float downY;
             private int startY;
@@ -183,7 +213,11 @@ public final class RideOverlayView {
                     }
                     return true;
                 }
-                return event.getAction() == MotionEvent.ACTION_UP && dragging;
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    if (!dragging) onTap.run();
+                    return true;
+                }
+                return false;
             }
         });
     }

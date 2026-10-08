@@ -6,6 +6,13 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+def mapsPropertiesFile = rootProject.file('maps.properties')
+def mapsProperties = new Properties()
+if (mapsPropertiesFile.exists()) {
+    mapsProperties.load(new FileInputStream(mapsPropertiesFile))
+}
+def mapsApiKey = mapsProperties.getProperty('apiKey') ?: System.getenv('GIRO_CERTO_GOOGLE_MAPS_API_KEY') ?: ''
+
 def releaseSigningFields = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
 def releaseSigningConfigured = releaseSigningFields.every {
     keystoreProperties.getProperty(it)?.trim()
@@ -18,8 +25,9 @@ android {
         applicationId "tech.domnex.girocerto"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 11
-        versionName "1.0.10"
+        versionCode 12
+        versionName "1.0.11"
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: mapsApiKey]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -71,6 +79,7 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
     implementation 'com.google.mlkit:text-recognition:16.0.1'
+    implementation 'com.google.android.gms:play-services-maps:20.0.0'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
