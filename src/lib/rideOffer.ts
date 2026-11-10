@@ -46,38 +46,6 @@ export interface CopilotLogEntry {
   raw: string;
 }
 
-export interface ScreenCaptureSupport {
-  supported: boolean;
-  reason: string;
-}
-
-export interface NativeCaptureResult {
-  appName: string;
-  packageName: string;
-  rawText: string;
-  fareOffered?: number;
-  distanceToPickupKm?: number;
-  tripDistanceKm?: number;
-  pickupMinutes?: number;
-  tripMinutes?: number;
-  complete: boolean;
-  incompleteReason?: string;
-  capturedAt: number;
-  fullScreen: boolean;
-}
-
-export interface RideCaptureStatus {
-  active: boolean;
-  appName: string;
-  fullScreen: boolean;
-  stopReason: string;
-}
-
-export interface RideCaptureStoppedEvent {
-  active: boolean;
-  reason: string;
-}
-
 interface RideOfferPlugin {
   isNotificationAccessGranted(): Promise<{ granted: boolean }>;
   isOverlayPermissionGranted(): Promise<{ granted: boolean }>;
@@ -104,14 +72,6 @@ interface RideOfferPlugin {
   disableAccessibility(): Promise<{ disabled: boolean }>;
   getCopilotLog(): Promise<{ entries: CopilotLogEntry[] }>;
   clearCopilotLog(): Promise<void>;
-  isScreenCaptureSupported(): Promise<ScreenCaptureSupport>;
-  startScreenCapture(options: {
-    appName: string;
-    packageName: string;
-  }): Promise<{ started: boolean; message?: string }>;
-  stopScreenCapture(): Promise<void>;
-  getCaptureStatus(): Promise<RideCaptureStatus>;
-  getLatestCaptureResult(): Promise<{ result?: NativeCaptureResult }>;
   saveRideCriteria(options: {
     minProfitPerKm: number;
     minProfitPerHour: number;
@@ -122,14 +82,6 @@ interface RideOfferPlugin {
   addListener(
     eventName: 'rideOffer',
     listener: (offer: NativeRideOffer) => void,
-  ): Promise<PluginListenerHandle>;
-  addListener(
-    eventName: 'rideCapture',
-    listener: (result: NativeCaptureResult) => void,
-  ): Promise<PluginListenerHandle>;
-  addListener(
-    eventName: 'rideCaptureStopped',
-    listener: (event: RideCaptureStoppedEvent) => void,
   ): Promise<PluginListenerHandle>;
 }
 
@@ -271,52 +223,6 @@ export async function listenForRideOffers(
 ): Promise<PluginListenerHandle | null> {
   if (!Capacitor.isNativePlatform()) return null;
   return RideOffer.addListener('rideOffer', listener);
-}
-
-export async function isRideScreenCaptureSupported(): Promise<ScreenCaptureSupport> {
-  if (!Capacitor.isNativePlatform()) {
-    return { supported: false, reason: 'Disponível apenas no aplicativo Android.' };
-  }
-  return RideOffer.isScreenCaptureSupported();
-}
-
-export async function startRideScreenCapture(options: {
-  appName: string;
-  packageName: string;
-}): Promise<{ started: boolean; message?: string }> {
-  if (!Capacitor.isNativePlatform()) {
-    return { started: false, message: 'Disponível apenas no aplicativo Android.' };
-  }
-  return RideOffer.startScreenCapture(options);
-}
-
-export async function stopRideScreenCapture(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return;
-  await RideOffer.stopScreenCapture();
-}
-
-export async function getRideCaptureStatus(): Promise<RideCaptureStatus> {
-  if (!Capacitor.isNativePlatform()) {
-    return { active: false, appName: '', fullScreen: false, stopReason: '' };
-  }
-  return RideOffer.getCaptureStatus();
-}
-
-export async function getLatestRideCaptureResult(): Promise<NativeCaptureResult | null> {
-  if (!Capacitor.isNativePlatform()) return null;
-  return (await RideOffer.getLatestCaptureResult()).result ?? null;
-}
-
-export async function listenForRideCapture(
-  onResult: (result: NativeCaptureResult) => void,
-  onStopped?: (event: RideCaptureStoppedEvent) => void,
-): Promise<PluginListenerHandle[]> {
-  if (!Capacitor.isNativePlatform()) return [];
-  const handles = [await RideOffer.addListener('rideCapture', onResult)];
-  if (onStopped) {
-    handles.push(await RideOffer.addListener('rideCaptureStopped', onStopped));
-  }
-  return handles;
 }
 
 export async function showTargetBar(title: string, body: string): Promise<boolean> {

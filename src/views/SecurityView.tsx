@@ -13,6 +13,7 @@ import {
   stopSecurityCamera,
   type SecurityCameraStatus,
 } from '../lib/securityCamera';
+import { PanicCard } from '../components/PanicCard';
 
 const clock = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -91,6 +92,8 @@ export const SecurityView: React.FC = () => {
         <ShieldCheck className="h-5 w-5 text-emerald-400" />
         <h2 className="text-lg font-bold text-white">Segurança</h2>
       </div>
+
+      <PanicCard />
 
       <button
         type="button"

@@ -100,6 +100,26 @@ public class SecurityCameraPlugin extends Plugin {
         call.resolve();
     }
 
+    /** Abre WhatsApp, SMS, discador ou mapa (links whatsapp:, https:, smsto:, tel:). */
+    @PluginMethod public void openExternal(PluginCall call) {
+        String url = call.getString("url", "");
+        String pkg = call.getString("package", "");
+        JSObject result = new JSObject();
+        try {
+            String action = url.startsWith("tel:") ? android.content.Intent.ACTION_DIAL
+                : url.startsWith("smsto:") ? android.content.Intent.ACTION_SENDTO
+                : android.content.Intent.ACTION_VIEW;
+            android.content.Intent intent = new android.content.Intent(action, android.net.Uri.parse(url))
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (pkg != null && !pkg.isEmpty()) intent.setPackage(pkg);
+            getContext().startActivity(intent);
+            result.put("opened", true);
+        } catch (RuntimeException error) {
+            result.put("opened", false);
+        }
+        call.resolve(result);
+    }
+
     @PluginMethod public void consumeOpenRequest(PluginCall call) {
         boolean open = prefs().getBoolean("openSecurityTab", false);
         if (open) prefs().edit().remove("openSecurityTab").apply();

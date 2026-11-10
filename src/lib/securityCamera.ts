@@ -27,6 +27,7 @@ interface SecurityCameraPlugin {
   getFloatingButton(): Promise<FloatingButtonState>;
   setFloatingButton(options: { enabled: boolean }): Promise<FloatingButtonState>;
   openOverlaySettings(): Promise<void>;
+  openExternal(options: { url: string; package?: string }): Promise<{ opened: boolean }>;
 }
 
 const SecurityCamera = registerPlugin<SecurityCameraPlugin>('SecurityCamera');
@@ -48,3 +49,11 @@ export async function consumeSecurityOpenRequest(): Promise<boolean> {
 export const getFloatingButton = () => SecurityCamera.getFloatingButton();
 export const setFloatingButton = (enabled: boolean) => SecurityCamera.setFloatingButton({ enabled });
 export const openOverlaySettings = () => SecurityCamera.openOverlaySettings();
+
+export async function openExternal(url: string, packageName?: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    window.open(url, '_blank');
+    return true;
+  }
+  return (await SecurityCamera.openExternal({ url, package: packageName })).opened;
+}

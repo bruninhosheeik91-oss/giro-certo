@@ -1,25 +1,19 @@
 package tech.domnex.girocerto;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.projection.MediaProjectionConfig;
-import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import androidx.core.app.NotificationCompat;
 import android.provider.Settings;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.activity.result.ActivityResult;
-import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
-import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,46 +23,13 @@ import org.json.JSONObject;
  *
  * Ponte nativa do Copiloto Giro Certo. A leitura das ofertas é feita pelo
  * RideAccessibilityService (restrito à Uber, 99 e inDrive), pensado para ficar ligado só
- * durante a jornada. Não há NotificationListener nem permissão de sobreposição; a captura
- * por MediaProjection fica desativada.
+ * durante a jornada. Não há NotificationListener, captura de tela nem permissão de
+ * sobreposição para o Copiloto.
  */
 @CapacitorPlugin(name = "RideOffer")
 public class RideOfferPlugin extends Plugin {
     static final String PREFS = "giro_certo_ride_offers";
     static final String ANALYZER_UNAVAILABLE = "Analisador automático temporariamente indisponível.";
-    private static final boolean CAPTURE_ENABLED = false;
-    private static final String CAPTURE_UNSUPPORTED = CAPTURE_ENABLED
-        ? "Recurso disponível apenas no Android 14 ou superior."
-        : "Captura de tela desativada: o Giro Certo analisa as ofertas pelas notificações.";
-
-    private String pendingAppName = "";
-    private String pendingPackage = "";
-
-    private final RideCaptureBus.Listener captureListener = new RideCaptureBus.Listener() {
-        @Override
-        public void onCaptureResult(RideCapturePayload payload) {
-            notifyListeners("rideCapture", payload.toJsObject());
-        }
-
-        @Override
-        public void onCaptureStopped(String reason) {
-            JSObject event = new JSObject();
-            event.put("active", false);
-            event.put("reason", reason == null ? "" : reason);
-            notifyListeners("rideCaptureStopped", event);
-        }
-    };
-
-    @Override
-    public void load() {
-        RideCaptureBus.setListener(captureListener);
-    }
-
-    @Override
-    protected void handleOnDestroy() {
-        RideCaptureBus.clearListener(captureListener);
-    }
-
     private SharedPreferences prefs() {
         return getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
@@ -187,89 +148,6 @@ public class RideOfferPlugin extends Plugin {
 
     @PluginMethod public void testOverlay(PluginCall call) {
         call.resolve(unavailable());
-    }
-
-    @PluginMethod public void isScreenCaptureSupported(PluginCall call) {
-        JSObject result = new JSObject();
-        boolean supported = CAPTURE_ENABLED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
-        result.put("supported", supported);
-        result.put("reason", supported ? "" : CAPTURE_UNSUPPORTED);
-        call.resolve(result);
-    }
-
-    @PluginMethod public void startScreenCapture(PluginCall call) {
-        if (!CAPTURE_ENABLED || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            JSObject result = new JSObject();
-            result.put("started", false);
-            result.put("message", CAPTURE_UNSUPPORTED);
-            call.resolve(result);
-            return;
-        }
-        pendingAppName = call.getString("appName", "");
-        pendingPackage = call.getString("packageName", "");
-        MediaProjectionManager manager =
-            (MediaProjectionManager) getContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        Intent intent = manager.createScreenCaptureIntent(
-            MediaProjectionConfig.createConfigForUserChoice());
-        startActivityForResult(call, intent, "screenCaptureResult");
-    }
-
-    @ActivityCallback
-    private void screenCaptureResult(PluginCall call, ActivityResult result) {
-        if (call == null) return;
-        JSObject response = new JSObject();
-        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
-            response.put("started", false);
-            response.put("message", "Consentimento de captura não concedido.");
-            call.resolve(response);
-            return;
-        }
-        Intent service = new Intent(getContext(), RideCaptureService.class)
-            .setAction(RideCaptureService.ACTION_START)
-            .putExtra(RideCaptureService.EXTRA_RESULT_CODE, result.getResultCode())
-            .putExtra(RideCaptureService.EXTRA_RESULT_DATA, result.getData())
-            .putExtra(RideCaptureService.EXTRA_APP_NAME, pendingAppName)
-            .putExtra(RideCaptureService.EXTRA_PACKAGE, pendingPackage);
-        ContextCompat.startForegroundService(getContext(), service);
-        response.put("started", true);
-        call.resolve(response);
-    }
-
-    @PluginMethod public void stopScreenCapture(PluginCall call) {
-        Intent intent = new Intent(getContext(), RideCaptureService.class)
-            .setAction(RideCaptureService.ACTION_STOP);
-        try {
-            getContext().startService(intent);
-        } catch (Exception ignored) { }
-        RideCaptureBus.emitStopped("Captura encerrada.");
-        call.resolve();
-    }
-
-    @PluginMethod public void getCaptureStatus(PluginCall call) {
-        SharedPreferences store = prefs();
-        JSObject result = new JSObject();
-        result.put("active", store.getBoolean(RideCaptureService.KEY_ACTIVE, false));
-        result.put("appName", store.getString(RideCaptureService.KEY_APP_NAME, ""));
-        result.put("fullScreen", store.getBoolean(RideCaptureService.KEY_FULL_SCREEN, false));
-        String reason = store.getString(RideCaptureService.KEY_STOP_REASON, "");
-        result.put("stopReason", reason == null ? "" : reason);
-        call.resolve(result);
-    }
-
-    @PluginMethod public void getLatestCaptureResult(PluginCall call) {
-        JSObject response = new JSObject();
-        String stored = prefs().getString(RideCaptureService.KEY_LAST_RESULT, "");
-        if (stored == null || stored.isEmpty()) {
-            response.put("result", JSONObject.NULL);
-            call.resolve(response);
-            return;
-        }
-        try {
-            response.put("result", new JSONObject(stored));
-        } catch (Exception error) {
-            response.put("result", JSONObject.NULL);
-        }
-        call.resolve(response);
     }
 
     @PluginMethod public void getAnalyzerEnabled(PluginCall call) {

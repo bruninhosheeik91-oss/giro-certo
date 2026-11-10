@@ -1,3 +1,4 @@
+import { QuickRideRegister } from '../components/QuickRideRegister';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
@@ -594,6 +595,7 @@ export const ShiftView: React.FC = () => {
           </div>
         )}
       </div>
+      <QuickRideRegister />
     </div>
   );
 };
