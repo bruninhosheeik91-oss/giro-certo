@@ -42,13 +42,13 @@ export const AdminOverviewCard: React.FC = () => {
     <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-violet-950/40 border border-violet-500/30 space-y-3 shadow-md">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-300" /><h3 className="text-xs font-bold text-white uppercase tracking-wider">Painel do Proprietário</h3></div>
-        <span className="px-2 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-[9px] font-bold text-violet-200">OWNER</span>
+        <span className="px-2 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-[11px] font-bold text-violet-200">OWNER</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {metrics.map(([label, value]) => <div key={label} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800"><span className="text-[9px] uppercase text-slate-500 block">{label}</span><span className="text-lg font-bold font-mono text-white">{value}</span></div>)}
+        {metrics.map(([label, value]) => <div key={label} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800"><span className="text-[11px] uppercase text-slate-500 block">{label}</span><span className="text-lg font-bold font-mono text-white">{value}</span></div>)}
       </div>
-      <div className="flex items-center justify-between text-[10px] text-slate-400"><span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Acesso validado pelo Supabase</span><span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {overview.expiredUsers} expirados</span></div>
-      <p className="text-[10px] text-slate-500">O painel web completo será liberado em uma etapa separada. Nenhum dado financeiro pessoal é exibido aqui.</p>
+      <div className="flex items-center justify-between text-[11px] text-slate-400"><span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Acesso validado pelo Supabase</span><span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {overview.expiredUsers} expirados</span></div>
+      <p className="text-[11px] text-slate-500">O painel web completo será liberado em uma etapa separada. Nenhum dado financeiro pessoal é exibido aqui.</p>
     </div>
   );
 };

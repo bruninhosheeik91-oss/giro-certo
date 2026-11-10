@@ -347,7 +347,7 @@ export const PayablesModal: React.FC = () => {
                   ? selectedCommitment?.title || 'Detalhes da conta'
                   : 'Contas e Parcelas'}
             </h2>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[11px] text-slate-400">
               {screen === 'list'
                 ? 'Compromissos financeiros sem misturar previsão com despesa'
                 : screen === 'form'
@@ -373,7 +373,7 @@ export const PayablesModal: React.FC = () => {
       <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950/30 border border-slate-800 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
               Pendente no mês
             </span>
             <p className="text-lg font-extrabold font-mono text-white">
@@ -381,7 +381,7 @@ export const PayablesModal: React.FC = () => {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
               Pago no mês
             </span>
             <p className="text-lg font-extrabold font-mono text-emerald-400">
@@ -389,7 +389,7 @@ export const PayablesModal: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-3 text-[11px]">
+        <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-3 text-xs">
           <span className={payablesSummary.overdueCount ? 'text-rose-300' : 'text-slate-400'}>
             {payablesSummary.overdueCount
               ? `${payablesSummary.overdueCount} em atraso · ${formatBRL(payablesSummary.overdueAmount)}`
@@ -402,7 +402,7 @@ export const PayablesModal: React.FC = () => {
           </span>
         </div>
         {payablesSummary.coverageGap > 0 && (
-          <div className="px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-200">
+          <div className="px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-200">
             Estimativa para cobrir as contas: {formatBRL(payablesSummary.dailyRequired)}/dia por{' '}
             {payablesSummary.daysRemaining} dias. Isso não altera sua meta original.
           </div>
@@ -422,7 +422,7 @@ export const PayablesModal: React.FC = () => {
               key={value}
               type="button"
               onClick={() => setFilter(value)}
-              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 filter === value
                   ? 'bg-emerald-500 text-slate-950'
                   : 'text-slate-400 hover:text-white'
@@ -490,12 +490,12 @@ export const PayablesModal: React.FC = () => {
                       {commitment.title}
                     </span>
                     <span
-                      className={`px-1.5 py-0.5 rounded-md border text-[9px] font-bold ${STATUS_CLASSES[status]}`}
+                      className={`px-1.5 py-0.5 rounded-md border text-[11px] font-bold ${STATUS_CLASSES[status]}`}
                     >
                       {STATUS_LABELS[status]}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     {progress.isOpenEnded
                       ? `${progress.paidInstallments} parcelas pagas`
                       : `${progress.paidInstallments} de ${progress.totalInstallments} parcelas pagas`}
@@ -532,7 +532,7 @@ export const PayablesModal: React.FC = () => {
         )}
 
         <div>
-          <label className="block text-[11px] font-semibold text-slate-400 mb-1">Nome *</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1">Nome *</label>
           <input
             aria-label="Nome da conta"
             value={form.title}
@@ -543,7 +543,7 @@ export const PayablesModal: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold text-slate-400 mb-1">Tipo *</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1">Tipo *</label>
           <select
             aria-label="Tipo da conta"
             value={form.type}
@@ -561,7 +561,7 @@ export const PayablesModal: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
               Valor {fixedInstallments ? 'da parcela' : ''} *
             </label>
             <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">
@@ -577,7 +577,7 @@ export const PayablesModal: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
               Primeiro vencimento *
             </label>
             <input
@@ -593,7 +593,7 @@ export const PayablesModal: React.FC = () => {
         {fixedInstallments && (
           <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-900/70 border border-slate-800">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-400 mb-1">
                 Total de parcelas
               </label>
               <input
@@ -606,7 +606,7 @@ export const PayablesModal: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-400 mb-1">
                 Já pagas
               </label>
               <input
@@ -620,7 +620,7 @@ export const PayablesModal: React.FC = () => {
               />
             </div>
             {!editingCommitmentId && Number(form.initialPaidInstallments) > 0 && (
-              <p className="col-span-2 text-[10px] text-amber-300">
+              <p className="col-span-2 text-[11px] text-amber-300">
                 As parcelas anteriores entrarão como histórico informado e não criarão despesas
                 retroativas.
               </p>
@@ -630,7 +630,7 @@ export const PayablesModal: React.FC = () => {
 
         {form.type === 'conta_recorrente' && (
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
               Data final (opcional)
             </label>
             <input
@@ -646,7 +646,7 @@ export const PayablesModal: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">Categoria</label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Categoria</label>
             <select
               aria-label="Categoria da conta"
               value={form.category}
@@ -661,7 +661,7 @@ export const PayablesModal: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
               Instituição
             </label>
             <input
@@ -676,7 +676,7 @@ export const PayablesModal: React.FC = () => {
 
         {form.type === 'financiamento_veiculo' && (
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
               Veículo relacionado
             </label>
             <select
@@ -696,7 +696,7 @@ export const PayablesModal: React.FC = () => {
         )}
 
         <div>
-          <label className="block text-[11px] font-semibold text-slate-400 mb-1">Observação</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1">Observação</label>
           <input
             aria-label="Observação da conta"
             value={form.notes}
@@ -707,7 +707,7 @@ export const PayablesModal: React.FC = () => {
         </div>
 
         {confirmFutureEdit && (
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 space-y-2">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-2">
             <p>
               Existem parcelas pagas. Elas serão preservadas; as alterações serão aplicadas somente
               às parcelas futuras.
@@ -754,14 +754,14 @@ export const PayablesModal: React.FC = () => {
         <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950/20 border border-slate-800 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
                 {TYPE_LABELS[selectedCommitment.type]}
               </span>
               <p className="text-xs text-slate-300 mt-0.5">
                 {selectedCommitment.creditor || 'Sem instituição informada'}
               </p>
             </div>
-            <span className="px-2 py-1 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300 capitalize">
+            <span className="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-300 capitalize">
               {selectedCommitment.status}
             </span>
           </div>
@@ -773,7 +773,7 @@ export const PayablesModal: React.FC = () => {
                   ? `${progress.paidInstallments} pagas`
                   : `${progress.paidInstallments} de ${progress.totalInstallments}`}
               </p>
-              <span className="text-[10px] text-slate-400">parcelas pagas</span>
+              <span className="text-[11px] text-slate-400">parcelas pagas</span>
             </div>
             {!progress.isOpenEnded && (
               <span className="text-sm font-bold text-emerald-400 font-mono">
@@ -782,7 +782,7 @@ export const PayablesModal: React.FC = () => {
             )}
           </div>
           {progress.isOpenEnded ? (
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[11px] text-slate-400">
               Recorrência contínua sem data final — a projeção mensal não é a duração do contrato.
             </p>
           ) : (
@@ -796,21 +796,21 @@ export const PayablesModal: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
             <div className="col-span-2 p-2.5 rounded-xl bg-slate-950/60 flex items-center justify-between gap-3">
-              <span className="text-[9px] uppercase text-slate-500">Total previsto</span>
+              <span className="text-[11px] uppercase text-slate-500">Total previsto</span>
               <strong className="text-white font-mono">{formatBRL(progress.totalExpected)}</strong>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/60">
-              <span className="text-[9px] uppercase text-slate-500 block">Total pago</span>
+              <span className="text-[11px] uppercase text-slate-500 block">Total pago</span>
               <strong className="text-emerald-400 font-mono">
                 {formatBRL(progress.totalPaid)}
               </strong>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/60">
-              <span className="text-[9px] uppercase text-slate-500 block">Saldo em aberto</span>
+              <span className="text-[11px] uppercase text-slate-500 block">Saldo em aberto</span>
               <strong className="text-white font-mono">{formatBRL(progress.openBalance)}</strong>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/60">
-              <span className="text-[9px] uppercase text-slate-500 block">Próximo vencimento</span>
+              <span className="text-[11px] uppercase text-slate-500 block">Próximo vencimento</span>
               <strong className="text-slate-200">
                 {progress.nextInstallment
                   ? formatDisplayDate(progress.nextInstallment.dueDate)
@@ -818,7 +818,7 @@ export const PayablesModal: React.FC = () => {
               </strong>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/60">
-              <span className="text-[9px] uppercase text-slate-500 block">Previsão de término</span>
+              <span className="text-[11px] uppercase text-slate-500 block">Previsão de término</span>
               <strong className="text-slate-200">
                 {progress.projectedEndDate
                   ? formatDisplayDate(progress.projectedEndDate)
@@ -864,7 +864,7 @@ export const PayablesModal: React.FC = () => {
               <CalendarDays className="w-4 h-4 text-blue-400" />
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Parcelas</h3>
             </div>
-            <span className="text-[10px] text-slate-500">{related.length} registradas</span>
+            <span className="text-[11px] text-slate-500">{related.length} registradas</span>
           </div>
 
           <div className="divide-y divide-slate-800/70">
@@ -882,12 +882,12 @@ export const PayablesModal: React.FC = () => {
                             : `Parcela ${installment.number}${selectedCommitment.totalInstallments ? `/${selectedCommitment.totalInstallments}` : ''}`}
                         </span>
                         <span
-                          className={`px-1.5 py-0.5 rounded-md border text-[9px] font-bold ${STATUS_CLASSES[status]}`}
+                          className={`px-1.5 py-0.5 rounded-md border text-[11px] font-bold ${STATUS_CLASSES[status]}`}
                         >
                           {STATUS_LABELS[status]}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
+                      <p className="text-[11px] text-slate-500 mt-0.5">
                         Vence {formatDisplayDate(installment.dueDate)}
                         {installment.paymentOrigin === 'opening_balance' &&
                           ' · histórico informado'}
@@ -908,7 +908,7 @@ export const PayablesModal: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setReopenConfirmId(installment.id)}
-                            className="text-[10px] text-slate-500 hover:text-amber-300"
+                            className="text-[11px] text-slate-500 hover:text-amber-300"
                           >
                             Reabrir
                           </button>
@@ -916,7 +916,7 @@ export const PayablesModal: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => startPayment(installment)}
-                            className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300"
+                            className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300"
                           >
                             Marcar como paga
                           </button>
@@ -928,7 +928,7 @@ export const PayablesModal: React.FC = () => {
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2">
-                          <span className="text-[10px] text-slate-500 mr-1">R$</span>
+                          <span className="text-[11px] text-slate-500 mr-1">R$</span>
                           <input
                             aria-label="Valor pago"
                             value={paymentAmount}
@@ -951,14 +951,14 @@ export const PayablesModal: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setPayingInstallmentId(null)}
-                          className="flex-1 py-1.5 rounded-lg text-[10px] text-slate-400 border border-slate-800"
+                          className="flex-1 py-1.5 rounded-lg text-[11px] text-slate-400 border border-slate-800"
                         >
                           Cancelar
                         </button>
                         <button
                           type="button"
                           onClick={() => confirmPayment(installment.id)}
-                          className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-500 text-slate-950"
+                          className="flex-1 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500 text-slate-950"
                         >
                           Confirmar pagamento
                         </button>
@@ -967,7 +967,7 @@ export const PayablesModal: React.FC = () => {
                   )}
 
                   {reopenConfirmId === installment.id && (
-                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-200">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200">
                       <p>
                         {installment.paymentOrigin === 'opening_balance'
                           ? 'O histórico informado será removido e a parcela voltará para pendente.'
@@ -1003,7 +1003,7 @@ export const PayablesModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAllInstallments((current) => !current)}
-              className="w-full py-2.5 border-t border-slate-800 text-[11px] font-semibold text-blue-300 hover:bg-slate-800/50"
+              className="w-full py-2.5 border-t border-slate-800 text-xs font-semibold text-blue-300 hover:bg-slate-800/50"
             >
               {showAllInstallments
                 ? 'Mostrar menos'
@@ -1035,7 +1035,7 @@ export const PayablesModal: React.FC = () => {
                   setSelectedCommitmentId(null);
                   setRemoveConfirm(false);
                 }}
-                className="flex-1 py-2 rounded-lg bg-rose-600 text-white font-bold"
+                className="flex-1 py-2 rounded-lg bg-rose-600 text-on-accent font-bold"
               >
                 Confirmar
               </button>
@@ -1045,7 +1045,7 @@ export const PayablesModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setRemoveConfirm(true)}
-            className="w-full py-2 text-[11px] text-slate-500 hover:text-rose-400 flex items-center justify-center gap-1.5"
+            className="w-full py-2 text-xs text-slate-500 hover:text-rose-400 flex items-center justify-center gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
             {hasPayments ? 'Cancelar conta e preservar histórico' : 'Remover conta'}
@@ -1064,7 +1064,7 @@ export const PayablesModal: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-label="Contas e Parcelas"
-        className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
         onClick={(event) => event.stopPropagation()}
       >
         {renderHeader()}

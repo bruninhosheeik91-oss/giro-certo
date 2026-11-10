@@ -76,7 +76,7 @@ export const ExpensesDonutChart: React.FC<ExpensesDonutChartProps> = ({ summary 
 
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+          <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
             Total
           </span>
           <span className="text-xs font-bold text-slate-100 font-mono">
@@ -95,7 +95,7 @@ export const ExpensesDonutChart: React.FC<ExpensesDonutChartProps> = ({ summary 
             </div>
             <div className="text-right font-mono">
               <span className="text-slate-100 font-semibold">{formatBRL(item.value)}</span>
-              <span className="text-slate-500 text-[11px] ml-1.5 font-normal">
+              <span className="text-slate-500 text-xs ml-1.5 font-normal">
                 ({formatPercent(item.percent)})
               </span>
             </div>

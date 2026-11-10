@@ -66,7 +66,7 @@ export const CopilotCriteriaEditor: React.FC<CopilotCriteriaEditorProps> = ({ mi
     <label className="flex items-center gap-2">
       <span className="flex-1">
         <span className="block text-xs font-bold text-slate-200">{label}</span>
-        <span className="block text-[10px] text-slate-500">{hint}</span>
+        <span className="block text-[11px] text-slate-500">{hint}</span>
       </span>
       <input inputMode="decimal" value={value} placeholder={placeholder} onChange={(e) => set(e.target.value)} className={field} />
     </label>
@@ -77,7 +77,7 @@ export const CopilotCriteriaEditor: React.FC<CopilotCriteriaEditorProps> = ({ mi
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-2 p-2.5 text-left">
         <SlidersHorizontal className="h-3.5 w-3.5 text-blue-400" />
         <span className="text-xs font-bold text-slate-100">Meus critérios</span>
-        <span className="ml-auto text-[10px] text-slate-400">
+        <span className="ml-auto text-[11px] text-slate-400">
           custo {formatBRL(bar.costPerKm)}/km · lucro mín {formatBRL(criteria.minProfitPerKm)}/km
         </span>
         <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -99,12 +99,12 @@ export const CopilotCriteriaEditor: React.FC<CopilotCriteriaEditorProps> = ({ mi
           {row('Valor mínimo da corrida (R$)', 'Abaixo disso é sempre vermelho', minFare, setMinFare)}
           {row('Nota mínima do passageiro', 'De 1 a 5', rating, setRating)}
 
-          <div className="rounded-lg bg-emerald-500/10 p-2.5 text-center text-[11px] text-emerald-200">
+          <div className="rounded-lg bg-emerald-500/10 p-2.5 text-center text-xs text-emerald-200">
             Com esses números, o Copiloto fica verde em ofertas acima de{' '}
             <b className="text-sm text-emerald-300">{formatBRL(preview)}/km</b> (o "R$/km" que a Uber e a 99 mostram).
           </div>
 
-          <button type="button" onClick={save} className="w-full rounded-lg bg-blue-600 py-2.5 text-xs font-bold text-white">
+          <button type="button" onClick={save} className="w-full rounded-lg bg-blue-600 py-2.5 text-xs font-bold text-on-accent">
             {saved ? 'Critérios salvos ✓' : 'Salvar critérios'}
           </button>
         </div>

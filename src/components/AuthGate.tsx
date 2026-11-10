@@ -12,7 +12,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ auth, children }) => {
 
   if (auth.loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#090d16]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-app">
         <div className="w-8 h-8 border-2 border-emerald-500/40 border-t-emerald-400 rounded-full animate-spin" />
       </div>
     );

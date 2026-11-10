@@ -78,7 +78,7 @@ const MainAppContent: React.FC = () => {
   // usuário anterior antes do efeito de hidratação trocar o escopo.
   if (!ready) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#090d16]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-app">
         <div className="w-8 h-8 border-2 border-emerald-500/40 border-t-emerald-400 rounded-full animate-spin" />
       </div>
     );
@@ -86,8 +86,8 @@ const MainAppContent: React.FC = () => {
 
   if (mode === 'cloud' && vehicles.length === 0) {
     return (
-      <div className="min-h-screen w-full flex justify-center items-center bg-[#060910] px-5 text-slate-100">
-        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#0f172a] p-6 shadow-2xl shadow-black">
+      <div className="min-h-screen w-full flex justify-center items-center bg-slate-950 px-5 text-slate-100">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-black">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
             <Bike className="h-8 w-8" />
           </div>
@@ -128,7 +128,7 @@ const MainAppContent: React.FC = () => {
                     type="button"
                     onClick={() => toggleRegisteredApp(app.id)}
                     aria-pressed={app.isActive}
-                    className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition active:scale-95 ${
+                    className={`rounded-lg border px-3 py-2 text-xs font-bold transition active:scale-95 ${
                       app.isActive
                         ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
                         : 'border-slate-700 bg-slate-900 text-slate-500'
@@ -161,9 +161,9 @@ const MainAppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex justify-center bg-[#060910] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen w-full flex justify-center bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
       {/* Mobile container centered on wider viewports */}
-      <div className="w-full max-w-md min-h-screen flex flex-col relative overflow-x-hidden bg-[#090d16] border-x border-slate-800/80 shadow-2xl shadow-black">
+      <div className="w-full max-w-md min-h-screen flex flex-col relative overflow-x-hidden bg-app border-x border-slate-800/80 shadow-2xl shadow-black">
         {/* Top Header */}
         <Header />
         <TrialExpiryNotice />

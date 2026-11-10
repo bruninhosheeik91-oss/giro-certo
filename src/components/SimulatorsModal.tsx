@@ -125,7 +125,7 @@ export const SimulatorsModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -197,7 +197,7 @@ export const SimulatorsModal: React.FC = () => {
                   >
                     <History className="h-4 w-4 text-blue-400" />
                     <span className="text-xs font-bold text-slate-100">Ofertas analisadas</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">
                       {offerHistory.length}
                     </span>
                     <ChevronDown
@@ -208,10 +208,10 @@ export const SimulatorsModal: React.FC = () => {
                     <div className="space-y-2 border-t border-slate-800 p-3">
                       {offerHistory.length === 0 && (
                         <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950/40 p-3 text-center">
-                          <p className="text-[11px] font-bold text-slate-300">
+                          <p className="text-xs font-bold text-slate-300">
                             Nenhuma oferta real analisada
                           </p>
-                          <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+                          <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                             O teste do cartão não entra aqui. Este histórico é preenchido quando uma
                             oferta compatível da 99, Uber ou outro app é reconhecida.
                           </p>
@@ -227,10 +227,10 @@ export const SimulatorsModal: React.FC = () => {
                               <span
                                 className={`h-2 w-2 rounded-full ${offer.status === 'COMPENSA' ? 'bg-emerald-400' : offer.status === 'ATENÇÃO' ? 'bg-amber-400' : 'bg-rose-400'}`}
                               />
-                              <span className="text-[11px] font-bold text-slate-200">
+                              <span className="text-xs font-bold text-slate-200">
                                 {offer.appName}
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[11px] text-slate-500">
                                 {new Date(offer.analyzedAt).toLocaleString('pt-BR', {
                                   day: '2-digit',
                                   month: '2-digit',
@@ -240,31 +240,31 @@ export const SimulatorsModal: React.FC = () => {
                               </span>
                             </div>
                             <span
-                              className={`text-[10px] font-extrabold ${offer.status === 'COMPENSA' ? 'text-emerald-400' : offer.status === 'ATENÇÃO' ? 'text-amber-400' : 'text-rose-400'}`}
+                              className={`text-[11px] font-extrabold ${offer.status === 'COMPENSA' ? 'text-emerald-400' : offer.status === 'ATENÇÃO' ? 'text-amber-400' : 'text-rose-400'}`}
                             >
                               {offer.status}
                             </span>
                           </div>
                           <div className="mt-2 grid grid-cols-4 gap-1 text-center">
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[11px] text-slate-400">
                               <strong className="block text-slate-200">
                                 {formatBRL(offer.fare)}
                               </strong>
                               oferta
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[11px] text-slate-400">
                               <strong className="block text-slate-200">
                                 {offer.totalKm.toFixed(1)} km
                               </strong>
                               distância
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[11px] text-slate-400">
                               <strong className="block text-slate-200">
                                 {offer.minutes || '—'} min
                               </strong>
                               tempo
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[11px] text-slate-400">
                               <strong className="block text-emerald-300">
                                 {formatBRL(offer.profit)}
                               </strong>
@@ -291,7 +291,7 @@ export const SimulatorsModal: React.FC = () => {
                                 rideOfferId: offer.id,
                               });
                             }}
-                            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[10px] font-bold text-emerald-300 disabled:border-slate-700 disabled:bg-slate-800/60 disabled:text-slate-500 active:scale-[0.99]"
+                            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 py-1.5 text-[11px] font-bold text-emerald-300 disabled:border-slate-700 disabled:bg-slate-800/60 disabled:text-slate-500 active:scale-[0.99]"
                           >
                             {offer.convertedAt
                               ? '✓ Ganho registrado'
@@ -299,14 +299,14 @@ export const SimulatorsModal: React.FC = () => {
                           </button>
                         </div>
                       ))}
-                      <p className="text-center text-[10px] text-slate-500">
+                      <p className="text-center text-[11px] text-slate-500">
                         Histórico local. Não altera ganhos ou relatórios.
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => void getRideOfferHistory().then(setOfferHistory)}
-                          className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/20 py-2 text-[10px] font-bold text-blue-300"
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/20 py-2 text-[11px] font-bold text-blue-300"
                         >
                           <RefreshCw className="h-3.5 w-3.5" /> Atualizar
                         </button>
@@ -316,7 +316,7 @@ export const SimulatorsModal: React.FC = () => {
                           onClick={() =>
                             void clearRideOfferHistory().then(() => setOfferHistory([]))
                           }
-                          className="flex items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[10px] font-bold text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-rose-500/20 py-2 text-[11px] font-bold text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Trash2 className="h-3.5 w-3.5" /> Limpar histórico
                         </button>
@@ -331,7 +331,7 @@ export const SimulatorsModal: React.FC = () => {
                   <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                     Dados da Corrida / Entrega
                   </h3>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-xs text-slate-400">
                     Veículo: <strong className="text-slate-200">{activeVehicle.nickname}</strong>
                   </span>
                 </div>
@@ -359,7 +359,7 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Distâncias */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Coleta (km)
                     </label>
                     <input
@@ -371,7 +371,7 @@ export const SimulatorsModal: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Viagem (km)
                     </label>
                     <input
@@ -384,13 +384,13 @@ export const SimulatorsModal: React.FC = () => {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-slate-400">
+                      <label className="text-xs font-semibold text-slate-400">
                         Retorno (km)
                       </label>
                       <button
                         type="button"
                         onClick={() => setConsiderReturn(!considerReturn)}
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
                           considerReturn
                             ? 'bg-emerald-500/20 text-emerald-400'
                             : 'bg-slate-800 text-slate-500'
@@ -415,7 +415,7 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Tempo & Custos */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Tempo (minutos)
                     </label>
                     <input
@@ -426,7 +426,7 @@ export const SimulatorsModal: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Custo/km (R$)
                     </label>
                     <input
@@ -438,7 +438,7 @@ export const SimulatorsModal: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Pedágio (R$)
                     </label>
                     <input
@@ -483,7 +483,7 @@ export const SimulatorsModal: React.FC = () => {
                 </p>
 
                 {/* Applied criteria bar */}
-                <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-1.5">
+                <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-1.5">
                   <span className="font-semibold text-slate-300">Seus critérios:</span>
                   <span>
                     Mín. <strong>{formatBRL(rideResult.appliedCriteria.minProfitPerKm)}/km</strong>
@@ -502,27 +502,27 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Metric Grid */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Distância Total
                     </span>
                     <span className="text-sm font-bold text-white font-mono">
                       {rideResult.totalDistance.toFixed(1)} km
                     </span>
-                    <span className="text-[10px] text-slate-500 block">
+                    <span className="text-[11px] text-slate-500 block">
                       {considerReturn ? '(com retorno)' : '(sem retorno)'}
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Custo Estimado
                     </span>
                     <span className="text-sm font-bold text-rose-400 font-mono">
                       -{formatBRL(rideResult.estimatedCost)}
                     </span>
-                    <span className="text-[10px] text-slate-500 block">veículo + pedágio</span>
+                    <span className="text-[11px] text-slate-500 block">veículo + pedágio</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Lucro Estimado
                     </span>
                     <span
@@ -530,17 +530,17 @@ export const SimulatorsModal: React.FC = () => {
                     >
                       {formatBRL(rideResult.estimatedProfit)}
                     </span>
-                    <span className="text-[10px] text-slate-500 block">valor − custos</span>
+                    <span className="text-[11px] text-slate-500 block">valor − custos</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">Lucro por KM</span>
+                    <span className="text-[11px] text-slate-400 block uppercase">Lucro por KM</span>
                     <span
                       className={`text-sm font-bold font-mono ${rideResult.profitPerKm >= rideResult.appliedCriteria.minProfitPerKm ? 'text-emerald-400' : 'text-rose-400'}`}
                     >
                       {formatBRL(rideResult.profitPerKm)}/km
                     </span>
                     <span
-                      className={`text-[10px] block ${rideResult.profitPerKm >= rideResult.appliedCriteria.minProfitPerKm ? 'text-emerald-500' : 'text-rose-400'}`}
+                      className={`text-[11px] block ${rideResult.profitPerKm >= rideResult.appliedCriteria.minProfitPerKm ? 'text-emerald-500' : 'text-rose-400'}`}
                     >
                       {rideResult.profitPerKm >= rideResult.appliedCriteria.minProfitPerKm
                         ? '✓ Atingiu meta'
@@ -548,16 +548,16 @@ export const SimulatorsModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Receita por Hora
                     </span>
                     <span className="text-sm font-bold text-slate-200 font-mono">
                       {formatBRL(rideResult.revenuePerHour)}/h
                     </span>
-                    <span className="text-[10px] text-slate-500 block">bruto por hora</span>
+                    <span className="text-[11px] text-slate-500 block">bruto por hora</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Lucro por Hora
                     </span>
                     <span
@@ -566,7 +566,7 @@ export const SimulatorsModal: React.FC = () => {
                       {formatBRL(rideResult.profitPerHour)}/h
                     </span>
                     <span
-                      className={`text-[10px] block ${rideResult.profitPerHour >= rideResult.appliedCriteria.minProfitPerHour ? 'text-emerald-500' : 'text-rose-400'}`}
+                      className={`text-[11px] block ${rideResult.profitPerHour >= rideResult.appliedCriteria.minProfitPerHour ? 'text-emerald-500' : 'text-rose-400'}`}
                     >
                       {rideResult.profitPerHour >= rideResult.appliedCriteria.minProfitPerHour
                         ? '✓ Atingiu meta'
@@ -575,7 +575,7 @@ export const SimulatorsModal: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="text-[10px] text-slate-500 italic text-center pt-1">
+                <p className="text-[11px] text-slate-500 italic text-center pt-1">
                   * Este resultado é uma estimativa operacional com base nos custos e critérios
                   configurados.
                 </p>
@@ -630,7 +630,7 @@ export const SimulatorsModal: React.FC = () => {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Ganho/h Atual (R$)
                     </label>
                     <input
@@ -641,7 +641,7 @@ export const SimulatorsModal: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Custo/km (R$)
                     </label>
                     <input
@@ -653,7 +653,7 @@ export const SimulatorsModal: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Reserva/km (R$)
                     </label>
                     <input
@@ -674,7 +674,7 @@ export const SimulatorsModal: React.FC = () => {
                     Plano de Ação para Alcançar a Meta
                   </h3>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                       goalResult.isFeasible
                         ? 'bg-emerald-500/20 text-emerald-400'
                         : 'bg-amber-500/20 text-amber-400'
@@ -690,7 +690,7 @@ export const SimulatorsModal: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Necessário por Dia
                     </span>
                     <span className="text-sm font-bold text-blue-400 font-mono">
@@ -698,7 +698,7 @@ export const SimulatorsModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Necessário por Hora
                     </span>
                     <span className="text-sm font-bold text-blue-400 font-mono">
@@ -706,19 +706,19 @@ export const SimulatorsModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">Horas Totais</span>
+                    <span className="text-[11px] text-slate-400 block uppercase">Horas Totais</span>
                     <span className="text-sm font-bold text-white font-mono">
                       {goalResult.totalHours} horas
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">KM Previstos</span>
+                    <span className="text-[11px] text-slate-400 block uppercase">KM Previstos</span>
                     <span className="text-sm font-bold text-white font-mono">
                       {goalResult.estimatedKm.toLocaleString('pt-BR')} km
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Faturamento Bruto
                     </span>
                     <span className="text-sm font-bold text-emerald-400 font-mono">
@@ -726,7 +726,7 @@ export const SimulatorsModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Reserva Poupança
                     </span>
                     <span className="text-sm font-bold text-teal-400 font-mono">

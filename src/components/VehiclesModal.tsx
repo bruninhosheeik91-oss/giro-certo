@@ -146,7 +146,7 @@ export const VehiclesModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -254,13 +254,13 @@ export const VehiclesModal: React.FC = () => {
                                 {v.nickname}
                               </h4>
                               {v.isActive && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                   <Star className="w-2.5 h-2.5 fill-current" />
                                   Ativo
                                 </span>
                               )}
                               {v.isArchived && (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-400">
                                   Arquivado
                                 </span>
                               )}
@@ -295,7 +295,7 @@ export const VehiclesModal: React.FC = () => {
                       {/* Specs pills */}
                       <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/80 text-center">
                         <div className="bg-slate-950/60 rounded-lg py-1.5 px-2">
-                          <span className="text-[10px] text-slate-500 block uppercase">
+                          <span className="text-[11px] text-slate-500 block uppercase">
                             KM Atual
                           </span>
                           <span className="text-xs font-bold text-slate-200 font-mono">
@@ -303,13 +303,13 @@ export const VehiclesModal: React.FC = () => {
                           </span>
                         </div>
                         <div className="bg-slate-950/60 rounded-lg py-1.5 px-2">
-                          <span className="text-[10px] text-slate-500 block uppercase">Média</span>
+                          <span className="text-[11px] text-slate-500 block uppercase">Média</span>
                           <span className="text-xs font-bold text-slate-200 font-mono">
                             {v.fuelAverageKmPerLiter} km/l
                           </span>
                         </div>
                         <div className="bg-slate-950/60 rounded-lg py-1.5 px-2">
-                          <span className="text-[10px] text-slate-500 block uppercase">
+                          <span className="text-[11px] text-slate-500 block uppercase">
                             Combustível
                           </span>
                           <span className="text-xs font-bold text-slate-200 truncate block">
@@ -319,7 +319,7 @@ export const VehiclesModal: React.FC = () => {
                       </div>
 
                       {v.notes && (
-                        <p className="text-[11px] text-slate-400 italic mt-2 bg-slate-950/40 p-2 rounded-lg">
+                        <p className="text-xs text-slate-400 italic mt-2 bg-slate-950/40 p-2 rounded-lg">
                           "{v.notes}"
                         </p>
                       )}
@@ -343,7 +343,7 @@ export const VehiclesModal: React.FC = () => {
 
                         <button
                           onClick={() => archiveVehicle(v.id)}
-                          className="text-[11px] text-slate-400 hover:text-slate-300 underline font-medium"
+                          className="text-xs text-slate-400 hover:text-slate-300 underline font-medium"
                         >
                           {v.isArchived ? 'Desarquivar' : 'Arquivar'}
                         </button>
@@ -361,7 +361,7 @@ export const VehiclesModal: React.FC = () => {
                                 deleteVehicle(v.id);
                                 setDeleteConfirmId(null);
                               }}
-                              className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded"
+                              className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-on-accent text-xs font-bold rounded"
                             >
                               Sim, excluir
                             </button>

@@ -66,7 +66,7 @@ export const QuickRideRegister: React.FC = () => {
         <Zap className="h-4 w-4 text-emerald-400" />
         <span className="text-sm font-bold text-white">Registrar corrida com 1 toque</span>
       </div>
-      <p className="text-[11px] text-slate-400">
+      <p className="text-xs text-slate-400">
         {offers.length === 0
           ? 'Nenhuma oferta lida ainda. Com o Copiloto ligado, as ofertas da Uber/99 aparecem aqui para você registrar com 1 toque.'
           : 'Ofertas lidas pelo Copiloto nas últimas horas. Toque na que você fez.'}
@@ -84,19 +84,19 @@ export const QuickRideRegister: React.FC = () => {
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot(offer.status)}`} />
             <span className="flex-1">
               <span className="block text-sm font-bold text-slate-100">
-                {formatBRL(offer.fare)} <span className="text-[11px] font-normal text-slate-400">· {offer.appName}</span>
+                {formatBRL(offer.fare)} <span className="text-xs font-normal text-slate-400">· {offer.appName}</span>
               </span>
-              <span className="block text-[10px] text-slate-500">
+              <span className="block text-[11px] text-slate-500">
                 {new Date(offer.analyzedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ·{' '}
                 {offer.totalKm.toFixed(1)} km · {Math.round(offer.minutes)} min
               </span>
             </span>
             {done ? (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400">
+              <span className="flex items-center gap-1 text-xs font-bold text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" /> Registrada
               </span>
             ) : (
-              <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white">Fiz esta</span>
+              <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-on-accent">Fiz esta</span>
             )}
           </button>
         );

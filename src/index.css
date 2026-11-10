@@ -1,4 +1,246 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/*
+ * Sistema visual do Giro Certo.
+ * Tema escuro é o padrão. O "Modo Sol" (html[data-theme="sol"]) redefine a paleta
+ * inteira: superfícies claras, textos escuros e cores de destaque mais escuras para
+ * contraste sob luz do dia. Ver src/lib/theme.ts.
+ */
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-app: #090d16;
+  --color-on-accent: #ffffff;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--color-app);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  background: var(--color-app);
+}
+
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme='sol'] {
+  color-scheme: light;
+  --color-app: #eef2f6;
+  --color-white: #0b1220;
+  --color-slate-50: #0B1220;
+  --color-slate-100: #101828;
+  --color-slate-200: #1D2939;
+  --color-slate-300: #344054;
+  --color-slate-400: #475467;
+  --color-slate-500: #5B6878;
+  --color-slate-600: #8A97A8;
+  --color-slate-700: #D0D8E2;
+  --color-slate-800: #E6EBF1;
+  --color-slate-900: #FFFFFF;
+  --color-slate-950: #F3F6F9;
+  --color-emerald-50: #067647;
+  --color-emerald-100: #067647;
+  --color-emerald-200: #067647;
+  --color-emerald-300: #067647;
+  --color-emerald-400: #067647;
+  --color-emerald-500: #067647;
+  --color-emerald-600: #067647;
+  --color-emerald-700: #05603A;
+  --color-emerald-800: #A6F4C5;
+  --color-emerald-900: #D1FADF;
+  --color-emerald-950: #ECFDF3;
+  --color-green-50: #067647;
+  --color-green-100: #067647;
+  --color-green-200: #067647;
+  --color-green-300: #067647;
+  --color-green-400: #067647;
+  --color-green-500: #067647;
+  --color-green-600: #067647;
+  --color-green-700: #05603A;
+  --color-green-800: #A6F4C5;
+  --color-green-900: #D1FADF;
+  --color-green-950: #ECFDF3;
+  --color-lime-50: #067647;
+  --color-lime-100: #067647;
+  --color-lime-200: #067647;
+  --color-lime-300: #067647;
+  --color-lime-400: #067647;
+  --color-lime-500: #067647;
+  --color-lime-600: #067647;
+  --color-lime-700: #05603A;
+  --color-lime-800: #A6F4C5;
+  --color-lime-900: #D1FADF;
+  --color-lime-950: #ECFDF3;
+  --color-rose-50: #B42318;
+  --color-rose-100: #B42318;
+  --color-rose-200: #B42318;
+  --color-rose-300: #B42318;
+  --color-rose-400: #B42318;
+  --color-rose-500: #D92D20;
+  --color-rose-600: #B42318;
+  --color-rose-700: #912018;
+  --color-rose-800: #FDA29B;
+  --color-rose-900: #FEE4E2;
+  --color-rose-950: #FEF3F2;
+  --color-red-50: #B42318;
+  --color-red-100: #B42318;
+  --color-red-200: #B42318;
+  --color-red-300: #B42318;
+  --color-red-400: #B42318;
+  --color-red-500: #D92D20;
+  --color-red-600: #B42318;
+  --color-red-700: #912018;
+  --color-red-800: #FDA29B;
+  --color-red-900: #FEE4E2;
+  --color-red-950: #FEF3F2;
+  --color-pink-50: #B42318;
+  --color-pink-100: #B42318;
+  --color-pink-200: #B42318;
+  --color-pink-300: #B42318;
+  --color-pink-400: #B42318;
+  --color-pink-500: #D92D20;
+  --color-pink-600: #B42318;
+  --color-pink-700: #912018;
+  --color-pink-800: #FDA29B;
+  --color-pink-900: #FEE4E2;
+  --color-pink-950: #FEF3F2;
+  --color-fuchsia-50: #B42318;
+  --color-fuchsia-100: #B42318;
+  --color-fuchsia-200: #B42318;
+  --color-fuchsia-300: #B42318;
+  --color-fuchsia-400: #B42318;
+  --color-fuchsia-500: #D92D20;
+  --color-fuchsia-600: #B42318;
+  --color-fuchsia-700: #912018;
+  --color-fuchsia-800: #FDA29B;
+  --color-fuchsia-900: #FEE4E2;
+  --color-fuchsia-950: #FEF3F2;
+  --color-amber-50: #B54708;
+  --color-amber-100: #B54708;
+  --color-amber-200: #B54708;
+  --color-amber-300: #B54708;
+  --color-amber-400: #B54708;
+  --color-amber-500: #DC6803;
+  --color-amber-600: #B54708;
+  --color-amber-700: #93370D;
+  --color-amber-800: #FEC84B;
+  --color-amber-900: #FEF0C7;
+  --color-amber-950: #FFFAEB;
+  --color-yellow-50: #B54708;
+  --color-yellow-100: #B54708;
+  --color-yellow-200: #B54708;
+  --color-yellow-300: #B54708;
+  --color-yellow-400: #B54708;
+  --color-yellow-500: #DC6803;
+  --color-yellow-600: #B54708;
+  --color-yellow-700: #93370D;
+  --color-yellow-800: #FEC84B;
+  --color-yellow-900: #FEF0C7;
+  --color-yellow-950: #FFFAEB;
+  --color-orange-50: #B54708;
+  --color-orange-100: #B54708;
+  --color-orange-200: #B54708;
+  --color-orange-300: #B54708;
+  --color-orange-400: #B54708;
+  --color-orange-500: #DC6803;
+  --color-orange-600: #B54708;
+  --color-orange-700: #93370D;
+  --color-orange-800: #FEC84B;
+  --color-orange-900: #FEF0C7;
+  --color-orange-950: #FFFAEB;
+  --color-blue-50: #175CD3;
+  --color-blue-100: #175CD3;
+  --color-blue-200: #175CD3;
+  --color-blue-300: #175CD3;
+  --color-blue-400: #175CD3;
+  --color-blue-500: #1570EF;
+  --color-blue-600: #175CD3;
+  --color-blue-700: #1849A9;
+  --color-blue-800: #B2DDFF;
+  --color-blue-900: #D1E9FF;
+  --color-blue-950: #EFF8FF;
+  --color-sky-50: #175CD3;
+  --color-sky-100: #175CD3;
+  --color-sky-200: #175CD3;
+  --color-sky-300: #175CD3;
+  --color-sky-400: #175CD3;
+  --color-sky-500: #1570EF;
+  --color-sky-600: #175CD3;
+  --color-sky-700: #1849A9;
+  --color-sky-800: #B2DDFF;
+  --color-sky-900: #D1E9FF;
+  --color-sky-950: #EFF8FF;
+  --color-cyan-50: #175CD3;
+  --color-cyan-100: #175CD3;
+  --color-cyan-200: #175CD3;
+  --color-cyan-300: #175CD3;
+  --color-cyan-400: #175CD3;
+  --color-cyan-500: #1570EF;
+  --color-cyan-600: #175CD3;
+  --color-cyan-700: #1849A9;
+  --color-cyan-800: #B2DDFF;
+  --color-cyan-900: #D1E9FF;
+  --color-cyan-950: #EFF8FF;
+  --color-indigo-50: #175CD3;
+  --color-indigo-100: #175CD3;
+  --color-indigo-200: #175CD3;
+  --color-indigo-300: #175CD3;
+  --color-indigo-400: #175CD3;
+  --color-indigo-500: #1570EF;
+  --color-indigo-600: #175CD3;
+  --color-indigo-700: #1849A9;
+  --color-indigo-800: #B2DDFF;
+  --color-indigo-900: #D1E9FF;
+  --color-indigo-950: #EFF8FF;
+  --color-teal-50: #107569;
+  --color-teal-100: #107569;
+  --color-teal-200: #107569;
+  --color-teal-300: #107569;
+  --color-teal-400: #107569;
+  --color-teal-500: #0E9384;
+  --color-teal-600: #107569;
+  --color-teal-700: #125D56;
+  --color-teal-800: #99F6E0;
+  --color-teal-900: #CCFBEF;
+  --color-teal-950: #F0FDF9;
+  --color-violet-50: #6927DA;
+  --color-violet-100: #6927DA;
+  --color-violet-200: #6927DA;
+  --color-violet-300: #6927DA;
+  --color-violet-400: #6927DA;
+  --color-violet-500: #7A5AF8;
+  --color-violet-600: #6927DA;
+  --color-violet-700: #5720B7;
+  --color-violet-800: #D9D6FE;
+  --color-violet-900: #EBE9FE;
+  --color-violet-950: #F5F3FF;
+  --color-purple-50: #6927DA;
+  --color-purple-100: #6927DA;
+  --color-purple-200: #6927DA;
+  --color-purple-300: #6927DA;
+  --color-purple-400: #6927DA;
+  --color-purple-500: #7A5AF8;
+  --color-purple-600: #6927DA;
+  --color-purple-700: #5720B7;
+  --color-purple-800: #D9D6FE;
+  --color-purple-900: #EBE9FE;
+  --color-purple-950: #F5F3FF;
+}
+
+html[data-theme='sol'] .shadow-xl,
+html[data-theme='sol'] .shadow-lg,
+html[data-theme='sol'] .shadow-md {
+  --tw-shadow-color: rgb(16 24 40 / 0.08);
+}
+
 
 /* Áreas seguras de dispositivos com notch (viewport-fit=cover) */
 .safe-top {

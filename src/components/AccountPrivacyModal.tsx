@@ -71,8 +71,8 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
 
   return (
     <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/75 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-slate-700/80 bg-[#0f172a] shadow-2xl sm:rounded-3xl">
-        <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-800 bg-[#0f172a]/95 p-4 backdrop-blur">
+      <div className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-slate-700/80 bg-slate-900 shadow-2xl sm:rounded-3xl">
+        <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-800 bg-slate-900/95 p-4 backdrop-blur">
           {page !== 'menu' && (
             <button type="button" onClick={() => { setPage('menu'); setMessage(null); }} className="rounded-xl bg-slate-800 p-2 text-slate-300" aria-label="Voltar">
               <ArrowLeft className="h-4 w-4" />
@@ -80,7 +80,7 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
           )}
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-bold text-white">Conta e Privacidade</h2>
-            <p className="text-[10px] text-slate-400">Seus dados, seus controles</p>
+            <p className="text-[11px] text-slate-400">Seus dados, seus controles</p>
           </div>
           <button type="button" onClick={close} className="rounded-xl bg-slate-800 p-2 text-slate-400" aria-label="Fechar">
             <X className="h-5 w-5" />
@@ -94,12 +94,12 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
               <MenuButton icon={Scale} title="Termos de Uso" description="Regras para utilização do Giro Certo" onClick={() => setPage('terms')} />
               <button type="button" disabled={busy} onClick={() => void exportData()} className="flex w-full items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-left disabled:opacity-50">
                 <Download className="h-5 w-5 text-blue-400" />
-                <span className="flex-1"><strong className="block text-xs text-white">Exportar meus dados</strong><span className="text-[10px] text-slate-400">Baixe uma cópia em formato JSON</span></span>
+                <span className="flex-1"><strong className="block text-xs text-white">Exportar meus dados</strong><span className="text-[11px] text-slate-400">Baixe uma cópia em formato JSON</span></span>
               </button>
               {app.mode === 'cloud' && (
                 <button type="button" onClick={() => setPage('delete')} className="flex w-full items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-left">
                   <Trash2 className="h-5 w-5 text-rose-400" />
-                  <span className="flex-1"><strong className="block text-xs text-rose-200">Excluir minha conta</strong><span className="text-[10px] text-slate-400">Apaga permanentemente a conta e os dados</span></span>
+                  <span className="flex-1"><strong className="block text-xs text-rose-200">Excluir minha conta</strong><span className="text-[11px] text-slate-400">Apaga permanentemente a conta e os dados</span></span>
                 </button>
               )}
             </>
@@ -120,7 +120,7 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
               <label className="block text-xs font-semibold text-slate-300">Digite <strong className="text-white">EXCLUIR</strong> para confirmar
                 <input value={confirmation} onChange={(event) => setConfirmation(event.target.value.toUpperCase())} autoCapitalize="characters" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm font-bold tracking-widest text-white outline-none focus:border-rose-500" />
               </label>
-              <button type="button" disabled={busy || confirmation !== 'EXCLUIR'} onClick={() => void deleteAccount()} className="w-full rounded-xl bg-rose-500 px-4 py-3 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
+              <button type="button" disabled={busy || confirmation !== 'EXCLUIR'} onClick={() => void deleteAccount()} className="w-full rounded-xl bg-rose-500 px-4 py-3 text-xs font-black text-on-accent disabled:cursor-not-allowed disabled:opacity-40">
                 {busy ? 'Excluindo…' : 'Excluir conta permanentemente'}
               </button>
             </div>
@@ -136,7 +136,7 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
 const MenuButton: React.FC<{ icon: React.ElementType; title: string; description: string; onClick: () => void }> = ({ icon: Icon, title, description, onClick }) => (
   <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-left">
     <Icon className="h-5 w-5 text-emerald-400" />
-    <span className="flex-1"><strong className="block text-xs text-white">{title}</strong><span className="text-[10px] text-slate-400">{description}</span></span>
+    <span className="flex-1"><strong className="block text-xs text-white">{title}</strong><span className="text-[11px] text-slate-400">{description}</span></span>
     <FileText className="h-4 w-4 text-slate-600" />
   </button>
 );

@@ -20,6 +20,7 @@ import { AccountRow, SyncStatusRow } from '../components/SyncStatusRow';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
+import { ThemeSelector } from '../components/ThemeSelector';
 import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
 import { AdminOverviewCard } from '../components/AdminOverviewCard';
 import { AccountPrivacyModal } from '../components/AccountPrivacyModal';
@@ -228,7 +229,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {mode === 'cloud' && (
-          <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-3 text-xs">
             <button
               type="button"
               onClick={() => avatarInputRef.current?.click()}
@@ -267,7 +268,7 @@ export const ProfileView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Nome</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Nome</label>
                 <input
                   type="text"
                   value={name}
@@ -276,7 +277,7 @@ export const ProfileView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Cidade / UF
                 </label>
                 <input
@@ -290,7 +291,7 @@ export const ProfileView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Meta Mensal (R$)
                 </label>
                 <input
@@ -301,7 +302,7 @@ export const ProfileView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Reserva/KM (R$)
                 </label>
                 <input
@@ -316,12 +317,12 @@ export const ProfileView: React.FC = () => {
 
             {/* Critérios de Corrida na Edição */}
             <div className="pt-2 border-t border-slate-800 space-y-2">
-              <span className="text-[11px] font-bold text-slate-300 block uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-300 block uppercase tracking-wider">
                 Critérios de Aceite de Corrida
               </span>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Mín. Lucro/KM</label>
+                  <label className="block text-[11px] text-slate-400 mb-1">Mín. Lucro/KM</label>
                   <input
                     type="number"
                     step="0.05"
@@ -331,7 +332,7 @@ export const ProfileView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Mín. Lucro/Hora</label>
+                  <label className="block text-[11px] text-slate-400 mb-1">Mín. Lucro/Hora</label>
                   <input
                     type="number"
                     step="1"
@@ -341,7 +342,7 @@ export const ProfileView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Valor Mínimo</label>
+                  <label className="block text-[11px] text-slate-400 mb-1">Valor Mínimo</label>
                   <input
                     type="number"
                     step="0.5"
@@ -384,6 +385,8 @@ export const ProfileView: React.FC = () => {
         )}
       </div>
 
+      <ThemeSelector />
+
       {/* Meus Veículos Card (Requirement 3) */}
       <div
         onClick={openVehiclesModal}
@@ -413,7 +416,7 @@ export const ProfileView: React.FC = () => {
         <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
           <div>
             <span className="font-bold text-white block">{activeVehicle.nickname}</span>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-xs text-slate-400">
               {activeVehicle.brand} {activeVehicle.model} ({activeVehicle.year}) •{' '}
               {activeVehicle.fuelType}
             </span>
@@ -482,7 +485,7 @@ export const ProfileView: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {payablesSummary.overdueCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-[9px] font-bold text-rose-300">
+              <span className="px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-[11px] font-bold text-rose-300">
                 {payablesSummary.overdueCount} em atraso
               </span>
             )}
@@ -516,28 +519,28 @@ export const ProfileView: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-2 pt-1">
           <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Mínimo / KM</span>
+            <span className="text-[11px] text-slate-400 block uppercase">Mínimo / KM</span>
             <span className="text-sm font-bold text-emerald-400 font-mono">
               {formatBRL(userProfile.rideCriteria?.minProfitPerKm ?? 0.8)}/km
             </span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Mínimo / Hora</span>
+            <span className="text-[11px] text-slate-400 block uppercase">Mínimo / Hora</span>
             <span className="text-sm font-bold text-emerald-400 font-mono">
               {formatBRL(userProfile.rideCriteria?.minProfitPerHour ?? 25.0)}/h
             </span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Valor Mínimo</span>
+            <span className="text-[11px] text-slate-400 block uppercase">Valor Mínimo</span>
             <span className="text-sm font-bold text-slate-200 font-mono">
               {formatBRL(userProfile.rideCriteria?.minAcceptableValue ?? 8.0)}
             </span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Considerar Retorno</span>
+            <span className="text-[11px] text-slate-400 block uppercase">Considerar Retorno</span>
             <span className="text-sm font-bold text-slate-200">
               {userProfile.rideCriteria?.considerReturnDistance ? 'Sim (Ativo)' : 'Não (Ignorar)'}
             </span>
@@ -563,7 +566,7 @@ export const ProfileView: React.FC = () => {
           <div className="flex items-center justify-between text-xs">
             <div>
               <span className="text-slate-200 font-medium block">Coach de Meta Mensal</span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[11px] text-slate-400">
                 Incentivos e alertas conforme o ritmo do mês
               </span>
             </div>
@@ -577,18 +580,18 @@ export const ProfileView: React.FC = () => {
 
           {userProfile.notificationPreferences.dailyGoalAlert && (
             <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5">
-              <span className="text-[10px] font-bold text-slate-300 uppercase">Voz do Coach</span>
+              <span className="text-[11px] font-bold text-slate-300 uppercase">Voz do Coach</span>
               <select value={coachVoice.voiceId ?? ''} onChange={(e) => updateCoachVoice({ voiceId: e.target.value || undefined })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200">
                 <option value="">Voz padrão do celular</option>
                 {coachVoices.map((voice, index) => <option key={voice.id} value={voice.id}>Voz {index + 1} · {voice.name}</option>)}
               </select>
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-[10px] text-slate-400">Velocidade
+                <label className="text-[11px] text-slate-400">Velocidade
                   <select value={coachVoice.rate} onChange={(e) => updateCoachVoice({ rate: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
                     <option value="0.82">Calma</option><option value="0.95">Normal</option><option value="1.08">Dinâmica</option>
                   </select>
                 </label>
-                <label className="text-[10px] text-slate-400">Tom
+                <label className="text-[11px] text-slate-400">Tom
                   <select value={coachVoice.pitch} onChange={(e) => updateCoachVoice({ pitch: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
                     <option value="0.8">Grave</option><option value="0.92">Natural</option><option value="1.08">Agudo</option>
                   </select>
@@ -598,7 +601,7 @@ export const ProfileView: React.FC = () => {
               <label className="flex items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
                 <div>
                   <span className="text-slate-200 font-medium block">Saudação com voz ao abrir</span>
-                  <span className="text-[10px] text-slate-400">Uma vez por dia e fora da jornada</span>
+                  <span className="text-[11px] text-slate-400">Uma vez por dia e fora da jornada</span>
                 </div>
                 <input type="checkbox" checked={coachVoice.greetingEnabled} onChange={() => updateCoachVoice({ greetingEnabled: !coachVoice.greetingEnabled })} className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700" />
               </label>
@@ -611,7 +614,7 @@ export const ProfileView: React.FC = () => {
               <span className="text-slate-200 font-medium block">
                 Alerta de Manutenção Preventiva
               </span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[11px] text-slate-400">
                 Notificar trocas de óleo e peças próximas
               </span>
             </div>
@@ -626,7 +629,7 @@ export const ProfileView: React.FC = () => {
           <div className="flex items-center justify-between text-xs">
             <div>
               <span className="text-slate-200 font-medium block">Lembrete de Abastecimento</span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[11px] text-slate-400">
                 Calcular médias e sugerir abastecimento
               </span>
             </div>
@@ -641,7 +644,7 @@ export const ProfileView: React.FC = () => {
       </div>
 
       <div className="divide-y divide-slate-800/70 rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
-        <button type="button" onClick={() => setAccountPrivacyOpen(true)} className="flex w-full items-center gap-2 px-3 py-3 text-left text-[11px] text-slate-300 hover:text-white">
+        <button type="button" onClick={() => setAccountPrivacyOpen(true)} className="flex w-full items-center gap-2 px-3 py-3 text-left text-xs text-slate-300 hover:text-white">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
           Conta e Privacidade
           <span className="ml-auto text-slate-600">›</span>

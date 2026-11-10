@@ -13,7 +13,7 @@ export const TrialExpiryNotice: React.FC = () => {
       <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
       <div className="flex-1">
         <p className="text-xs font-bold">Sua apresentação termina {deadline}</p>
-        <p className="mt-1 text-[10px] leading-relaxed text-amber-100/70">
+        <p className="mt-1 text-[11px] leading-relaxed text-amber-100/70">
           O Essencial continuará funcionando. O copiloto por leitura de tela é um recurso
           experimental em validação (Android 14+).
         </p>

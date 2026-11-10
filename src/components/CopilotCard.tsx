@@ -45,29 +45,29 @@ export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) =>
       <div className="flex items-center gap-2">
         <Radar className="h-4 w-4 text-blue-400" />
         <span className="text-sm font-bold text-slate-100">Copiloto Giro Certo</span>
-        <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ${running ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400'}`}>
+        <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${running ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400'}`}>
           {running ? 'ATIVO' : 'DESLIGADO'}
         </span>
       </div>
 
-      <div className="flex gap-1.5 text-[10px] font-bold">
-        <span className="flex-1 rounded bg-emerald-500 py-1 text-center text-white">Vale a pena</span>
-        <span className="flex-1 rounded bg-amber-500 py-1 text-center text-white">Atenção</span>
-        <span className="flex-1 rounded bg-red-500 py-1 text-center text-white">Não compensa</span>
+      <div className="flex gap-1.5 text-[11px] font-bold">
+        <span className="flex-1 rounded bg-emerald-500 py-1 text-center text-on-accent">Vale a pena</span>
+        <span className="flex-1 rounded bg-amber-500 py-1 text-center text-on-accent">Atenção</span>
+        <span className="flex-1 rounded bg-red-500 py-1 text-center text-on-accent">Não compensa</span>
       </div>
 
       {!granted ? (
         <>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-xs text-slate-400">
             Toque abaixo, entre em <b>Apps instalados → Copiloto Giro Certo</b> e ative. Ele lê só a Uber, 99 e inDrive.
           </p>
-          <button type="button" onClick={() => void openSettings()} className="w-full rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-white">
+          <button type="button" onClick={() => void openSettings()} className="w-full rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-on-accent">
             Ativar Copiloto nas configurações
           </button>
         </>
       ) : (
         <div className="flex gap-2">
-          <button type="button" onClick={() => void toggle()} className={`flex-1 rounded-lg px-3 py-2.5 text-xs font-bold ${enabled ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-white'}`}>
+          <button type="button" onClick={() => void toggle()} className={`flex-1 rounded-lg px-3 py-2.5 text-xs font-bold ${enabled ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-on-accent'}`}>
             {enabled ? 'Pausar análise' : 'Analisar ofertas'}
           </button>
           <button type="button" onClick={() => void turnOff()} className="flex items-center gap-1 rounded-lg bg-red-600/90 px-3 py-2.5 text-xs font-bold text-white">
@@ -80,12 +80,12 @@ export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) =>
       <CopilotLogPanel />
 
       {diagnostic && (
-        <p className={`rounded bg-slate-950/60 p-2 text-[11px] ${diagnostic.analyzed ? 'text-emerald-300' : 'text-amber-300'}`}>
+        <p className={`rounded bg-slate-950/60 p-2 text-xs ${diagnostic.analyzed ? 'text-emerald-300' : 'text-amber-300'}`}>
           {timeFormat.format(diagnostic.at)} · {diagnostic.message}
         </p>
       )}
 
-      <p className="text-[10px] text-slate-500">
+      <p className="text-[11px] text-slate-500">
         {granted
           ? onShift
             ? 'Ao encerrar a jornada no Giro Certo, o Copiloto se desliga sozinho e seus apps de banco voltam a funcionar.'

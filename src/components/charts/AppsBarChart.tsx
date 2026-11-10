@@ -57,19 +57,19 @@ export const AppsBarChart: React.FC<AppsBarChartProps> = ({ transactions, select
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span
-                className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shadow-sm"
+                className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-bold shadow-sm"
                 style={{ backgroundColor: app.bg, color: app.color }}
               >
                 {app.name.charAt(0)}
               </span>
               <span className="font-semibold text-slate-200">{app.name}</span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-xs text-slate-400">
                 • {app.count} {app.name === 'iFood' ? 'entregas' : 'corridas'}
               </span>
             </div>
             <div className="text-right">
               <span className="font-mono font-bold text-slate-100">{formatBRL(app.total)}</span>
-              <span className="text-slate-400 text-[11px] ml-1.5 font-medium">
+              <span className="text-slate-400 text-xs ml-1.5 font-medium">
                 ({formatPercent(app.percent)})
               </span>
             </div>

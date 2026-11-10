@@ -10,6 +10,8 @@ import {
 import { Award, Trophy } from 'lucide-react';
 import { FuelConsumptionView } from '../components/FuelConsumptionView';
 
+const PERIOD_LABEL = { hoje: 'Hoje', semana: 'Semana', mes: 'Mês', ano: 'Ano' } as const;
+
 export const ReportsView: React.FC = () => {
   const { transactions, shifts, selectedMonth, registeredApps, userProfile } = useApp();
   const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual' | 'consumo'>('mensal');
@@ -92,46 +94,46 @@ export const ReportsView: React.FC = () => {
       <div className="grid grid-cols-4 gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-semibold">
         <button
           onClick={() => setViewMode('mensal')}
-          className={`py-2 px-2 rounded-xl transition-all ${
+          className={`min-h-11 py-2 px-2 rounded-xl text-[13px] font-semibold transition-all ${
             viewMode === 'mensal'
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm font-bold'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Visão Mensal
+          Mês
         </button>
 
         <button
           onClick={() => setViewMode('apps')}
-          className={`py-2 px-2 rounded-xl transition-all ${
+          className={`min-h-11 py-2 px-2 rounded-xl text-[13px] font-semibold transition-all ${
             viewMode === 'apps'
               ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-sm font-bold'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Por Aplicativo
+          Apps
         </button>
 
         <button
           onClick={() => setViewMode('anual')}
-          className={`py-2 px-2 rounded-xl transition-all ${
+          className={`min-h-11 py-2 px-2 rounded-xl text-[13px] font-semibold transition-all ${
             viewMode === 'anual'
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-sm font-bold'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Comparativo Anual
+          Anual
         </button>
 
         <button
           onClick={() => setViewMode('consumo')}
-          className={`py-2 px-2 rounded-xl transition-all ${
+          className={`min-h-11 py-2 px-2 rounded-xl text-[13px] font-semibold transition-all ${
             viewMode === 'consumo'
               ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-sm font-bold'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Consumo km/L
+          Consumo
         </button>
       </div>
 
@@ -146,13 +148,13 @@ export const ReportsView: React.FC = () => {
                 <button
                   key={p}
                   onClick={() => setPeriodFilter(p)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  className={`min-h-9 px-3 py-1 rounded-lg text-[13px] font-semibold transition-all ${
                     periodFilter === p
                       ? 'bg-emerald-500 text-slate-950 shadow-sm'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {p}
+                  {PERIOD_LABEL[p]}
                 </button>
               ))}
             </div>
@@ -161,12 +163,12 @@ export const ReportsView: React.FC = () => {
           {/* Month Overview Summary Card */}
           <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-3">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              Balanço do Período ({periodFilter.toUpperCase()})
+              Balanço · {PERIOD_LABEL[periodFilter]}
             </h3>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block uppercase">
+                <span className="text-[11px] text-slate-400 block uppercase">
                   Faturamento Bruto
                 </span>
                 <span className="text-sm font-bold text-emerald-400 font-mono">
@@ -174,7 +176,7 @@ export const ReportsView: React.FC = () => {
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block uppercase">Lançamentos</span>
+                <span className="text-[11px] text-slate-400 block uppercase">Lançamentos</span>
                 <span className="text-sm font-bold text-slate-200 font-mono">
                   {filteredTxs.length} registros
                 </span>
@@ -191,42 +193,34 @@ export const ReportsView: React.FC = () => {
             {filteredTxs.filter((t) => t.type !== 'ganho').length === 0 ? (
               <p className="text-xs text-slate-500 py-3 text-center">Nenhuma despesa no período.</p>
             ) : (
-              <div className="space-y-2">
-                {Array.from(
-                  new Set(
-                    filteredTxs
-                      .filter((t) => t.type !== 'ganho')
-                      .map((t) =>
-                        t.type === 'outra_despesa'
-                          ? t.category
-                          : t.type === 'abastecimento'
-                            ? 'Combustível'
-                            : 'Manutenção',
-                      ),
-                  ),
-                ).map((catName) => {
-                  const catTxs = filteredTxs.filter(
-                    (t) =>
-                      (t.type === 'outra_despesa'
-                        ? t.category
-                        : t.type === 'abastecimento'
-                          ? 'Combustível'
-                          : 'Manutenção') === catName,
-                  );
-                  const catTotal = catTxs.reduce((sum, t) => sum + t.amount, 0);
-
-                  return (
-                    <div
-                      key={catName}
-                      className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs"
-                    >
-                      <span className="text-slate-300 font-medium">{catName}</span>
-                      <span className="text-rose-400 font-bold font-mono">
-                        -{formatBRL(catTotal)}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="space-y-3">
+                {(() => {
+                  const totals = new Map<string, number>();
+                  for (const t of filteredTxs) {
+                    if (t.type === 'ganho') continue;
+                    const name = t.type === 'outra_despesa' ? t.category : t.type === 'abastecimento' ? 'Combustível' : 'Manutenção';
+                    totals.set(name, (totals.get(name) ?? 0) + t.amount);
+                  }
+                  const rows = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
+                  const sum = rows.reduce((acc, [, v]) => acc + v, 0) || 1;
+                  return rows.map(([catName, catTotal]) => {
+                    const share = (catTotal / sum) * 100;
+                    return (
+                      <div key={catName} className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-2 text-sm">
+                          <span className="font-medium text-white">{catName}</span>
+                          <span className="font-bold text-rose-400">
+                            {formatBRL(catTotal)}
+                            <span className="ml-1.5 text-xs font-medium text-slate-400">{share.toFixed(0)}%</span>
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                          <div className="h-full rounded-full bg-rose-400" style={{ width: `${Math.max(2, share)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </div>
@@ -244,7 +238,7 @@ export const ReportsView: React.FC = () => {
                   <Trophy className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">
                     App Mais Rentável do Mês
                   </span>
                   <h3 className="text-base font-extrabold text-white">
@@ -310,17 +304,17 @@ export const ReportsView: React.FC = () => {
                   {/* Metrics Row */}
                   <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1 border-t border-slate-800/60">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase block">Fatia</span>
+                      <span className="text-[11px] text-slate-400 uppercase block">Fatia</span>
                       <span className="font-bold text-white font-mono">
                         {formatPercent(app.percentage)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase block">Corridas</span>
+                      <span className="text-[11px] text-slate-400 uppercase block">Corridas</span>
                       <span className="font-bold text-white font-mono">{app.rides}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase block">
+                      <span className="text-[11px] text-slate-400 uppercase block">
                         Média / Corrida
                       </span>
                       <span className="font-bold text-emerald-400 font-mono">
@@ -353,7 +347,7 @@ export const ReportsView: React.FC = () => {
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">
                     Crescimento Anual Consolidado
                   </span>
                   <h3 className="text-base font-extrabold text-white">
@@ -382,14 +376,14 @@ export const ReportsView: React.FC = () => {
                       Ano {yr.year}
                     </span>
                     {index === 0 && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         Ano Atual
                       </span>
                     )}
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] text-slate-400 block uppercase">
+                    <span className="text-[11px] text-slate-400 block uppercase">
                       Lucro Disponível
                     </span>
                     <span className="text-base font-extrabold text-emerald-400 font-mono">
@@ -401,42 +395,42 @@ export const ReportsView: React.FC = () => {
                 {/* Main Annual KPIs Grid */}
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">Ganho Bruto</span>
-                    <span className="font-bold text-white font-mono text-[11px]">
+                    <span className="text-[11px] text-slate-400 uppercase block">Ganho Bruto</span>
+                    <span className="font-bold text-white font-mono text-xs">
                       {formatBRL(yr.ganhoBruto)}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">Despesas</span>
-                    <span className="font-bold text-rose-400 font-mono text-[11px]">
+                    <span className="text-[11px] text-slate-400 uppercase block">Despesas</span>
+                    <span className="font-bold text-rose-400 font-mono text-xs">
                       -{formatBRL(yr.totalDespesas)}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">
+                    <span className="text-[11px] text-slate-400 uppercase block">
                       Reserva Poupança
                     </span>
-                    <span className="font-bold text-teal-400 font-mono text-[11px]">
+                    <span className="font-bold text-teal-400 font-mono text-xs">
                       {formatBRL(yr.reservaManutencao)}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">
+                    <span className="text-[11px] text-slate-400 uppercase block">
                       Horas Trabalhadas
                     </span>
-                    <span className="font-bold text-slate-200 font-mono text-[11px]">
+                    <span className="font-bold text-slate-200 font-mono text-xs">
                       {yr.horasTrabalhadas}h
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">Quilometragem</span>
-                    <span className="font-bold text-slate-200 font-mono text-[11px]">
+                    <span className="text-[11px] text-slate-400 uppercase block">Quilometragem</span>
+                    <span className="font-bold text-slate-200 font-mono text-xs">
                       {yr.quilometrosRodados.toLocaleString('pt-BR')} km
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                    <span className="text-[9px] text-slate-400 uppercase block">Ganho / Hora</span>
-                    <span className="font-bold text-blue-400 font-mono text-[11px]">
+                    <span className="text-[11px] text-slate-400 uppercase block">Ganho / Hora</span>
+                    <span className="font-bold text-blue-400 font-mono text-xs">
                       {formatBRL(yr.ganhoPorHora)}/h
                     </span>
                   </div>

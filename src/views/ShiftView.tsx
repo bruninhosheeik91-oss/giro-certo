@@ -284,7 +284,7 @@ export const ShiftView: React.FC = () => {
 
           {/* Timers Display */}
           <div className="text-center py-2 bg-slate-950/80 rounded-2xl border border-slate-800/80 space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">
+            <span className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">
               Tempo Efetivo de Trabalho
             </span>
             <div className="text-4xl font-extrabold font-mono tracking-tight text-white">
@@ -310,7 +310,7 @@ export const ShiftView: React.FC = () => {
           {/* Real-time Earnings of this shift */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block font-semibold">
+              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
                 Ganhos
               </span>
               <span className="text-xs font-bold text-emerald-400 font-mono">
@@ -318,7 +318,7 @@ export const ShiftView: React.FC = () => {
               </span>
             </div>
             <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block font-semibold">
+              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
                 Despesas
               </span>
               <span className="text-xs font-bold text-rose-400 font-mono">
@@ -326,7 +326,7 @@ export const ShiftView: React.FC = () => {
               </span>
             </div>
             <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block font-semibold">
+              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
                 Ganho / Hora
               </span>
               <span className="text-xs font-bold text-blue-400 font-mono">
@@ -357,7 +357,7 @@ export const ShiftView: React.FC = () => {
 
             <button
               onClick={handleOpenEndModal}
-              className="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              className="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-on-accent font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
             >
               <Square className="w-4 h-4 fill-current" />
               <span>Finalizar Turno</span>
@@ -383,7 +383,7 @@ export const ShiftView: React.FC = () => {
       {/* End Shift Modal Dialog */}
       {isEndModalOpen && activeShift && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-white tracking-tight">Finalizar Turno</h3>
               <button
@@ -427,7 +427,7 @@ export const ShiftView: React.FC = () => {
                   onChange={(e) => setEndKmInput(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500"
                 />
-                <p className="mt-1.5 text-[11px] text-slate-400">
+                <p className="mt-1.5 text-xs text-slate-400">
                   {parseDecimalInput(endKmInput) >= activeShift.startKm
                     ? `Distância da jornada: ${calculateOdometerDistance(activeShift.startKm, parseDecimalInput(endKmInput)).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`
                     : 'Digite exatamente o número exibido no odômetro do veículo.'}
@@ -518,7 +518,7 @@ export const ShiftView: React.FC = () => {
                       <span className="text-sm font-extrabold text-emerald-400 font-mono block">
                         {formatBRL(totals.gain)}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[11px] text-slate-400 font-mono">
                         Líquido: {formatBRL(netProfit)}
                       </span>
                     </div>
@@ -527,44 +527,44 @@ export const ShiftView: React.FC = () => {
                   {/* 4 Metrics in pill grid */}
                   <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
                     <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[9px] text-slate-500 block uppercase">Trabalho</span>
-                      <span className="font-bold text-slate-200 font-mono text-[11px]">
+                      <span className="text-[11px] text-slate-500 block uppercase">Trabalho</span>
+                      <span className="font-bold text-slate-200 font-mono text-xs">
                         {s.totalWorkHours}h
                       </span>
                     </div>
                     <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[9px] text-slate-500 block uppercase">Pausas</span>
-                      <span className="font-bold text-amber-400 font-mono text-[11px]">
+                      <span className="text-[11px] text-slate-500 block uppercase">Pausas</span>
+                      <span className="font-bold text-amber-400 font-mono text-xs">
                         {s.totalPauseMinutes || 0}m
                       </span>
                     </div>
                     <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[9px] text-slate-500 block uppercase">Distância</span>
-                      <span className="font-bold text-slate-200 font-mono text-[11px]">
+                      <span className="text-[11px] text-slate-500 block uppercase">Distância</span>
+                      <span className="font-bold text-slate-200 font-mono text-xs">
                         {s.totalKm} km
                       </span>
                     </div>
                     <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[9px] text-slate-500 block uppercase">Ganho/h</span>
-                      <span className="font-bold text-blue-400 font-mono text-[11px]">
+                      <span className="text-[11px] text-slate-500 block uppercase">Ganho/h</span>
+                      <span className="font-bold text-blue-400 font-mono text-xs">
                         {formatBRL(perHour)}/h
                       </span>
                     </div>
                   </div>
 
                   {s.notes && (
-                    <p className="text-[11px] text-slate-400 bg-slate-950/40 p-2 rounded-lg italic">
+                    <p className="text-xs text-slate-400 bg-slate-950/40 p-2 rounded-lg italic">
                       "{s.notes}"
                     </p>
                   )}
 
                   {deleteConfirmId === s.id ? (
                     <div className="flex items-center justify-end gap-2 pt-1">
-                      <span className="text-[11px] text-rose-300">Excluir esta jornada?</span>
+                      <span className="text-xs text-rose-300">Excluir esta jornada?</span>
                       <button
                         type="button"
                         onClick={() => setDeleteConfirmId(null)}
-                        className="px-2.5 py-1 rounded-lg text-[11px] bg-slate-800 text-slate-300"
+                        className="px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300"
                       >
                         Cancelar
                       </button>
@@ -574,7 +574,7 @@ export const ShiftView: React.FC = () => {
                           removeShift(s.id);
                           setDeleteConfirmId(null);
                         }}
-                        className="px-2.5 py-1 rounded-lg text-[11px] bg-rose-500 text-white font-semibold"
+                        className="px-2.5 py-1 rounded-lg text-xs bg-rose-500 text-on-accent font-semibold"
                       >
                         Excluir
                       </button>

@@ -40,7 +40,7 @@ export const MaintenanceModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -84,7 +84,7 @@ export const MaintenanceModal: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800/80">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-medium block">
+                <span className="text-[11px] text-slate-400 uppercase font-medium block">
                   Custo no Mês ({selectedMonth})
                 </span>
                 <span className="text-sm font-bold text-white font-mono">
@@ -92,7 +92,7 @@ export const MaintenanceModal: React.FC = () => {
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-medium block">
+                <span className="text-[11px] text-slate-400 uppercase font-medium block">
                   Custo no Ano ({currentYear})
                 </span>
                 <span className="text-sm font-bold text-amber-400 font-mono">
@@ -119,7 +119,7 @@ export const MaintenanceModal: React.FC = () => {
                     {alert.remainingKm > 0 ? `${alert.remainingKm} km` : 'KM atingido!'}
                   </span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                       alert.status === 'Atrasada'
                         ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                         : alert.status === 'Troca próxima'
@@ -145,7 +145,7 @@ export const MaintenanceModal: React.FC = () => {
                   closeMaintenanceModal();
                   openNewTransactionModal('manutencao');
                 }}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Lançar Serviço
@@ -181,7 +181,7 @@ export const MaintenanceModal: React.FC = () => {
                         </span>
                       </div>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}`}
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${badgeClass}`}
                       >
                         {part.status}
                       </span>
@@ -195,7 +195,7 @@ export const MaintenanceModal: React.FC = () => {
                           style={{ width: `${part.progressPercent}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                      <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
                         <span>Última: {part.lastChangeKm.toLocaleString('pt-BR')} km</span>
                         <span>
                           Faltam:{' '}
@@ -241,7 +241,7 @@ export const MaintenanceModal: React.FC = () => {
                       <span className="font-bold text-white block">
                         {m.servicePerformed || m.description || m.category}
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-xs text-slate-400">
                         {m.date} • {m.workshop ? `${m.workshop} • ` : ''}
                         {m.currentKm ? `${m.currentKm} km` : ''}
                       </span>

@@ -8,53 +8,86 @@ import {
   calculateMonthlyGoalProjection,
 } from '../utils/calculations';
 import {
-  TrendingUp,
-  DollarSign,
-  Clock,
-  MapPin,
-  Fuel,
-  Wrench,
-  Plus,
-  ChevronRight,
   Bike,
-  Car,
-  Target,
-  PiggyBank,
   Calculator,
-  Edit2,
   CalendarClock,
+  Car,
+  Check,
+  ChevronRight,
+  Clock,
+  Edit2,
+  Fuel,
+  MapPin,
+  Pause,
+  PiggyBank,
+  Play,
+  Plus,
+  Radar,
+  TrendingUp,
   Volume2,
-  Sparkles,
+  Wrench,
 } from 'lucide-react';
 import { getCoachVoicePreferences, showGoalNotification, speakGoalCoach } from '../lib/nativeCoach';
+import { getRideAnalyzerEnabled, isRideOfferNativeAvailable } from '../lib/rideOffer';
+import { useTargetBar } from '../hooks/useTargetBar';
 
-const MONTH_NAMES = [
-  'Jan',
-  'Fev',
-  'Mar',
-  'Abr',
-  'Mai',
-  'Jun',
-  'Jul',
-  'Ago',
-  'Set',
-  'Out',
-  'Nov',
-  'Dez',
+const MONTH_FULL = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
 ];
 
-const formatMonthLabel = (month: string) => {
-  const [y, m] = month.split('-');
-  return `${MONTH_NAMES[parseInt(m, 10) - 1] || m}/${y.slice(2)}`;
-};
+const card = 'rounded-[20px] bg-slate-900 border border-slate-800/70';
+
+function useMinuteTick(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
+}
+
+function formatElapsed(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds / 60));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`;
+}
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  return hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+}
+
+const ProgressBar: React.FC<{ value: number }> = ({ value }) => (
+  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+    <div
+      className="h-full rounded-full bg-emerald-400 transition-all duration-700"
+      style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+    />
+  </div>
+);
 
 export const HomeView: React.FC = () => {
   const {
     monthSummary,
+    todaySummary,
     userProfile,
     updateUserProfile,
     activeVehicle,
     activeShift,
+    transactions,
+    shifts,
     maintenanceReserveBalance,
     openNewTransactionModal,
     openVehiclesModal,
@@ -66,10 +99,27 @@ export const HomeView: React.FC = () => {
     setActiveTab,
     selectedMonth,
     getShiftTotals,
+    pauseShift,
+    resumeShift,
   } = useApp();
+  const { bar } = useTargetBar();
+  const now = useMinuteTick();
+  const native = isRideOfferNativeAvailable();
+  const [copilotOn, setCopilotOn] = useState(false);
 
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoalInput, setNewGoalInput] = useState(userProfile.monthlyGoal.toString());
+
+  useEffect(() => {
+    if (!native) return;
+    const check = () => void getRideAnalyzerEnabled().then(setCopilotOn).catch(() => undefined);
+    check();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [native]);
 
   const goalProjection = calculateMonthlyGoalProjection(
     selectedMonth,
@@ -79,541 +129,428 @@ export const HomeView: React.FC = () => {
   const {
     targetRemaining,
     dailyRequired,
-    projectedMonthProfit,
     daysRemaining,
     dayOfMonth,
     daysInMonth,
-    weekdayLabel,
-    expectedProfitToDate,
     paceDifference,
     periodState,
     status: goalStatus,
+    projectedMonthProfit,
   } = goalProjection;
 
+  const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
+  const isNewUser = transactions.length === 0 && shifts.length === 0;
+  const dailyGoal = daysInMonth > 0 ? userProfile.monthlyGoal / daysInMonth : 0;
+  const todayProfit = todaySummary.lucroDisponivel;
+  const todayProgress = dailyGoal > 0 ? (todayProfit / dailyGoal) * 100 : 0;
+  const shiftTotals = activeShift ? getShiftTotals(activeShift.shiftId) : null;
+  const shiftElapsed = activeShift
+    ? (now - activeShift.startEpoch) / 1000 -
+      activeShift.totalPausedSeconds -
+      (activeShift.isPaused && activeShift.pauseStartEpoch ? (now - activeShift.pauseStartEpoch) / 1000 : 0)
+    : 0;
+  const [year, month] = selectedMonth.split('-').map(Number);
+  const monthName = `${MONTH_FULL[month - 1] ?? ''}${year !== new Date().getFullYear() ? ` de ${year}` : ''}`;
+
   const goalCoach = useMemo(() => {
-    const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
     if (periodState === 'past') {
-      return { tone: 'slate', title: 'Mês encerrado', message: `O resultado final foi ${formatBRL(monthSummary.lucroDisponivel)}. Use este histórico para planejar a próxima meta.` };
+      return { title: 'Mês encerrado', message: `O resultado final foi ${formatBRL(monthSummary.lucroDisponivel)}. Use este histórico para planejar a próxima meta.` };
     }
     if (periodState === 'future') {
-      return { tone: 'blue', title: 'Planejamento pronto', message: `Sua meta de ${formatBRL(userProfile.monthlyGoal)} será acompanhada durante os ${daysInMonth} dias deste mês.` };
+      return { title: 'Planejamento pronto', message: `Sua meta de ${formatBRL(userProfile.monthlyGoal)} será acompanhada durante os ${daysInMonth} dias deste mês.` };
     }
     if (targetRemaining <= 0) {
-      return { tone: 'emerald', title: `Meta alcançada, ${firstName}!`, message: `Você superou sua meta em ${formatBRL(Math.abs(targetRemaining))}. Que tal direcionar parte do resultado para suas Reservas Financeiras?` };
+      return { title: `Meta alcançada, ${firstName}!`, message: `Você superou a meta em ${formatBRL(Math.abs(targetRemaining))}. Que tal guardar parte nas Reservas?` };
+    }
+    if (monthSummary.ganhoBruto === 0 && monthSummary.totalDespesas === 0) {
+      return { title: 'Mês começando', message: `Para chegar a ${formatBRL(userProfile.monthlyGoal)}, mire em cerca de ${formatBRL(dailyRequired)} por dia trabalhado.` };
     }
     if (monthSummary.progressoMeta >= 85) {
-      return { tone: 'emerald', title: 'Falta muito pouco!', message: `Você já alcançou ${formatPercent(monthSummary.progressoMeta)} da meta. Faltam apenas ${formatBRL(targetRemaining)} para concluir.` };
+      return { title: 'Falta muito pouco!', message: `Você já fez ${formatPercent(monthSummary.progressoMeta)} da meta. Faltam ${formatBRL(targetRemaining)}.` };
     }
     if (paceDifference >= 0) {
-      return { tone: 'blue', title: 'Você está no ritmo certo', message: `Seu resultado está ${formatBRL(paceDifference)} acima do ritmo esperado. Continue assim!` };
+      return { title: 'No ritmo certo', message: `Você está ${formatBRL(paceDifference)} acima do ritmo esperado. Continue assim!` };
     }
     if (daysRemaining === 0) {
-      return { tone: 'amber', title: 'Último dia do mês', message: `Ainda faltam ${formatBRL(targetRemaining)} para a meta. Faça o melhor resultado possível hoje, sem aceitar corridas que dão prejuízo.` };
+      return { title: 'Último dia do mês', message: `Faltam ${formatBRL(targetRemaining)} para a meta. Faça o melhor hoje, sem aceitar corrida que dá prejuízo.` };
     }
-    return { tone: 'amber', title: 'Vamos recuperar o ritmo', message: `Você está ${formatBRL(Math.abs(paceDifference))} abaixo do planejado. Uma média de ${formatBRL(dailyRequired)} por dia coloca você novamente no caminho da meta.` };
-  }, [dailyRequired, daysInMonth, daysRemaining, monthSummary.lucroDisponivel, monthSummary.progressoMeta, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal, userProfile.name]);
-
-  const coachToneClass = goalCoach.tone === 'emerald'
-    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300'
-    : goalCoach.tone === 'amber'
-      ? 'bg-amber-500/10 border-amber-500/25 text-amber-300'
-      : goalCoach.tone === 'blue'
-        ? 'bg-blue-500/10 border-blue-500/25 text-blue-300'
-        : 'bg-slate-800/60 border-slate-700 text-slate-300';
-
-  const speakCoachMessage = () => {
-    void speakGoalCoach(`${goalCoach.title}. ${goalCoach.message}`);
-  };
+    return { title: 'Bora recuperar o ritmo', message: `Com ${formatBRL(dailyRequired)} por dia nos próximos ${daysRemaining} dias, você volta para o caminho da meta.` };
+  }, [dailyRequired, daysInMonth, daysRemaining, firstName, monthSummary.ganhoBruto, monthSummary.lucroDisponivel, monthSummary.progressoMeta, monthSummary.totalDespesas, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal]);
 
   useEffect(() => {
     const preferences = getCoachVoicePreferences();
-    if (!preferences.greetingEnabled || activeShift || periodState !== 'current') return;
+    if (!preferences.greetingEnabled || activeShift || periodState !== 'current' || isNewUser) return;
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
     const key = `giro_certo_spoken_greeting_${today}`;
     if (localStorage.getItem(key)) return;
-    const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
-    const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-    const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista';
     const monthlyContext = `Sua meta mensal é ${formatBRL(userProfile.monthlyGoal)}. Até agora, você acumulou ${formatBRL(monthSummary.lucroDisponivel)}.`;
     const encouragement = targetRemaining <= 0
-      ? `${monthlyContext} Parabéns! A meta do mês foi alcançada. Continue cuidando bem dos seus resultados.`
+      ? `${monthlyContext} Parabéns! A meta do mês foi alcançada.`
       : daysRemaining === 0
-        ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta mensal, e hoje é o último dia do mês. Faça o seu melhor sem aceitar corridas que dão prejuízo.`
+        ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)} e hoje é o último dia do mês. Faça o seu melhor sem aceitar corridas que dão prejuízo.`
         : paceDifference >= 0
-          ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta do mês. Você está no ritmo certo. Continue firme, porque cada giro conta!`
-          : `${monthlyContext} Faltam ${formatBRL(targetRemaining)} para alcançar a meta do mês. Para chegar lá, a média necessária nos próximos ${daysRemaining} dias é de ${formatBRL(dailyRequired)} por dia. Não desista!`;
+          ? `${monthlyContext} Faltam ${formatBRL(targetRemaining)}. Você está no ritmo certo. Cada giro conta!`
+          : `${monthlyContext} Faltam ${formatBRL(targetRemaining)}. A média necessária nos próximos ${daysRemaining} dias é de ${formatBRL(dailyRequired)} por dia. Não desista!`;
     const timer = window.setTimeout(() => {
-      void speakGoalCoach(`${greeting}, ${firstName}! ${encouragement}`)
+      void speakGoalCoach(`${greeting()}, ${firstName}! ${encouragement}`)
         .then(() => localStorage.setItem(key, 'spoken'))
         .catch(() => undefined);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [activeShift, dailyRequired, daysRemaining, monthSummary.lucroDisponivel, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal, userProfile.name]);
+  }, [activeShift, dailyRequired, daysRemaining, firstName, isNewUser, monthSummary.lucroDisponivel, paceDifference, periodState, targetRemaining, userProfile.monthlyGoal]);
 
   useEffect(() => {
-    if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current') return;
+    if (!userProfile.notificationPreferences.dailyGoalAlert || periodState !== 'current' || isNewUser) return;
     const today = new Date().toISOString().slice(0, 10);
     const key = `giro_certo_goal_coach_${today}_${goalCoach.title}`;
     if (localStorage.getItem(key)) return;
     void showGoalNotification(`Giro Certo · ${goalCoach.title}`, goalCoach.message)
       .then(() => localStorage.setItem(key, 'sent'))
       .catch(() => undefined);
-  }, [goalCoach, periodState, userProfile.notificationPreferences.dailyGoalAlert]);
+  }, [goalCoach, isNewUser, periodState, userProfile.notificationPreferences.dailyGoalAlert]);
 
   const handleSaveGoal = () => {
     const val = parseDecimalInput(newGoalInput);
-    if (!isNaN(val) && val > 0) {
-      updateUserProfile({ monthlyGoal: val });
-    }
+    if (!isNaN(val) && val > 0) updateUserProfile({ monthlyGoal: val });
     setIsEditingGoal(false);
   };
 
+  const quickActions = [
+    { label: 'Ganho', icon: Plus, tone: 'text-emerald-400', onClick: () => openNewTransactionModal('ganho') },
+    { label: 'Abastecer', icon: Fuel, tone: 'text-sky-400', onClick: () => openNewTransactionModal('abastecimento') },
+    { label: 'Manutenção', icon: Wrench, tone: 'text-slate-200', onClick: openMaintenanceModal },
+    { label: 'Simular', icon: Calculator, tone: 'text-slate-200', onClick: openSimulatorsModal },
+  ];
+
   return (
     <div className="space-y-4 pb-2">
-      {/* Top Header Card: Active Vehicle Banner */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 border border-slate-800 shadow-md flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            {activeVehicle.type === 'moto' ? (
-              <Bike className="w-5 h-5" />
-            ) : (
-              <Car className="w-5 h-5" />
-            )}
+      {/* Hoje: jornada em andamento, primeiros passos ou resumo do dia */}
+      {activeShift ? (
+        <section aria-label="Jornada de hoje" className={`${card} space-y-4 p-5`}>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              {!activeShift.isPaused && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              )}
+              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${activeShift.isPaused ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+            </span>
+            <span className="text-sm font-semibold text-white">
+              {activeShift.isPaused ? 'Jornada pausada' : 'Jornada em andamento'}
+            </span>
+            <span className="ml-auto text-sm text-slate-400">
+              {formatElapsed(shiftElapsed)} · desde {activeShift.startTime.slice(0, 5)}
+            </span>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                Veículo Ativo
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {activeVehicle.currentKm.toLocaleString('pt-BR')} km
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white tracking-tight">
-              {activeVehicle.nickname}
-            </h3>
+            <p className="text-sm text-slate-400">Lucro de hoje</p>
+            <p className="mt-1 text-[40px] font-extrabold leading-none tracking-tight text-emerald-400">
+              {formatBRL(todayProfit)}
+            </p>
+            <p className="mt-2 text-[13px] text-slate-400">
+              Ganho {formatBRL(todaySummary.ganhoBruto)} · Gastos {formatBRL(todaySummary.totalDespesas)}
+              {shiftTotals && shiftTotals.gain !== todaySummary.ganhoBruto ? ` · Jornada ${formatBRL(shiftTotals.gain)}` : ''}
+            </p>
           </div>
-        </div>
-
-        <button
-          onClick={openVehiclesModal}
-          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
-        >
-          Trocar
-        </button>
-      </div>
-
-      {/* Active Shift Floating Banner (if ongoing) */}
-      {activeShift && (
-        <div
-          onClick={() => setActiveTab('jornada')}
-          className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/60 to-emerald-950/60 border border-blue-500/40 shadow-lg flex items-center justify-between cursor-pointer hover:border-blue-400 transition-all"
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <div>
-              <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                Jornada em Andamento
-                {activeShift.isPaused && (
-                  <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 text-[10px] rounded border border-amber-500/30">
-                    Pausada
+          {dailyGoal > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-[13px]">
+                <span className="text-slate-400">Meta do dia {formatBRL(dailyGoal)}</span>
+                <span className="font-bold text-emerald-400">
+                  {Math.round(todayProgress)}%{todayProgress >= 100 ? ' ✓' : ''}
+                </span>
+              </div>
+              <ProgressBar value={todayProgress} />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={activeShift.isPaused ? resumeShift : pauseShift}
+              className="flex h-12 items-center justify-center gap-2 rounded-[14px] border border-slate-700 bg-slate-800 text-[15px] font-semibold text-white active:scale-[0.98]"
+            >
+              {activeShift.isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              {activeShift.isPaused ? 'Retomar' : 'Pausar'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('jornada')}
+              className="h-12 rounded-[14px] bg-white text-[15px] font-bold text-app active:scale-[0.98]"
+            >
+              Encerrar jornada
+            </button>
+          </div>
+        </section>
+      ) : isNewUser ? (
+        <section aria-label="Primeiros passos" className={`${card} space-y-4 p-5`}>
+          <div>
+            <p className="text-sm text-slate-400">{greeting()}, {firstName}</p>
+            <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-white">
+              Vamos para a sua primeira jornada?
+            </h2>
+          </div>
+          <ul className="space-y-2.5">
+            {[
+              { done: true, label: 'Veículo cadastrado', detail: activeVehicle.nickname },
+              { done: userProfile.monthlyGoal > 0, label: 'Meta definida', detail: `${formatBRL(userProfile.monthlyGoal)}/mês` },
+              { done: false, label: 'Iniciar a primeira jornada', detail: '' },
+            ].map((step, index) => (
+              <li key={step.label} className="flex items-center gap-3">
+                {step.done ? (
+                  <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+                    <Check className="h-4 w-4" strokeWidth={3} />
+                  </span>
+                ) : (
+                  <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full border-2 border-slate-700 text-[13px] font-bold text-slate-400">
+                    {index + 1}
                   </span>
                 )}
-              </p>
-              <p className="text-[11px] text-slate-300 font-mono">
-                Início: {activeShift.startTime} • Ganho acumulado:{' '}
-                {formatBRL(getShiftTotals(activeShift.shiftId).gain)}
-              </p>
-            </div>
+                <span className={`text-[15px] ${step.done ? 'text-white' : 'font-semibold text-white'}`}>
+                  {step.label}
+                  {step.detail && <span className="text-slate-400"> · {step.detail}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => setActiveTab('jornada')}
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-emerald-500 text-base font-bold text-on-accent active:scale-[0.98]"
+          >
+            <Play className="h-4 w-4 fill-current" /> Iniciar jornada
+          </button>
+          {userProfile.monthlyGoal > 0 && (
+            <p className="text-[13px] leading-relaxed text-slate-400">
+              Para chegar a {formatBRL(userProfile.monthlyGoal)} no mês, mire em cerca de{' '}
+              <b className="text-white">{formatBRL(dailyRequired)} por dia</b> trabalhado.
+            </p>
+          )}
+        </section>
+      ) : (
+        <section aria-label="Hoje" className={`${card} space-y-4 p-5`}>
+          <div className="flex items-baseline justify-between">
+            <p className="text-sm text-slate-400">{greeting()}, {firstName}</p>
+            <p className="text-[13px] text-slate-400">Hoje</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+          <div>
+            <p className="text-sm text-slate-400">Lucro de hoje</p>
+            <p className={`mt-1 text-[34px] font-extrabold leading-none tracking-tight ${todayProfit > 0 ? 'text-emerald-400' : 'text-white'}`}>
+              {formatBRL(todayProfit)}
+            </p>
+            {dailyGoal > 0 && (
+              <p className="mt-2 text-[13px] text-slate-400">Meta do dia {formatBRL(dailyGoal)}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('jornada')}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-emerald-500 text-[15px] font-bold text-on-accent active:scale-[0.98]"
+          >
+            <Play className="h-4 w-4 fill-current" /> Iniciar jornada
+          </button>
+        </section>
       )}
 
-      {/* Main Financial Hero Card: Lucro Líquido & Lucro Disponível */}
-      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Lucro Real do Mês ({formatMonthLabel(selectedMonth)})
-            </span>
-          </div>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-            {formatPercent(monthSummary.progressoMeta)} da meta
+      {/* Copiloto / régua de aceite */}
+      <button
+        type="button"
+        onClick={openSimulatorsModal}
+        className="flex w-full items-center gap-3 rounded-2xl bg-sky-500/10 px-4 py-3.5 text-left active:scale-[0.99]"
+      >
+        <Radar className="h-[22px] w-[22px] flex-none text-sky-400" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-white">
+            {native ? (copilotOn ? 'Copiloto ativo' : 'Copiloto desligado') : 'Régua de aceite'}
           </span>
-        </div>
-
-        {/* Big Available Profit */}
-        <div>
-          <span className="text-xs text-slate-400 block font-medium">
-            Lucro Disponível (Livre no Bolso):
+          <span className="block text-[13px] text-slate-400">
+            Aceite acima de <b className="text-white">{formatBRL(bar.minGrossPerKm)}/km</b> · mín. {formatBRL(bar.minFare)}
           </span>
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-emerald-400 font-mono">
-              {formatBRL(monthSummary.lucroDisponivel)}
-            </h1>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            Ganho Bruto ({formatBRL(monthSummary.ganhoBruto)}) – Despesas (
-            {formatBRL(monthSummary.totalDespesas)}) – Reserva Sugerida (
-            {formatBRL(monthSummary.reservaManutencao)})
-          </p>
-        </div>
+        </span>
+        <ChevronRight className="h-[18px] w-[18px] flex-none text-slate-400" />
+      </button>
 
-        {/* 3 Metric Pills */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
-          <div className="bg-slate-950/60 p-2 rounded-xl">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Ganho Bruto
+      {/* Ações rápidas */}
+      <nav aria-label="Ações rápidas" className="grid grid-cols-4 gap-2">
+        {quickActions.map(({ label, icon: Icon, tone, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={onClick}
+            className="flex h-[76px] flex-col items-center justify-center gap-2 rounded-2xl border border-slate-800/70 bg-slate-900 text-[13px] font-semibold text-white active:scale-95"
+          >
+            <span className={`flex h-8 w-8 items-center justify-center rounded-[10px] bg-slate-800 ${tone}`}>
+              <Icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </span>
-            <span className="text-xs font-bold text-slate-200 font-mono">
-              {formatBRL(monthSummary.ganhoBruto)}
-            </span>
-          </div>
-          <div className="bg-slate-950/60 p-2 rounded-xl">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Despesas
-            </span>
-            <span className="text-xs font-bold text-rose-400 font-mono">
-              -{formatBRL(monthSummary.totalDespesas)}
-            </span>
-          </div>
-          <div className="bg-slate-950/60 p-2 rounded-xl">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Lucro / Hora
-            </span>
-            <span className="text-xs font-bold text-emerald-400 font-mono">
-              {monthSummary.hourlyMetricsReady
-                ? `${formatBRL(monthSummary.lucroPorHora)}/h`
-                : 'Em cálculo'}
-            </span>
-          </div>
-        </div>
-      </div>
+            {label}
+          </button>
+        ))}
+      </nav>
 
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-4 gap-2">
-        <button
-          onClick={() => openNewTransactionModal('ganho')}
-          className="p-3 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 flex flex-col items-center gap-1.5 transition-all active:scale-95 text-center"
-        >
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Plus className="w-4 h-4" />
-          </div>
-          <span className="text-[11px] font-bold text-emerald-400 leading-tight">Ganho</span>
-        </button>
-
-        <button
-          onClick={() => openNewTransactionModal('abastecimento')}
-          className="p-3 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 flex flex-col items-center gap-1.5 transition-all active:scale-95 text-center"
-        >
-          <div className="w-8 h-8 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
-            <Fuel className="w-4 h-4" />
-          </div>
-          <span className="text-[11px] font-bold text-rose-400 leading-tight">Abastecer</span>
-        </button>
-
-        <button
-          onClick={openMaintenanceModal}
-          className="p-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 flex flex-col items-center gap-1.5 transition-all active:scale-95 text-center"
-        >
-          <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
-            <Wrench className="w-4 h-4" />
-          </div>
-          <span className="text-[11px] font-bold text-amber-400 leading-tight">Manutenção</span>
-        </button>
-
-        <button
-          onClick={openSimulatorsModal}
-          className="p-3 rounded-2xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 flex flex-col items-center gap-1.5 transition-all active:scale-95 text-center"
-        >
-          <div className="w-8 h-8 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400">
-            <Calculator className="w-4 h-4" />
-          </div>
-          <span className="text-[11px] font-bold text-teal-400 leading-tight">Simuladores</span>
-        </button>
-      </div>
-
-      {/* Requirement 8: Meta Mensal Aprimorada Card */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-blue-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              Meta Mensal de Lucro
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                goalStatus === 'Meta atingida' || goalStatus === 'No ritmo'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  : goalStatus === 'Planejada'
-                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                    : goalStatus === 'Mês encerrado'
-                      ? 'bg-slate-700/40 text-slate-300 border-slate-600'
-                      : goalStatus === 'Atenção'
-                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-              }`}
-            >
-              {goalStatus}
+      {/* Mês */}
+      <section aria-label="Resultado do mês" className={`${card} space-y-4 p-5`}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[15px] font-bold text-white">{monthName}</h2>
+          <div className="flex items-center gap-1">
+            <span className="text-[13px] text-slate-400">
+              {periodState === 'current' ? `Dia ${dayOfMonth} de ${daysInMonth} · ${goalStatus}` : goalStatus}
             </span>
             <button
+              type="button"
               onClick={() => setIsEditingGoal(!isEditingGoal)}
-              className="text-slate-400 hover:text-white p-1"
-              title="Ajustar meta"
+              aria-label="Ajustar meta mensal"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 active:bg-slate-800"
             >
-              <Edit2 className="w-3.5 h-3.5" />
+              <Edit2 className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Goal Edit inline */}
         {isEditingGoal ? (
-          <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <span className="text-xs font-bold text-slate-400">R$</span>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 p-2">
+            <label htmlFor="meta-mensal" className="pl-1 text-sm font-semibold text-slate-400">Meta R$</label>
             <input
+              id="meta-mensal"
               type="number"
+              inputMode="decimal"
               value={newGoalInput}
               onChange={(e) => setNewGoalInput(e.target.value)}
-              className="w-full bg-transparent text-sm font-bold text-white font-mono focus:outline-none"
+              className="w-full bg-transparent text-base font-bold text-white focus:outline-none"
             />
-            <button
-              onClick={handleSaveGoal}
-              className="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-bold rounded-lg"
-            >
+            <button type="button" onClick={handleSaveGoal} className="h-10 rounded-lg bg-emerald-500 px-4 text-sm font-bold text-on-accent">
               Salvar
             </button>
           </div>
         ) : (
-          <div className="flex items-baseline justify-between">
-            <span className="text-sm font-bold text-white font-mono">
-              {formatBRL(monthSummary.lucroDisponivel)}
-              <span className="text-xs font-normal text-slate-400">
-                {' '}
-                / {formatBRL(userProfile.monthlyGoal)}
-              </span>
-            </span>
-            <span className="text-xs font-bold text-blue-400 font-mono">
-              Faltam {formatBRL(targetRemaining)}
-            </span>
+          <div>
+            <p className="text-sm text-slate-400">Lucro do mês</p>
+            <p className="mt-1 flex items-baseline gap-2">
+              <span className="text-[28px] font-extrabold tracking-tight text-white">{formatBRL(monthSummary.lucroDisponivel)}</span>
+              <span className="text-sm text-slate-400">de {formatBRL(userProfile.monthlyGoal)}</span>
+            </p>
           </div>
         )}
 
-        {/* Progress Bar */}
-        <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full transition-all duration-700"
-            style={{ width: `${Math.min(100, Math.max(0, monthSummary.progressoMeta))}%` }}
-          />
-        </div>
-
-        <div className={`px-3 py-3 rounded-xl border ${coachToneClass}`}>
-          <div className="flex items-start gap-2.5">
-            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <strong className="text-xs text-white block mb-1">{goalCoach.title}</strong>
-              <p className="text-[11px] leading-relaxed text-slate-300">{goalCoach.message}</p>
-              {periodState === 'current' && (
-                <p className="text-[10px] text-slate-500 mt-1.5 capitalize">
-                  {weekdayLabel}, dia {dayOfMonth} de {daysInMonth} · ritmo esperado até hoje: {formatBRL(expectedProfitToDate)}
-                </p>
-              )}
-            </div>
-            <button type="button" onClick={speakCoachMessage} title="Ouvir mensagem" aria-label="Ouvir mensagem de incentivo" className="p-1.5 rounded-lg bg-slate-950/40 hover:bg-slate-950 text-current active:scale-95">
-              <Volume2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Daily Target & Projection Row */}
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-center">
-          <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Prazo da Meta</span>
-            <span className="text-xs font-bold text-slate-200 font-mono">
-              {periodState === 'past'
-                ? 'Encerrado'
-                : periodState === 'current' && daysRemaining === 0
-                  ? 'Encerra hoje'
-                  : `${daysRemaining} ${daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`}
-            </span>
-          </div>
-          <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">
-              {periodState === 'current' && daysRemaining === 0
-                ? 'Meta Mensal'
-                : 'Média Necessária'}
-            </span>
-            <span className="text-xs font-bold text-blue-400 font-mono">
-              {periodState === 'current' && daysRemaining === 0
-                ? formatBRL(userProfile.monthlyGoal)
-                : `${formatBRL(dailyRequired)}/dia`}
-            </span>
-          </div>
-          <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">
-              Projeção de Fechamento
-            </span>
-            <span className="text-xs font-bold text-emerald-400 font-mono">
-              {formatBRL(projectedMonthProfit)}
-            </span>
-          </div>
-          <div className="bg-slate-950/50 rounded-lg p-2">
-            <span className="text-[10px] text-slate-400 block uppercase">Falta para a Meta</span>
-            <span className="text-xs font-bold text-amber-300 font-mono">
-              {formatBRL(targetRemaining)}
+        <div className="space-y-2">
+          <ProgressBar value={monthSummary.progressoMeta} />
+          <div className="flex justify-between text-[13px] text-slate-400">
+            <span>{formatPercent(monthSummary.progressoMeta)} da meta</span>
+            <span>
+              {targetRemaining > 0 ? `Faltam ${formatBRL(targetRemaining)}` : 'Meta batida ✓'}
             </span>
           </div>
         </div>
-      </div>
 
-      {/* Compact bills entry point — details stay behind user action */}
-      <button
-        type="button"
-        onClick={openPayablesModal}
-        className="w-full p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/40 text-left shadow-md transition-all active:scale-[0.99]"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0">
-              <CalendarClock className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Contas do mês
-                </h3>
-                {payablesSummary.overdueCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-[9px] font-bold text-rose-300">
-                    {payablesSummary.overdueCount} atrasada
-                    {payablesSummary.overdueCount > 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-slate-400 truncate">
-                {payablesSummary.nextDue
-                  ? `Próximo vencimento: ${new Date(`${payablesSummary.nextDue.dueDate}T12:00:00`).toLocaleDateString('pt-BR')}`
-                  : 'Nenhum vencimento pendente'}
+        <div className="flex items-start gap-3 rounded-2xl bg-slate-800/60 p-3.5">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">{goalCoach.title}</p>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-slate-400">{goalCoach.message}</p>
+            {periodState === 'current' && targetRemaining > 0 && (
+              <p className="mt-1.5 text-xs text-slate-400">
+                Projeção de fechamento: <b className="text-white">{formatBRL(projectedMonthProfit)}</b>
               </p>
-            </div>
+            )}
           </div>
-          <div className="text-right flex-shrink-0">
-            <span className="text-sm font-bold font-mono text-white block">
-              {formatBRL(payablesSummary.pendingAmount)}
-            </span>
-            <span className="text-[9px] uppercase text-blue-300 font-semibold">Ver contas</span>
-          </div>
-        </div>
-      </button>
-
-      {/* Reservas financeiras */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950/30 border border-slate-800 space-y-3 shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400">
-              <PiggyBank className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                Reservas Financeiras
-              </h3>
-              <p className="text-[10px] text-slate-400">
-                Organize valores por objetivo e banco
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-bold text-teal-400">
-            R$ {(userProfile.maintenanceReservePerKm || 0.12).toFixed(2).replace('.', ',')}/km
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
-          <div>
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Sugerido no Mês ({monthSummary.quilometrosRodados.toLocaleString('pt-BR')} km)
-            </span>
-            <span className="text-sm font-bold text-slate-200 font-mono">
-              {formatBRL(monthSummary.reservaManutencao)}
-            </span>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Total Reservado
-            </span>
-            <span className="text-sm font-bold text-teal-400 font-mono">
-              {formatBRL(maintenanceReserveBalance)}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between pt-1">
           <button
-            onClick={openReserveModal}
-            className="w-full py-2 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            type="button"
+            onClick={() => void speakGoalCoach(`${goalCoach.title}. ${goalCoach.message}`)}
+            aria-label="Ouvir mensagem"
+            className="flex h-10 w-10 flex-none items-center justify-center rounded-xl text-slate-400 active:bg-slate-800"
           >
-            <PiggyBank className="w-3.5 h-3.5" />
-            <span>Gerenciar Reservas</span>
+            <Volume2 className="h-[18px] w-[18px]" />
           </button>
         </div>
-      </div>
 
-      {/* Operational Stats: Horas, KM, Ganho/Hora, Ganho/KM */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
-            <span>Horas Trabalhadas</span>
-            <Clock className="w-3.5 h-3.5 text-blue-400" />
+        <div className="grid grid-cols-3 border-t border-slate-800 pt-4">
+          <div>
+            <p className="text-[13px] text-slate-400">Ganho</p>
+            <p className="mt-1 text-base font-bold text-white">{formatBRL(monthSummary.ganhoBruto)}</p>
           </div>
-          <p className="text-base font-bold text-white font-mono">
-            {formatHours(monthSummary.horasTrabalhadas)}
-          </p>
-          <span className="text-[10px] text-slate-500">Líquido de pausas</span>
+          <div className="border-l border-slate-800 pl-3">
+            <p className="text-[13px] text-slate-400">Gastos</p>
+            <p className="mt-1 text-base font-bold text-rose-400">{formatBRL(monthSummary.totalDespesas)}</p>
+          </div>
+          <div className="border-l border-slate-800 pl-3">
+            <p className="text-[13px] text-slate-400">Lucro/hora</p>
+            <p className="mt-1 text-base font-bold text-white">
+              {monthSummary.hourlyMetricsReady ? formatBRL(monthSummary.lucroPorHora) : '—'}
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
-            <span>Quilômetros Rodados</span>
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+      {/* Desempenho do mês */}
+      <section aria-label="Desempenho do mês" className={`${card} grid grid-cols-2`}>
+        {[
+          { icon: Clock, label: 'Horas trabalhadas', value: formatHours(monthSummary.horasTrabalhadas) },
+          { icon: MapPin, label: 'Km rodados', value: `${monthSummary.quilometrosRodados.toLocaleString('pt-BR')} km` },
+          {
+            icon: TrendingUp,
+            label: 'Ganho por hora',
+            value: monthSummary.hourlyMetricsReady ? formatBRL(monthSummary.ganhoPorHora) : '—',
+          },
+          { icon: TrendingUp, label: 'Lucro por km', value: formatBRL(monthSummary.lucroPorKm) },
+        ].map(({ icon: Icon, label, value }, i) => (
+          <div
+            key={label}
+            className={`p-4 ${i % 2 === 1 ? 'border-l border-slate-800' : ''} ${i >= 2 ? 'border-t border-slate-800' : ''}`}
+          >
+            <p className="flex items-center gap-1.5 text-[13px] text-slate-400">
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </p>
+            <p className="mt-1 text-[17px] font-bold text-white">{value}</p>
           </div>
-          <p className="text-base font-bold text-white font-mono">
-            {monthSummary.quilometrosRodados.toLocaleString('pt-BR')} km
-          </p>
-          <span className="text-[10px] text-slate-500">Média de consumo ativa</span>
-        </div>
+        ))}
+      </section>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
-            <span>Ganho por Hora</span>
-            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-          </div>
-          <p className="text-base font-bold text-emerald-400 font-mono">
-            {monthSummary.hourlyMetricsReady
-              ? `${formatBRL(monthSummary.ganhoPorHora)}/h`
-              : 'Em cálculo'}
-          </p>
-          <span className="text-[10px] text-slate-500">
-            {monthSummary.hourlyMetricsReady
-              ? 'Bruto faturado / hora'
-              : 'Disponível após 1h trabalhada'}
-          </span>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
-            <span>Lucro por KM</span>
-            <TrendingUp className="w-3.5 h-3.5 text-teal-400" />
-          </div>
-          <p className="text-base font-bold text-teal-400 font-mono">
-            {formatBRL(monthSummary.lucroPorKm)}/km
-          </p>
-          <span className="text-[10px] text-slate-500">Líquido de despesas e reserva</span>
-        </div>
-      </div>
+      {/* Organização */}
+      <section aria-label="Organização" className={`${card} overflow-hidden`}>
+        {[
+          {
+            icon: CalendarClock,
+            tone: 'text-sky-400',
+            title: 'Contas do mês',
+            detail:
+              payablesSummary.overdueCount > 0
+                ? `${payablesSummary.overdueCount} atrasada${payablesSummary.overdueCount > 1 ? 's' : ''} · ${formatBRL(payablesSummary.pendingAmount)} pendente`
+                : payablesSummary.nextDue
+                  ? `Próximo vencimento ${new Date(`${payablesSummary.nextDue.dueDate}T12:00:00`).toLocaleDateString('pt-BR')} · ${formatBRL(payablesSummary.pendingAmount)}`
+                  : 'Nenhum vencimento pendente',
+            alert: payablesSummary.overdueCount > 0,
+            onClick: openPayablesModal,
+          },
+          {
+            icon: PiggyBank,
+            tone: 'text-emerald-400',
+            title: 'Reservas',
+            detail: `${formatBRL(maintenanceReserveBalance)} guardados · sugerido ${formatBRL(monthSummary.reservaManutencao)}`,
+            alert: false,
+            onClick: openReserveModal,
+          },
+          {
+            icon: activeVehicle.type === 'moto' ? Bike : Car,
+            tone: 'text-slate-200',
+            title: activeVehicle.nickname,
+            detail: `${activeVehicle.currentKm.toLocaleString('pt-BR')} km · trocar ou editar veículo`,
+            alert: false,
+            onClick: openVehiclesModal,
+          },
+        ].map(({ icon: Icon, tone, title, detail, alert, onClick }, i) => (
+          <button
+            key={title}
+            type="button"
+            onClick={onClick}
+            className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left active:bg-slate-800/60 ${i > 0 ? 'border-t border-slate-800' : ''}`}
+          >
+            <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-slate-800 ${tone}`}>
+              <Icon className="h-[18px] w-[18px]" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-white">{title}</span>
+              <span className={`block truncate text-[13px] ${alert ? 'font-semibold text-rose-400' : 'text-slate-400'}`}>{detail}</span>
+            </span>
+            <ChevronRight className="h-[18px] w-[18px] flex-none text-slate-400" />
+          </button>
+        ))}
+      </section>
     </div>
   );
 };

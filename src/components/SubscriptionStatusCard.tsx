@@ -31,14 +31,14 @@ export const SubscriptionStatusCard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Meu Plano</h3>
-              <p className="text-[10px] text-slate-400">{subtitle}</p>
+              <p className="text-[11px] text-slate-400">{subtitle}</p>
             </div>
           </div>
-          <span className="px-2 py-1 rounded-lg bg-blue-500/15 border border-blue-500/25 text-[10px] font-bold text-blue-300">
+          <span className="px-2 py-1 rounded-lg bg-blue-500/15 border border-blue-500/25 text-[11px] font-bold text-blue-300">
             {isTrial ? `${daysRemaining} dias` : isPro ? 'PRO' : 'ESSENCIAL'}
           </span>
         </div>
-        <p className="text-[10px] leading-relaxed text-slate-400">
+        <p className="text-[11px] leading-relaxed text-slate-400">
           {isTrial
             ? 'O copiloto por leitura de tela é um recurso experimental em validação (Android 14+). O Essencial e o simulador manual continuam disponíveis.'
             : isPro
@@ -46,7 +46,7 @@ export const SubscriptionStatusCard: React.FC = () => {
               : 'Ganhos, gastos, jornadas, metas, contas e relatórios continuam disponíveis sem prazo.'}
         </p>
         {reason === 'subscription' && (
-          <p className="text-[10px] text-blue-300">
+          <p className="text-[11px] text-blue-300">
             Cobrança via{' '}
             {provider === 'google_play'
               ? 'Google Play'

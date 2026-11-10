@@ -66,21 +66,21 @@ export const AchievementsCard: React.FC = () => {
           <Trophy className="w-4 h-4 text-amber-400" />
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Conquistas</h3>
         </div>
-        <span className="text-[10px] font-bold text-amber-300">{unlockedCount}/{achievements.length}</span>
+        <span className="text-[11px] font-bold text-amber-300">{unlockedCount}/{achievements.length}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {achievements.map((achievement) => (
           <div key={achievement.id} className={`p-2.5 rounded-xl border ${achievement.unlocked ? 'bg-amber-500/10 border-amber-500/25' : 'bg-slate-950/50 border-slate-800 opacity-60'}`}>
             <div className="flex items-center gap-1.5 mb-1">
               {achievement.unlocked ? <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" /> : <LockKeyhole className="w-3.5 h-3.5 text-slate-500" />}
-              <span className={`text-[10px] font-bold ${achievement.unlocked ? 'text-amber-200' : 'text-slate-400'}`}>{achievement.title}</span>
+              <span className={`text-[11px] font-bold ${achievement.unlocked ? 'text-amber-200' : 'text-slate-400'}`}>{achievement.title}</span>
             </div>
-            <p className="text-[9px] leading-snug text-slate-400">{achievement.description}</p>
+            <p className="text-[11px] leading-snug text-slate-400">{achievement.description}</p>
           </div>
         ))}
       </div>
       {unlockedCount === achievements.length && (
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-emerald-300"><Award className="w-3.5 h-3.5" /> Todas as conquistas desbloqueadas!</div>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-300"><Award className="w-3.5 h-3.5" /> Todas as conquistas desbloqueadas!</div>
       )}
     </div>
   );

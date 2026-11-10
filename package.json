@@ -25,6 +25,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@fontsource-variable/inter": "^5.2.6",
     "@supabase/supabase-js": "^2.117.1",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",

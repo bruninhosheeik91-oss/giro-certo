@@ -29,7 +29,7 @@ export const FuelConsumptionView: React.FC = () => {
           </div>
           <div className="flex-1">
             <p className="text-xs font-bold text-amber-300">Ciclo de consumo em aberto</p>
-            <p className="text-[11px] text-slate-300 mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               {openFuelCycleLabel(result.openCycle)}
             </p>
           </div>
@@ -47,7 +47,7 @@ export const FuelConsumptionView: React.FC = () => {
           </span>
           <span className="text-sm font-bold text-slate-400 mb-1.5">km/L</span>
         </div>
-        <p className="text-[11px] text-slate-400 mt-1.5">
+        <p className="text-xs text-slate-400 mt-1.5">
           Último ciclo:{' '}
           {result.lastKmPerLiter > 0 ? (
             <span className="text-rose-300 font-bold font-mono">
@@ -70,7 +70,7 @@ export const FuelConsumptionView: React.FC = () => {
           <p className="text-base font-bold text-white font-mono">
             {result.totalDistanceKm.toLocaleString('pt-BR')} km
           </p>
-          <span className="text-[10px] text-slate-500">Entre tanques cheios</span>
+          <span className="text-[11px] text-slate-500">Entre tanques cheios</span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -81,7 +81,7 @@ export const FuelConsumptionView: React.FC = () => {
           <p className="text-base font-bold text-white font-mono">
             {formatNumber(result.totalLiters, 1)} L
           </p>
-          <span className="text-[10px] text-slate-500">Total nos ciclos</span>
+          <span className="text-[11px] text-slate-500">Total nos ciclos</span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -92,7 +92,7 @@ export const FuelConsumptionView: React.FC = () => {
           <p className="text-base font-bold text-amber-400 font-mono">
             {formatBRL(result.totalAmount)}
           </p>
-          <span className="text-[10px] text-slate-500">Total abastecido</span>
+          <span className="text-[11px] text-slate-500">Total abastecido</span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -106,7 +106,7 @@ export const FuelConsumptionView: React.FC = () => {
               : '--'}
             <span className="text-xs font-normal">/{'km'}</span>
           </p>
-          <span className="text-[10px] text-slate-500">Último ciclo</span>
+          <span className="text-[11px] text-slate-500">Último ciclo</span>
         </div>
       </div>
 
@@ -117,7 +117,7 @@ export const FuelConsumptionView: React.FC = () => {
           <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
             Ciclos Confirmados
           </h4>
-          <span className="text-[10px] text-slate-500 ml-auto">
+          <span className="text-[11px] text-slate-500 ml-auto">
             Método tanque cheio → tanque cheio
           </span>
         </div>
@@ -145,26 +145,26 @@ export const FuelConsumptionView: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-center">
                   <div>
-                    <span className="text-[9px] text-slate-500 block uppercase">Distância</span>
-                    <span className="text-[11px] font-bold text-white font-mono">
+                    <span className="text-[11px] text-slate-500 block uppercase">Distância</span>
+                    <span className="text-xs font-bold text-white font-mono">
                       {c.distanceKm.toLocaleString('pt-BR')} km
                     </span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-500 block uppercase">Litros</span>
-                    <span className="text-[11px] font-bold text-white font-mono">
+                    <span className="text-[11px] text-slate-500 block uppercase">Litros</span>
+                    <span className="text-xs font-bold text-white font-mono">
                       {formatNumber(c.liters, 1)} L
                     </span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-500 block uppercase">Custo</span>
-                    <span className="text-[11px] font-bold text-white font-mono">
+                    <span className="text-[11px] text-slate-500 block uppercase">Custo</span>
+                    <span className="text-xs font-bold text-white font-mono">
                       {formatBRL(c.totalAmount)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-500 block uppercase">R$/km</span>
-                    <span className="text-[11px] font-bold text-white font-mono">
+                    <span className="text-[11px] text-slate-500 block uppercase">R$/km</span>
+                    <span className="text-xs font-bold text-white font-mono">
                       {formatBRL(c.costPerKm)}
                     </span>
                   </div>

@@ -167,7 +167,7 @@ export const SecurityView: React.FC = () => {
           <CircleDot className={`h-5 w-5 ${floating.enabled ? 'text-emerald-400' : 'text-slate-500'}`} />
           <span className="flex-1">
             <span className="block text-sm font-bold text-slate-100">Botão flutuante na tela</span>
-            <span className="block text-[11px] text-slate-400">
+            <span className="block text-xs text-slate-400">
               {floating.canDraw
                 ? 'Bolinha do Giro Certo por cima da tela inicial e dos apps. Toque para abrir, arraste para mover.'
                 : 'Toque para permitir "Sobrepor a outros apps" e depois volte aqui para ligar.'}

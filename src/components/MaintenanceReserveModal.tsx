@@ -83,7 +83,7 @@ export const MaintenanceReserveModal: React.FC = () => {
       onClick={closeReserveModal}
     >
       <div
-        className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -94,7 +94,7 @@ export const MaintenanceReserveModal: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">Reservas Financeiras</h3>
-              <p className="text-[10px] text-slate-400">Organize valores por objetivo e instituição</p>
+              <p className="text-[11px] text-slate-400">Organize valores por objetivo e instituição</p>
             </div>
           </div>
           <button
@@ -111,7 +111,7 @@ export const MaintenanceReserveModal: React.FC = () => {
             {reserves.map((reserve) => (
               <button key={reserve.id} onClick={() => setSelectedReserveId(reserve.id)} className={`min-w-[150px] p-3 rounded-xl border text-left ${selected?.id === reserve.id ? 'border-teal-400 bg-teal-500/10' : 'border-slate-800 bg-slate-900'}`}>
                 <span className="text-xs font-bold text-white block truncate">{reserve.name}</span>
-                <span className="text-[10px] text-slate-400 block truncate">{reserve.institution || 'Local não informado'}</span>
+                <span className="text-[11px] text-slate-400 block truncate">{reserve.institution || 'Local não informado'}</span>
                 <span className="text-sm font-mono font-bold text-teal-400 block mt-1">{formatBRL(reserve.balance)}</span>
               </button>
             ))}
@@ -137,15 +137,15 @@ export const MaintenanceReserveModal: React.FC = () => {
 
           {/* Balance Card */}
           <div className="p-4 rounded-xl bg-gradient-to-br from-teal-950/40 to-slate-900 border border-teal-500/30 text-center">
-            <div className="flex justify-center items-center gap-1 text-[10px] text-slate-400 mb-1"><Landmark className="w-3 h-3" /> {selected?.institution || 'Informe onde o dinheiro está guardado'}</div>
+            <div className="flex justify-center items-center gap-1 text-[11px] text-slate-400 mb-1"><Landmark className="w-3 h-3" /> {selected?.institution || 'Informe onde o dinheiro está guardado'}</div>
             <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block mb-1">
               Saldo Disponível
             </span>
             <span className="text-3xl font-extrabold font-mono text-teal-400 tracking-tight">
               {formatBRL(selectedBalance)}
             </span>
-            {selected?.goalAmount ? <p className="text-[10px] text-slate-400 mt-1.5">Meta {formatBRL(selected.goalAmount)} · {Math.min(100, Math.round((selectedBalance / selected.goalAmount) * 100))}% alcançada</p> : <p className="text-[10px] text-slate-400 mt-1.5">Sem meta definida</p>}
-            {selected && <button onClick={() => { setEditingReserveId(selected.id); setName(selected.name); setInstitution(selected.institution || ''); setGoalStr(formatBRLInput(String(Math.round((selected.goalAmount || 0) * 100)))); setCategory(selected.category); setShowForm(true); }} className="mt-2 text-[10px] text-teal-300 inline-flex items-center gap-1"><Settings2 className="w-3 h-3" /> Ajustar dados</button>}
+            {selected?.goalAmount ? <p className="text-[11px] text-slate-400 mt-1.5">Meta {formatBRL(selected.goalAmount)} · {Math.min(100, Math.round((selectedBalance / selected.goalAmount) * 100))}% alcançada</p> : <p className="text-[11px] text-slate-400 mt-1.5">Sem meta definida</p>}
+            {selected && <button onClick={() => { setEditingReserveId(selected.id); setName(selected.name); setInstitution(selected.institution || ''); setGoalStr(formatBRLInput(String(Math.round((selected.goalAmount || 0) * 100)))); setCategory(selected.category); setShowForm(true); }} className="mt-2 text-[11px] text-teal-300 inline-flex items-center gap-1"><Settings2 className="w-3 h-3" /> Ajustar dados</button>}
           </div>
 
           {/* Mode Toggle */}
@@ -235,7 +235,7 @@ export const MaintenanceReserveModal: React.FC = () => {
               <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                 Histórico da Reserva
               </h4>
-              <span className="text-[10px] text-slate-500 ml-auto">
+              <span className="text-[11px] text-slate-500 ml-auto">
                 {selectedLedger.length} movimentações
               </span>
             </div>
@@ -268,13 +268,13 @@ export const MaintenanceReserveModal: React.FC = () => {
                         </span>
                         <span className="text-slate-500 ml-2">{typeLabel(e.type)}</span>
                         {e.description && (
-                          <span className="text-slate-500 block text-[10px] truncate max-w-[200px]">
+                          <span className="text-slate-500 block text-[11px] truncate max-w-[200px]">
                             {e.description}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-slate-500 text-[10px]">
+                        <span className="text-slate-500 text-[11px]">
                           {formatDisplayDate(e.date)}
                         </span>
                         <button

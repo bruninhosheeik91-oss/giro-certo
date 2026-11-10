@@ -146,7 +146,7 @@ export const PanicCard: React.FC = () => {
         <Siren className="h-5 w-5 text-red-400" />
         <span className="text-sm font-bold text-white">Botão de pânico silencioso</span>
         {status?.active && (
-          <span className="ml-auto animate-pulse rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="ml-auto animate-pulse rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-on-accent">
             ALERTA ATIVO
           </span>
         )}
@@ -154,12 +154,12 @@ export const PanicCard: React.FC = () => {
 
       {status?.active ? (
         <div className="space-y-2">
-          <p className="rounded-lg bg-slate-950/60 p-2.5 text-[11px] text-slate-200">{status.status || 'Enviando…'}</p>
-          {status.lastTrigger && <p className="text-[10px] text-slate-500">Acionado: {status.lastTrigger}</p>}
+          <p className="rounded-lg bg-slate-950/60 p-2.5 text-xs text-slate-200">{status.status || 'Enviando…'}</p>
+          {status.lastTrigger && <p className="text-[11px] text-slate-500">Acionado: {status.lastTrigger}</p>}
           <button
             type="button"
             onClick={() => void nativePanic.end().then(() => window.setTimeout(() => void refresh(), 1500))}
-            className="w-full rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-white"
+            className="w-full rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-on-accent"
           >
             Estou bem · encerrar alerta
           </button>
@@ -172,17 +172,17 @@ export const PanicCard: React.FC = () => {
           onPointerLeave={cancelHold}
           onPointerCancel={cancelHold}
           onContextMenu={(e) => e.preventDefault()}
-          className="relative w-full select-none overflow-hidden rounded-2xl bg-red-700 py-5 text-center text-white"
+          className="relative w-full select-none overflow-hidden rounded-2xl bg-red-700 py-5 text-center text-on-accent"
         >
           <span className="absolute inset-y-0 left-0 bg-red-400/60" style={{ width: `${progress * 100}%` }} />
           <span className="relative block text-base font-black">SEGURE PARA PEDIR AJUDA</span>
-          <span className="relative mt-0.5 block text-[10px] text-red-100">
+          <span className="relative mt-0.5 block text-[11px] text-red-100">
             Nada aparece na tela. Câmera grava e seus contatos recebem o alerta, a localização e até 5 fotos (a cada 20 s) no Telegram.
           </span>
         </button>
       ) : null}
 
-      <div className="flex items-start gap-2 rounded-lg bg-slate-950/50 p-2.5 text-[11px] text-slate-300">
+      <div className="flex items-start gap-2 rounded-lg bg-slate-950/50 p-2.5 text-xs text-slate-300">
         <CircleDot className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
         <span>
           <b className="text-white">Modo discreto:</b> com o botão flutuante ligado, <b className="text-white">segure a bolinha por 2
@@ -191,10 +191,10 @@ export const PanicCard: React.FC = () => {
       </div>
 
       <div className="space-y-2">
-        <p className="text-[11px] font-bold text-slate-300">
+        <p className="text-xs font-bold text-slate-300">
           Contatos de emergência ({linkedCount} confirmados de {contacts.length}, máx. {MAX_PANIC_CONTACTS})
         </p>
-        <p className="text-[10px] text-slate-500">
+        <p className="text-[11px] text-slate-500">
           Cada contato recebe um convite e toca em "Iniciar" no Telegram uma única vez. Seu celular não precisa de
           Telegram, WhatsApp nem chip, só internet.
         </p>
@@ -207,7 +207,7 @@ export const PanicCard: React.FC = () => {
             )}
             <span className="flex-1 text-slate-200">
               {c.name}
-              <span className={`block text-[10px] ${c.linked ? 'text-emerald-400' : 'text-amber-300'}`}>
+              <span className={`block text-[11px] ${c.linked ? 'text-emerald-400' : 'text-amber-300'}`}>
                 {c.linked ? 'Confirmado no Telegram' : 'Aguardando tocar em Iniciar'}
               </span>
             </span>
@@ -216,7 +216,7 @@ export const PanicCard: React.FC = () => {
                 type="button"
                 disabled={busy}
                 onClick={() => void invite(c)}
-                className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1.5 text-[10px] font-bold text-white"
+                className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1.5 text-[11px] font-bold text-on-accent"
               >
                 <Share2 className="h-3 w-3" /> Enviar convite
               </button>
@@ -246,24 +246,24 @@ export const PanicCard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <button type="button" disabled={busy || contacts.length === 0} onClick={() => void activate()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[10px] font-bold text-white disabled:opacity-40">
+        <button type="button" disabled={busy || contacts.length === 0} onClick={() => void activate()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[11px] font-bold text-white disabled:opacity-40">
           <ShieldAlert className="h-4 w-4 text-red-400" /> {status?.configured ? 'Reativar' : 'Ativar'}
         </button>
-        <button type="button" disabled={busy || linkedCount === 0} onClick={() => void test()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[10px] font-bold text-white disabled:opacity-40">
+        <button type="button" disabled={busy || linkedCount === 0} onClick={() => void test()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[11px] font-bold text-white disabled:opacity-40">
           <Send className="h-4 w-4 text-blue-400" /> Enviar teste
         </button>
-        <button type="button" onClick={() => void callPolice()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[10px] font-bold text-white">
+        <button type="button" onClick={() => void callPolice()} className="flex flex-col items-center gap-1 rounded-lg bg-slate-800 py-2 text-[11px] font-bold text-white">
           <PhoneCall className="h-4 w-4 text-amber-400" /> Ligar 190
         </button>
       </div>
 
       {status && !status.locationGranted && status.configured && (
-        <button type="button" onClick={() => void nativePanic.requestLocation().then(setStatus)} className="w-full rounded-lg bg-amber-500/15 p-2 text-[11px] text-amber-300">
+        <button type="button" onClick={() => void nativePanic.requestLocation().then(setStatus)} className="w-full rounded-lg bg-amber-500/15 p-2 text-xs text-amber-300">
           Permita a localização para o mapa ao vivo funcionar
         </button>
       )}
-      {message && <p className="text-[11px] text-amber-200">{message}</p>}
-      <p className="text-[10px] text-slate-500">
+      {message && <p className="text-xs text-amber-200">{message}</p>}
+      <p className="text-[11px] text-slate-500">
         Precisa de internet (Wi-Fi ou roteador do celular). Sem conexão, o app tenta de novo a cada 15 segundos.
       </p>
     </div>

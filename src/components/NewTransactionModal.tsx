@@ -374,7 +374,7 @@ export const NewTransactionModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -668,17 +668,17 @@ export const NewTransactionModal: React.FC = () => {
                         <span className="font-semibold text-white block">
                           Turno iniciado às {activeShift.startTime.slice(0, 5)}
                         </span>
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-xs text-slate-400">
                           {activeShift.vehicleName} • Odômetro{' '}
                           {activeShift.startKm.toLocaleString('pt-BR')} km
                         </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         ✓ Associado
                       </span>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-400 bg-slate-900/60 p-2 rounded-lg">
+                    <p className="text-xs text-slate-400 bg-slate-900/60 p-2 rounded-lg">
                       Lançamento avulso (não somará no ganho acumulado da jornada ativa atual).
                     </p>
                   )}
@@ -734,7 +734,7 @@ export const NewTransactionModal: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span className="font-semibold text-slate-300">Cálculo de Combustível</span>
-                  <span className="text-[11px] text-slate-500 italic">
+                  <span className="text-xs text-slate-500 italic">
                     Preencha 2 para calcular o 3º
                   </span>
                 </div>
@@ -1122,7 +1122,7 @@ export const NewTransactionModal: React.FC = () => {
 
                 {isRecurring && (
                   <div className="pt-2 pl-6">
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">
                       Frequência de Cobrança
                     </label>
                     <div className="grid grid-cols-3 gap-2">

@@ -32,7 +32,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (!isCloud) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
         <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
         Modo local — dados só neste dispositivo
       </div>
@@ -41,7 +41,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (syncStatus.state === 'syncing') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
         <RefreshCw className="w-3 h-3 animate-spin" />
         Sincronizando
         {syncQueue.pending > 0 && <span className="text-slate-500">· {syncQueue.pending}</span>}
@@ -51,7 +51,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (syncStatus.state === 'offline') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-amber-400">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs text-amber-400">
         <CloudOff className="w-3 h-3" />
         Offline
         {syncQueue.pending > 0 && (
@@ -65,7 +65,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (syncQueue.blocked > 0 || syncStatus.state === 'error') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px]">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs">
         <AlertTriangle className="w-3 h-3 text-rose-400" />
         <span className="text-rose-300">
           {syncQueue.blocked > 0
@@ -87,7 +87,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (showSynced) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-emerald-400">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-400">
         <Check className="w-3 h-3" />
         Sincronizado
       </div>
@@ -96,7 +96,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (hasPending) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
         <Cloud className="w-3 h-3" />
         {syncQueue.pending} alteração{syncQueue.pending > 1 ? 'ões' : 'ão'} na fila
       </div>
@@ -104,7 +104,7 @@ export const SyncStatusRow: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-500">
+    <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
       Sincronizado
     </div>
@@ -120,7 +120,7 @@ export const AccountRow: React.FC = () => {
       <button
         type="button"
         onClick={enableCloudMode}
-        className="w-full flex items-center gap-2 px-3 py-2.5 text-[11px] text-slate-300 hover:text-white"
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-slate-300 hover:text-white"
       >
         <Cloud className="w-3.5 h-3.5 text-emerald-400" />
         Ativar conta na nuvem
@@ -130,9 +130,9 @@ export const AccountRow: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 text-[11px]">
+    <div className="flex items-center gap-2 px-3 py-2.5 text-xs">
       <div className="min-w-0 flex-1">
-        <span className="block text-slate-500 uppercase tracking-wider text-[9px]">Conta</span>
+        <span className="block text-slate-500 uppercase tracking-wider text-[11px]">Conta</span>
         <span className="block text-slate-300 truncate">{cloudEmail ?? 'Conectado'}</span>
       </div>
       <button

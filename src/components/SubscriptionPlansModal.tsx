@@ -79,7 +79,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-slate-700/80 bg-[#0f172a] p-5 shadow-2xl sm:rounded-3xl">
+      <div className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-slate-700/80 bg-slate-900 p-5 shadow-2xl sm:rounded-3xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
@@ -111,7 +111,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-white">Essencial</h3>
-                <p className="mt-1 text-[10px] text-slate-400">
+                <p className="mt-1 text-[11px] text-slate-400">
                   Seu controle diário continua disponível.
                 </p>
               </div>
@@ -134,7 +134,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                   <Sparkles className="h-4 w-4 text-emerald-400" />
                   <h3 className="text-sm font-bold text-white">Pro</h3>
                 </div>
-                <p className="mt-1 text-[10px] text-emerald-300">
+                <p className="mt-1 text-[11px] text-emerald-300">
                   Exclusivo para assinantes ativos.
                 </p>
               </div>
@@ -159,20 +159,20 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                       <p className="text-xs font-bold text-white">{plan.title}</p>
                       <p className="text-lg font-extrabold text-emerald-300">
                         {formatBillingPrice(plan.price)}
-                        <span className="ml-1 text-[10px] font-medium text-slate-400">
+                        <span className="ml-1 text-[11px] font-medium text-slate-400">
                           {plan.periodLabel}
                         </span>
                       </p>
                       {plan.savingsLabel && (
-                        <p className="text-[10px] text-emerald-300">{plan.savingsLabel}</p>
+                        <p className="text-[11px] text-emerald-300">{plan.savingsLabel}</p>
                       )}
                     </div>
                     {subscriptionActive && activePlan === plan.id ? (
-                      <span className="rounded-lg bg-emerald-400/15 px-2 py-1 text-[9px] font-bold text-emerald-300">
+                      <span className="rounded-lg bg-emerald-400/15 px-2 py-1 text-[11px] font-bold text-emerald-300">
                         PLANO ATUAL
                       </span>
                     ) : plan.id === 'annual' ? (
-                      <span className="rounded-lg bg-amber-400/15 px-2 py-1 text-[9px] font-bold text-amber-300">
+                      <span className="rounded-lg bg-amber-400/15 px-2 py-1 text-[11px] font-bold text-amber-300">
                         MELHOR VALOR
                       </span>
                     ) : null}
@@ -203,12 +203,12 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                 </div>
               ))}
               {annualScheduled && (
-                <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-[10px] text-emerald-200">
+                <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-[11px] text-emerald-200">
                   Mudança confirmada. O mensal continua ativo até o vencimento e depois passa para o anual.
                 </p>
               )}
               {checkoutError && (
-                <p className="rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-[10px] text-red-200">
+                <p className="rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-[11px] text-red-200">
                   {checkoutError}
                 </p>
               )}
@@ -216,7 +216,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
           </div>
         </div>
 
-        <div className="mt-5 flex items-start gap-2 rounded-xl bg-slate-950/50 p-3 text-[10px] leading-relaxed text-slate-400">
+        <div className="mt-5 flex items-start gap-2 rounded-xl bg-slate-950/50 p-3 text-[11px] leading-relaxed text-slate-400">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
           <span>
             {checkoutEnabled

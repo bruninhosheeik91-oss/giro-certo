@@ -49,7 +49,7 @@ export const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({
             Despesas
           </span>
         </div>
-        <span className="text-[11px] text-slate-500">Por semanas do mês</span>
+        <span className="text-xs text-slate-500">Por semanas do mês</span>
       </div>
 
       {/* Bars Container */}
@@ -61,7 +61,7 @@ export const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({
           return (
             <div key={idx} className="flex flex-col items-center h-full justify-end group relative">
               {/* Tooltip on hover/touch */}
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-[10px] text-slate-200 px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-[11px] text-slate-200 px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
                 <span className="text-emerald-400">+{formatBRL(week.gains)}</span> /{' '}
                 <span className="text-rose-400">-{formatBRL(week.expenses)}</span>
               </div>
@@ -83,7 +83,7 @@ export const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({
               </div>
 
               {/* Week Label */}
-              <span className="text-[11px] text-slate-400 mt-2 font-medium truncate max-w-full text-center">
+              <span className="text-xs text-slate-400 mt-2 font-medium truncate max-w-full text-center">
                 Sem {idx + 1}
               </span>
             </div>
@@ -92,13 +92,13 @@ export const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({
       </div>
 
       {/* Bottom Values Summary */}
-      <div className="grid grid-cols-4 gap-2 pt-2 text-[11px] text-center font-mono">
+      <div className="grid grid-cols-4 gap-2 pt-2 text-xs text-center font-mono">
         {weeks.map((w, idx) => (
           <div key={idx} className="truncate">
             <span className="text-emerald-400 font-semibold block">
               +{formatBRL(w.gains).replace('R$', '').trim()}
             </span>
-            <span className="text-rose-400/80 text-[10px] block">
+            <span className="text-rose-400/80 text-[11px] block">
               -{formatBRL(w.expenses).replace('R$', '').trim()}
             </span>
           </div>

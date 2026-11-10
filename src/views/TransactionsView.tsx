@@ -175,7 +175,7 @@ export const TransactionsView: React.FC = () => {
                                     : t.category || 'Outro'}
                             </span>
                             {t.type === 'ganho' && t.ridesCount && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold">
+                              <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold">
                                 {t.ridesCount} corridas
                               </span>
                             )}
@@ -192,9 +192,9 @@ export const TransactionsView: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="text-right">
+                        <div className="flex-none text-right">
                           <span
-                            className={`text-sm font-extrabold font-mono block ${
+                            className={`text-sm font-extrabold font-mono block whitespace-nowrap ${
                               t.type === 'ganho' ? 'text-emerald-400' : 'text-rose-400'
                             }`}
                           >
@@ -228,7 +228,7 @@ export const TransactionsView: React.FC = () => {
                                 deleteTransaction(t.id);
                                 setDeleteConfirmId(null);
                               }}
-                              className="px-2.5 py-1 bg-rose-600 text-white text-xs font-bold rounded"
+                              className="px-2.5 py-1 bg-rose-600 text-on-accent text-xs font-bold rounded"
                             >
                               Excluir
                             </button>

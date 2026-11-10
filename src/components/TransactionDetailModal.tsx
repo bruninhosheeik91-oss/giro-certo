@@ -82,7 +82,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm transition-opacity">
       <div
-        className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -257,7 +257,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           </div>
 
           {isEditing && hasOdometer && (
-            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300">
               <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>
                 O odômetro nunca regride abaixo do KM base do veículo (reconciliação automática
@@ -283,7 +283,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 text-xs text-white font-bold hover:bg-rose-500"
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 text-xs text-on-accent font-bold hover:bg-rose-500"
                 >
                   Confirmar Exclusão
                 </button>
@@ -305,7 +305,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleSaveEdit}
-                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-on-accent flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
                 >
                   <Check className="w-4 h-4" />
                   <span>Salvar Alterações</span>

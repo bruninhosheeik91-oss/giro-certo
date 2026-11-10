@@ -116,7 +116,7 @@ export const AppsManagementModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -190,7 +190,7 @@ export const AppsManagementModal: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-white">{app.name}</span>
                           <span
-                            className={`px-2 py-0.2 rounded-full text-[10px] font-semibold ${
+                            className={`px-2 py-0.2 rounded-full text-[11px] font-semibold ${
                               app.isActive
                                 ? 'text-emerald-400 bg-emerald-500/10'
                                 : 'text-slate-500 bg-slate-800'
@@ -244,7 +244,7 @@ export const AppsManagementModal: React.FC = () => {
                               deleteRegisteredApp(app.id);
                               setDeleteConfirmId(null);
                             }}
-                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded"
+                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-on-accent text-xs font-bold rounded"
                           >
                             Excluir
                           </button>

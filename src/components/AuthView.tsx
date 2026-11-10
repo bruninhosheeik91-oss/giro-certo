@@ -63,7 +63,7 @@ const Field: React.FC<{
   onEnter,
 }) => (
   <div>
-    <label htmlFor={id} className="block text-[11px] font-medium text-slate-400 ml-1">
+    <label htmlFor={id} className="block text-xs font-medium text-slate-400 ml-1">
       {label}
     </label>
     <div className="mt-1 relative">
@@ -371,7 +371,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
 
   return (
     <div
-      className="min-h-[100dvh] w-full bg-[#090d16] flex items-start sm:items-center justify-center overflow-y-auto"
+      className="min-h-[100dvh] w-full bg-app flex items-start sm:items-center justify-center overflow-y-auto"
       style={{
         paddingTop: 'max(1.5rem, env(safe-area-inset-top, 0px))',
         paddingBottom: `max(1.5rem, env(safe-area-inset-bottom, 0px))`,
@@ -437,7 +437,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
                 ref={errorRef}
                 tabIndex={-1}
                 role="alert"
-                className="flex items-start gap-1.5 text-[11px] text-rose-300 outline-none"
+                className="flex items-start gap-1.5 text-xs text-rose-300 outline-none"
               >
                 <AlertCircle className="w-3.5 h-3.5 mt-px flex-shrink-0" aria-hidden="true" />
                 <span>{error}</span>
@@ -448,7 +448,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
                 ref={noticeRef}
                 tabIndex={-1}
                 role="status"
-                className="flex items-start gap-1.5 text-[11px] text-emerald-300 outline-none"
+                className="flex items-start gap-1.5 text-xs text-emerald-300 outline-none"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 mt-px flex-shrink-0" aria-hidden="true" />
                 <span>{notice}</span>
@@ -481,7 +481,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
             <button
               type="button"
               onClick={() => changeMode('recuperacao')}
-              className="block text-[11px] text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 rounded mx-auto"
+              className="block text-xs text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 rounded mx-auto"
             >
               Esqueci minha senha
             </button>
@@ -497,7 +497,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ auth }) => {
           )}
         </div>
 
-        <p className="mt-8 text-center text-[10px] tracking-wide text-slate-600">
+        <p className="mt-8 text-center text-[11px] tracking-wide text-slate-600">
           Desenvolvido por <span className="font-semibold text-sky-400">Domnex Tech</span>
         </p>
 
