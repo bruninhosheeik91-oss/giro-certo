@@ -171,7 +171,7 @@ export const PanicCard: React.FC = () => {
           <span className="absolute inset-y-0 left-0 bg-red-400/60" style={{ width: `${progress * 100}%` }} />
           <span className="relative block text-base font-black">SEGURE PARA PEDIR AJUDA</span>
           <span className="relative mt-0.5 block text-[10px] text-red-100">
-            Nada aparece na tela. Câmera grava e seus contatos recebem o alerta no Telegram.
+            Nada aparece na tela. Câmera grava e seus contatos recebem o alerta, a localização e fotos a cada 10 s no Telegram.
           </span>
         </button>
       ) : null}

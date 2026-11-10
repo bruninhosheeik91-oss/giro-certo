@@ -34,8 +34,25 @@ Deno.serve(async (request) => {
         .order('recorded_at', { ascending: true })
         .limit(500);
 
+  let photos: { url: string; at: string }[] = [];
+  if (!expired) {
+    const { data: rows } = await admin
+      .from('panic_photos')
+      .select('path, taken_at')
+      .eq('alert_id', alert.id)
+      .order('taken_at', { ascending: false })
+      .limit(12);
+    if (rows?.length) {
+      const { data: signed } = await admin.storage.from('panic-photos').createSignedUrls(rows.map((r) => r.path), 3600);
+      photos = rows
+        .map((r, i) => ({ url: signed?.[i]?.signedUrl ?? '', at: r.taken_at }))
+        .filter((p) => p.url);
+    }
+  }
+
   return new Response(
     JSON.stringify({
+      photos,
       driverName: alert.driver_name,
       startedAt: alert.started_at,
       endedAt: alert.ended_at,

@@ -7,6 +7,8 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.5
  * - register_device (JWT do usuário): cria a credencial do aparelho usada pelo disparo nativo.
  * - test (JWT): envia uma mensagem de teste aos contatos.
  * - start / update / end (credencial do aparelho): abre o alerta, atualiza a posição e encerra.
+ * - photo (credencial do aparelho): foto da câmera (JPEG em base64, a cada ~10 s). A 1ª foto
+ *   do alerta também vai direto para o Telegram dos contatos.
  *
  * - bot (JWT): nome de usuário do bot, para montar o link de convite dos contatos.
  *
@@ -58,6 +60,41 @@ export async function sendTelegram(chatId: number, text: string) {
   if (response.ok) return { ok: true };
   const detail = await response.text();
   return { ok: false, error: `${response.status}: ${detail.slice(0, 200)}` };
+}
+
+export async function sendTelegramPhoto(chatId: number, jpeg: Uint8Array, caption: string) {
+  const token = env('TELEGRAM_BOT_TOKEN');
+  if (!token) return { ok: false, error: 'Telegram não configurado no servidor' };
+  const form = new FormData();
+  form.append('chat_id', String(chatId));
+  form.append('caption', caption);
+  form.append('photo', new Blob([jpeg], { type: 'image/jpeg' }), 'camera.jpg');
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
+  return response.ok ? { ok: true } : { ok: false, error: `${response.status}` };
+}
+
+const PHOTO_BUCKET = 'panic-photos';
+const MAX_PHOTO_BYTES = 512 * 1024;
+const RETENTION_DAYS = 7;
+
+function decodeBase64(value: string): Uint8Array | null {
+  try {
+    const binary = atob(value);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+/** Apaga fotos de alertas com mais de 7 dias (melhor esforço, roda a cada novo alerta). */
+async function cleanupOldPhotos(admin: SupabaseClient) {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data: old } = await admin.from('panic_photos').select('id, path').lt('taken_at', cutoff).limit(500);
+  if (!old?.length) return;
+  await admin.storage.from(PHOTO_BUCKET).remove(old.map((p) => p.path));
+  await admin.from('panic_photos').delete().in('id', old.map((p) => p.id));
 }
 
 function alertText(driverName: string, link: string, test = false): string {
@@ -152,6 +189,7 @@ Deno.serve(async (request) => {
       .gte('started_at', since)
       .maybeSingle();
     if (recent) return json({ alertId: recent.id, reused: true });
+    await cleanupOldPhotos(admin).catch(() => undefined);
 
     const { data: alert, error } = await admin
       .from('panic_alerts')
@@ -194,6 +232,40 @@ Deno.serve(async (request) => {
       .from('panic_alerts')
       .update({ last_lat: lat, last_lng: lng, last_accuracy: accuracy, last_at: new Date().toISOString() })
       .eq('id', alert.id);
+    return json({ ok: true });
+  }
+
+  if (action === 'photo') {
+    if (alert.ended_at) return json({ ended: true });
+    const jpeg = decodeBase64(String(body.image ?? ''));
+    if (!jpeg || jpeg.length < 1000 || jpeg.length > MAX_PHOTO_BYTES || jpeg[0] !== 0xff || jpeg[1] !== 0xd8) {
+      return json({ error: 'Foto inválida.' }, 400);
+    }
+    const path = `${alert.id}/${Date.now()}.jpg`;
+    const { error: uploadError } = await admin.storage
+      .from(PHOTO_BUCKET)
+      .upload(path, jpeg, { contentType: 'image/jpeg', upsert: false });
+    if (uploadError) return json({ error: 'Não foi possível salvar a foto.' }, 500);
+    const { count } = await admin.from('panic_photos').select('id', { count: 'exact', head: true }).eq('alert_id', alert.id);
+    await admin.from('panic_photos').insert({ alert_id: alert.id, path });
+
+    if (!count) {
+      const { data: contacts } = await admin
+        .from('panic_contacts')
+        .select('telegram_chat_id')
+        .eq('user_id', device.user_id)
+        .not('telegram_chat_id', 'is', null);
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+      await Promise.all(
+        (contacts ?? []).map((c) =>
+          sendTelegramPhoto(
+            Number(c.telegram_chat_id),
+            jpeg,
+            `📸 Câmera de ${device.driver_name} às ${time}. Novas fotos a cada 10 s no link do alerta.`,
+          ),
+        ),
+      );
+    }
     return json({ ok: true });
   }
 

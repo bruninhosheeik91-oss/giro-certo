@@ -19,7 +19,13 @@ import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.util.Log;
 import androidx.annotation.Nullable;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.video.FileOutputOptions;
 import androidx.camera.video.MediaStoreOutputOptions;
@@ -36,7 +42,10 @@ import androidx.core.app.ServiceCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.util.function.Consumer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -65,8 +74,13 @@ public class SecurityCameraService extends LifecycleService {
     private static final int NOTIFICATION_ID = 9051;
     private static final long SEGMENT_MS = 30 * 60 * 1000L;
 
+    private static SecurityCameraService instance;
+    private static final int SNAPSHOT_MAX_SIDE = 720;
+    private static final int SNAPSHOT_QUALITY = 60;
+
     private Recording recording;
     private VideoCapture<Recorder> videoCapture;
+    private ImageCapture imageCapture;
     private boolean stopRequested;
     private boolean silent;
 
@@ -147,7 +161,19 @@ public class SecurityCameraService extends LifecycleService {
                     ? CameraSelector.DEFAULT_BACK_CAMERA : CameraSelector.DEFAULT_FRONT_CAMERA;
                 if (!provider.hasCamera(selector)) selector = CameraSelector.DEFAULT_BACK_CAMERA;
                 provider.unbindAll();
-                provider.bindToLifecycle(this, selector, videoCapture);
+                imageCapture = new ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .build();
+                try {
+                    provider.bindToLifecycle(this, selector, videoCapture, imageCapture);
+                } catch (IllegalArgumentException combinationNotSupported) {
+                    // Alguns aparelhos não aceitam vídeo + foto juntos: grava só o vídeo.
+                    Log.w("GiroCertoCamera", "Foto + vídeo não suportado; só vídeo", combinationNotSupported);
+                    imageCapture = null;
+                    provider.unbindAll();
+                    provider.bindToLifecycle(this, selector, videoCapture);
+                }
+                instance = this;
                 startSegment();
             } catch (Exception error) {
                 Log.e("GiroCertoCamera", "Falha ao abrir a câmera", error);
@@ -214,12 +240,69 @@ public class SecurityCameraService extends LifecycleService {
         });
     }
 
+    /**
+     * Foto da câmera em uso, reduzida (lado maior 720 px, JPEG 60%) para enviar com internet fraca.
+     * Responde null quando a câmera não está gravando ou o aparelho não suporta foto + vídeo.
+     */
+    static void snapshot(Consumer<byte[]> done) {
+        SecurityCameraService service = instance;
+        if (service == null || service.imageCapture == null) {
+            done.accept(null);
+            return;
+        }
+        service.imageCapture.takePicture(ContextCompat.getMainExecutor(service), new ImageCapture.OnImageCapturedCallback() {
+            @Override
+            public void onCaptureSuccess(ImageProxy image) {
+                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                byte[] raw = new byte[buffer.remaining()];
+                buffer.get(raw);
+                int rotation = image.getImageInfo().getRotationDegrees();
+                image.close();
+                new Thread(() -> done.accept(compress(raw, rotation)), "giro-certo-snapshot").start();
+            }
+
+            @Override
+            public void onError(ImageCaptureException error) {
+                Log.w("GiroCertoCamera", "Falha na foto", error);
+                done.accept(null);
+            }
+        });
+    }
+
+    private static byte[] compress(byte[] jpeg, int rotation) {
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length, bounds);
+            int sample = 1;
+            while (Math.max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= SNAPSHOT_MAX_SIDE) sample *= 2;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = sample;
+            Bitmap bitmap = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length, options);
+            if (bitmap == null) return null;
+            float scale = Math.min(1f, (float) SNAPSHOT_MAX_SIDE / Math.max(bitmap.getWidth(), bitmap.getHeight()));
+            Matrix matrix = new Matrix();
+            matrix.postScale(scale, scale);
+            if (rotation != 0) matrix.postRotate(rotation);
+            Bitmap out = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            out.compress(Bitmap.CompressFormat.JPEG, SNAPSHOT_QUALITY, stream);
+            if (out != bitmap) out.recycle();
+            bitmap.recycle();
+            return stream.toByteArray();
+        } catch (RuntimeException | OutOfMemoryError error) {
+            return null;
+        }
+    }
+
     private void fail(String message) {
         prefs().edit().putString(KEY_ERROR, message).apply();
         finishService();
     }
 
     private void finishService() {
+        if (instance == this) instance = null;
+        imageCapture = null;
         prefs().edit().putBoolean(KEY_RECORDING, false).apply();
         vibrate(2);
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
@@ -274,6 +357,7 @@ public class SecurityCameraService extends LifecycleService {
 
     @Override
     public void onDestroy() {
+        if (instance == this) instance = null;
         if (recording != null) {
             stopRequested = true;
             recording.stop();

@@ -14,7 +14,17 @@
   header.ok { background: #14532d; }
   h1 { margin: 0; font-size: 18px; }
   header p { margin: 4px 0 0; font-size: 13px; opacity: .9; }
-  #map { height: calc(100vh - 170px); min-height: 320px; }
+  #map { height: 55vh; min-height: 300px; }
+  #photos { display: none; padding: 12px 16px 4px; }
+  #photos.on { display: block; }
+  .live { position: relative; border-radius: 14px; overflow: hidden; background: #000; }
+  .live img { display: block; width: 100%; max-height: 46vh; object-fit: contain; }
+  .live span { position: absolute; left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: rgba(0,0,0,.7); font-size: 12px; color: #fff; }
+  .live span b { color: #f87171; }
+  .strip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; }
+  .strip img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; opacity: .75; border: 2px solid transparent; cursor: pointer; flex: none; }
+  .strip img.sel { opacity: 1; border-color: #ef4444; }
+  .hint { font-size: 11px; color: #64748b; margin: 2px 0 0; }
   .info { padding: 12px 16px; font-size: 13px; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 8px 16px; }
   .info b { color: #f1f5f9; }
   a.btn { display: block; margin: 0 16px 16px; padding: 12px; border-radius: 12px; background: #10b981; color: #052e2b; font-weight: 800; text-align: center; text-decoration: none; }
@@ -23,6 +33,11 @@
 </head>
 <body>
 <header id="top"><h1 id="title">Carregando alerta…</h1><p id="subtitle"></p></header>
+<section id="photos">
+  <div class="live"><img id="photo" alt="Foto da câmera do motorista"><span id="photoTime"></span></div>
+  <div class="strip" id="strip"></div>
+  <p class="hint">Foto da câmera do motorista a cada ~10 segundos. Toque numa miniatura para ampliar.</p>
+</section>
 <div id="map"></div>
 <div class="info" id="info"></div>
 <a class="btn" id="maps" target="_blank" rel="noopener" style="display:none">Abrir no Google Maps / traçar rota</a>
@@ -37,7 +52,31 @@
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap'
   }).addTo(map);
-  var marker = null, circle = null, line = null, centered = false;
+  var marker = null, circle = null, line = null, centered = false, pinned = null;
+
+  function showPhoto(p, isLatest) {
+    document.getElementById('photo').src = p.url;
+    document.getElementById('photoTime').innerHTML = (isLatest ? '<b>●</b> AO VIVO · ' : '') + fmt(p.at) + ' (' + ago(p.at) + ')';
+  }
+
+  function renderPhotos(photos) {
+    var box = document.getElementById('photos');
+    if (!photos || !photos.length) { box.className = ''; return; }
+    box.className = 'on';
+    var selected = pinned && photos.some(function (p) { return p.at === pinned; }) ? pinned : null;
+    var current = selected ? photos.filter(function (p) { return p.at === selected; })[0] : photos[0];
+    showPhoto(current, !selected);
+    var strip = document.getElementById('strip');
+    strip.innerHTML = '';
+    photos.forEach(function (p, i) {
+      var img = document.createElement('img');
+      img.src = p.url;
+      img.alt = 'Foto ' + fmt(p.at);
+      if (p === current) img.className = 'sel';
+      img.onclick = function () { pinned = i === 0 ? null : p.at; renderPhotos(photos); };
+      strip.appendChild(img);
+    });
+  }
 
   function fmt(iso) {
     return iso ? new Date(iso).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' }) : '—';
@@ -66,6 +105,7 @@
       info.appendChild(span);
     });
     if (data.expired) { setText('subtitle', 'Este alerta expirou.'); return; }
+    renderPhotos(data.photos);
     var points = (data.trail || []).map(function (p) { return [p.lat, p.lng]; });
     if (line) map.removeLayer(line);
     if (points.length > 1) line = L.polyline(points, { color: '#ef4444', weight: 4, opacity: .7 }).addTo(map);
@@ -87,7 +127,7 @@
       .then(function (data) {
         if (data.error) { setText('title', data.error); return; }
         render(data);
-        if (!data.endedAt) setTimeout(load, 15000);
+        if (!data.endedAt) setTimeout(load, 10000);
       })
       .catch(function () { setText('subtitle', 'Sem conexão. Tentando de novo…'); setTimeout(load, 15000); });
   }

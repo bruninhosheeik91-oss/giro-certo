@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.json.JSONObject;
 
 /**
@@ -54,6 +57,7 @@ public class PanicService extends Service {
     private static final long UPDATE_MS = 30000L;
     private static final long FIRST_FIX_TIMEOUT_MS = 12000L;
     private static final long RETRY_MS = 15000L;
+    private static final long PHOTO_MS = 10000L;
 
     private HandlerThread thread;
     private Handler worker;
@@ -171,6 +175,7 @@ public class PanicService extends Service {
                 .putString(KEY_STATUS, res.optBoolean("reused") ? "Alerta já ativo" : "Avisados " + sent + " de " + total + " contatos")
                 .apply();
             worker.postDelayed(this::sendUpdate, UPDATE_MS);
+            worker.postDelayed(this::sendPhoto, 2000L);
         } catch (Exception error) {
             startSent = false;
             prefs().edit().putString(KEY_STATUS, "Sem conexão, tentando de novo… (" + error.getMessage() + ")").apply();
@@ -190,6 +195,28 @@ public class PanicService extends Service {
             } catch (Exception ignored) { }
         }
         worker.postDelayed(this::sendUpdate, UPDATE_MS);
+    }
+
+    /** Foto da câmera a cada 10 s enquanto o alerta estiver ativo. Falhas só pulam a vez. */
+    private void sendPhoto() {
+        if (ending) return;
+        String alertId = prefs().getString(KEY_ALERT_ID, "");
+        if (!alertId.isEmpty()) {
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicReference<byte[]> photo = new AtomicReference<>();
+            new Handler(Looper.getMainLooper()).post(() -> SecurityCameraService.snapshot(bytes -> {
+                photo.set(bytes);
+                latch.countDown();
+            }));
+            try {
+                if (latch.await(6, TimeUnit.SECONDS) && photo.get() != null) {
+                    String image = android.util.Base64.encodeToString(photo.get(), android.util.Base64.NO_WRAP);
+                    JSONObject res = post(new JSONObject().put("action", "photo").put("alertId", alertId).put("image", image));
+                    if (res.optBoolean("ended")) { finish(); return; }
+                }
+            } catch (Exception ignored) { }
+        }
+        worker.postDelayed(this::sendPhoto, PHOTO_MS);
     }
 
     private void sendEnd() {
