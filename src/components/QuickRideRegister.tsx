@@ -35,7 +35,7 @@ export const QuickRideRegister: React.FC = () => {
     };
   }, [refresh]);
 
-  if (!activeShift || offers.length === 0) return null;
+  if (!activeShift || !isRideOfferNativeAvailable()) return null;
 
   const register = (offer: AnalyzedRideOffer) => {
     const at = new Date(offer.analyzedAt);
@@ -66,7 +66,11 @@ export const QuickRideRegister: React.FC = () => {
         <Zap className="h-4 w-4 text-emerald-400" />
         <span className="text-sm font-bold text-white">Registrar corrida com 1 toque</span>
       </div>
-      <p className="text-[11px] text-slate-400">Ofertas lidas pelo Copiloto nas últimas horas. Toque na que você fez.</p>
+      <p className="text-[11px] text-slate-400">
+        {offers.length === 0
+          ? 'Nenhuma oferta lida ainda. Com o Copiloto ligado, as ofertas da Uber/99 aparecem aqui para você registrar com 1 toque.'
+          : 'Ofertas lidas pelo Copiloto nas últimas horas. Toque na que você fez.'}
+      </p>
       {offers.map((offer) => {
         const done = Boolean(offer.convertedAt) || saved[offer.id];
         return (

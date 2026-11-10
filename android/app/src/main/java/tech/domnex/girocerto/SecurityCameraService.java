@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.MediaStore;
+import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -149,13 +150,24 @@ public class SecurityCameraService extends LifecycleService {
                 provider.bindToLifecycle(this, selector, videoCapture);
                 startSegment();
             } catch (Exception error) {
-                fail("Não foi possível abrir a câmera: " + error.getMessage());
+                Log.e("GiroCertoCamera", "Falha ao abrir a câmera", error);
+                fail("Não foi possível abrir a câmera: " + error.getClass().getSimpleName() + " " + error.getMessage());
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
-    @SuppressLint("MissingPermission")
     private void startSegment() {
+        try {
+            startSegmentUnsafe();
+        } catch (RuntimeException error) {
+            Log.e("GiroCertoCamera", "Falha ao iniciar a gravação", error);
+            recording = null;
+            fail("Não foi possível iniciar a gravação: " + error.getClass().getSimpleName() + " " + error.getMessage());
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void startSegmentUnsafe() {
         String name = "GiroCerto_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
         PendingRecording pending;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -186,6 +198,9 @@ public class SecurityCameraService extends LifecycleService {
             recording = null;
             int error = done.getError();
             boolean limit = error == VideoRecordEvent.Finalize.ERROR_DURATION_LIMIT_REACHED;
+            if (error != VideoRecordEvent.Finalize.ERROR_NONE) {
+                Log.e("GiroCertoCamera", "Gravação finalizada com erro " + error, done.getCause());
+            }
             if (error == VideoRecordEvent.Finalize.ERROR_NONE || limit) {
                 prefs().edit().putString(KEY_LAST_NAME, videoName).putLong(KEY_LAST_AT, System.currentTimeMillis()).apply();
             } else {

@@ -31,6 +31,7 @@ export const SecurityView: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [, tick] = useState(0);
   const [floating, setFloating] = useState<FloatingButtonState | null>(null);
+  const [notice, setNotice] = useState('');
 
   const refresh = useCallback(async () => {
     if (!native) return;
@@ -62,9 +63,21 @@ export const SecurityView: React.FC = () => {
         await stopSecurityCamera();
       } else {
         const access = status.cameraGranted ? status : await requestSecurityCameraAccess();
-        if (access.cameraGranted) await startSecurityCamera();
         setStatus(access);
+        if (!access.cameraGranted) {
+          setNotice('Permita a câmera para gravar (Configurações do Android → Apps → Giro Certo → Permissões).');
+          return;
+        }
+        setNotice('Iniciando a câmera…');
+        await startSecurityCamera();
+        window.setTimeout(async () => {
+          const after = await getSecurityCameraStatus();
+          setStatus(after);
+          setNotice(after.recording ? '' : after.lastError || 'A câmera não iniciou. Feche outros apps que usam a câmera e tente de novo.');
+        }, 3500);
+        return;
       }
+      setNotice('');
       window.setTimeout(() => void refresh(), 800);
     } finally {
       setBusy(false);
@@ -142,6 +155,8 @@ export const SecurityView: React.FC = () => {
           </span>
         </button>
       </div>
+
+      {notice && <p className="rounded-lg bg-blue-500/10 p-3 text-xs text-blue-200">{notice}</p>}
 
       {floating && (
         <button

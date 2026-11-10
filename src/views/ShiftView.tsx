@@ -377,6 +377,9 @@ export const ShiftView: React.FC = () => {
         </div>
       )}
 
+      {/* Ofertas do Copiloto: registrar ganho com 1 toque */}
+      <QuickRideRegister />
+
       {/* End Shift Modal Dialog */}
       {isEndModalOpen && activeShift && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
@@ -595,7 +598,6 @@ export const ShiftView: React.FC = () => {
           </div>
         )}
       </div>
-      <QuickRideRegister />
     </div>
   );
 };

@@ -76,6 +76,7 @@ public class PanicService extends Service {
     /** Disparo completo: câmera silenciosa + alerta. Deve ser chamado com uma Activity visível. */
     static void trigger(Context context) {
         if (SecurityCameraService.hasCameraPermission(context) && !SecurityCameraService.isRecording(context)) {
+            context.getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean("cameraByPanic", true).apply();
             SecurityCameraService.start(context, true);
         }
         if (!isActive(context)) {
@@ -200,7 +201,10 @@ public class PanicService extends Service {
     }
 
     private void finish() {
-        prefs().edit().putBoolean(KEY_ACTIVE, false).putString(KEY_STATUS, "Encerrado").apply();
+        if (ending && prefs().getBoolean("cameraByPanic", false) && SecurityCameraService.isRecording(this)) {
+            SecurityCameraService.stop(this);
+        }
+        prefs().edit().putBoolean(KEY_ACTIVE, false).putBoolean("cameraByPanic", false).putString(KEY_STATUS, "Encerrado").apply();
         new Handler(Looper.getMainLooper()).post(() -> {
             if (locationManager != null) {
                 try { locationManager.removeUpdates(listener); } catch (RuntimeException ignored) { }
