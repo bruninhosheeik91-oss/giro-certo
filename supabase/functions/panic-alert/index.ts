@@ -7,8 +7,8 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.5
  * - register_device (JWT do usuário): cria a credencial do aparelho usada pelo disparo nativo.
  * - test (JWT): envia uma mensagem de teste aos contatos.
  * - start / update / end (credencial do aparelho): abre o alerta, atualiza a posição e encerra.
- * - photo (credencial do aparelho): foto da câmera (JPEG em base64, a cada ~10 s). A 1ª foto
- *   do alerta também vai direto para o Telegram dos contatos.
+ * - photo (credencial do aparelho): foto da câmera (JPEG em base64, até 5 por alerta, a cada
+ *   ~20 s). A 1ª foto do alerta também vai direto para o Telegram dos contatos.
  *
  * - bot (JWT): nome de usuário do bot, para montar o link de convite dos contatos.
  *
@@ -76,6 +76,7 @@ export async function sendTelegramPhoto(chatId: number, jpeg: Uint8Array, captio
 const PHOTO_BUCKET = 'panic-photos';
 const MAX_PHOTO_BYTES = 512 * 1024;
 const RETENTION_DAYS = 7;
+const MAX_PHOTOS_PER_ALERT = 5;
 
 function decodeBase64(value: string): Uint8Array | null {
   try {
@@ -241,12 +242,13 @@ Deno.serve(async (request) => {
     if (!jpeg || jpeg.length < 1000 || jpeg.length > MAX_PHOTO_BYTES || jpeg[0] !== 0xff || jpeg[1] !== 0xd8) {
       return json({ error: 'Foto inválida.' }, 400);
     }
+    const { count } = await admin.from('panic_photos').select('id', { count: 'exact', head: true }).eq('alert_id', alert.id);
+    if ((count ?? 0) >= MAX_PHOTOS_PER_ALERT) return json({ limit: true });
     const path = `${alert.id}/${Date.now()}.jpg`;
     const { error: uploadError } = await admin.storage
       .from(PHOTO_BUCKET)
       .upload(path, jpeg, { contentType: 'image/jpeg', upsert: false });
     if (uploadError) return json({ error: 'Não foi possível salvar a foto.' }, 500);
-    const { count } = await admin.from('panic_photos').select('id', { count: 'exact', head: true }).eq('alert_id', alert.id);
     await admin.from('panic_photos').insert({ alert_id: alert.id, path });
 
     if (!count) {
@@ -261,7 +263,7 @@ Deno.serve(async (request) => {
           sendTelegramPhoto(
             Number(c.telegram_chat_id),
             jpeg,
-            `📸 Câmera de ${device.driver_name} às ${time}. Novas fotos a cada 10 s no link do alerta.`,
+            `📸 Câmera de ${device.driver_name} às ${time}. Mais fotos (até 5, a cada 20 s) no link do alerta.`,
           ),
         ),
       );

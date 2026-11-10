@@ -57,7 +57,9 @@ public class PanicService extends Service {
     private static final long UPDATE_MS = 30000L;
     private static final long FIRST_FIX_TIMEOUT_MS = 12000L;
     private static final long RETRY_MS = 15000L;
-    private static final long PHOTO_MS = 10000L;
+    private static final long PHOTO_MS = 20000L;
+    private static final int MAX_PHOTOS = 5;
+    private int photosSent;
 
     private HandlerThread thread;
     private Handler worker;
@@ -175,6 +177,7 @@ public class PanicService extends Service {
                 .putString(KEY_STATUS, res.optBoolean("reused") ? "Alerta já ativo" : "Avisados " + sent + " de " + total + " contatos")
                 .apply();
             worker.postDelayed(this::sendUpdate, UPDATE_MS);
+            photosSent = 0;
             worker.postDelayed(this::sendPhoto, 2000L);
         } catch (Exception error) {
             startSent = false;
@@ -197,9 +200,9 @@ public class PanicService extends Service {
         worker.postDelayed(this::sendUpdate, UPDATE_MS);
     }
 
-    /** Foto da câmera a cada 10 s enquanto o alerta estiver ativo. Falhas só pulam a vez. */
+    /** Até 5 fotos, uma a cada 20 s, enquanto o alerta estiver ativo. Falhas só pulam a vez. */
     private void sendPhoto() {
-        if (ending) return;
+        if (ending || photosSent >= MAX_PHOTOS) return;
         String alertId = prefs().getString(KEY_ALERT_ID, "");
         if (!alertId.isEmpty()) {
             CountDownLatch latch = new CountDownLatch(1);
@@ -213,10 +216,12 @@ public class PanicService extends Service {
                     String image = android.util.Base64.encodeToString(photo.get(), android.util.Base64.NO_WRAP);
                     JSONObject res = post(new JSONObject().put("action", "photo").put("alertId", alertId).put("image", image));
                     if (res.optBoolean("ended")) { finish(); return; }
+                    if (res.optBoolean("ok") || res.optBoolean("limit")) photosSent++;
+                    if (res.optBoolean("limit")) photosSent = MAX_PHOTOS;
                 }
             } catch (Exception ignored) { }
         }
-        worker.postDelayed(this::sendPhoto, PHOTO_MS);
+        if (photosSent < MAX_PHOTOS) worker.postDelayed(this::sendPhoto, PHOTO_MS);
     }
 
     private void sendEnd() {

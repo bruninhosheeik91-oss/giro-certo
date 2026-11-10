@@ -41,7 +41,7 @@ Deno.serve(async (request) => {
       .select('path, taken_at')
       .eq('alert_id', alert.id)
       .order('taken_at', { ascending: false })
-      .limit(12);
+      .limit(5);
     if (rows?.length) {
       const { data: signed } = await admin.storage.from('panic-photos').createSignedUrls(rows.map((r) => r.path), 3600);
       photos = rows
