@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserVehicle, FuelType } from '../types';
-import { parseDecimalInput } from '../utils/calculations';
+import { formatNumber, parseDecimalInput } from '../utils/calculations';
 import { X, Plus, Bike, Car, Check, Trash2, Edit3, Star, AlertTriangle } from 'lucide-react';
 
 const FUEL_OPTIONS: FuelType[] = [
@@ -305,7 +305,7 @@ export const VehiclesModal: React.FC = () => {
                         <div className="bg-slate-950/60 rounded-lg py-1.5 px-2">
                           <span className="text-[11px] text-slate-500 block uppercase">Média</span>
                           <span className="text-xs font-bold text-slate-200 font-mono">
-                            {v.fuelAverageKmPerLiter} km/l
+                            {formatNumber(v.fuelAverageKmPerLiter, 1)} km/L
                           </span>
                         </div>
                         <div className="bg-slate-950/60 rounded-lg py-1.5 px-2">
@@ -384,7 +384,7 @@ export const VehiclesModal: React.FC = () => {
             <form onSubmit={handleSave} className="space-y-4">
               {/* Type Selector */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Tipo de Veículo *
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -440,7 +440,7 @@ export const VehiclesModal: React.FC = () => {
 
               {/* Apelido do Veículo */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Apelido do Veículo *
                 </label>
                 <input
@@ -456,7 +456,7 @@ export const VehiclesModal: React.FC = () => {
               {/* Marca & Modelo */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Marca *</label>
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Marca *</label>
                   <input
                     type="text"
                     required
@@ -467,7 +467,7 @@ export const VehiclesModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Modelo *
                   </label>
                   <input
@@ -484,7 +484,7 @@ export const VehiclesModal: React.FC = () => {
               {/* Ano & Placa */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ano</label>
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Ano</label>
                   <input
                     type="text"
                     placeholder="Ex: 2024"
@@ -494,7 +494,7 @@ export const VehiclesModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Placa (Opcional)
                   </label>
                   <input
@@ -510,7 +510,7 @@ export const VehiclesModal: React.FC = () => {
               {/* Quilometragem Atual & Combustível */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Quilometragem Atual *
                   </label>
                   <input
@@ -523,7 +523,7 @@ export const VehiclesModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Tipo de Combustível
                   </label>
                   <select
@@ -543,7 +543,7 @@ export const VehiclesModal: React.FC = () => {
               {/* Média de Consumo (km/l) & Preço de Referência (R$) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Consumo Estimado (km/l)
                   </label>
                   <input
@@ -556,7 +556,7 @@ export const VehiclesModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Preço Ref. Litro (R$)
                   </label>
                   <input
@@ -573,7 +573,7 @@ export const VehiclesModal: React.FC = () => {
               {/* Aquisição (Opcionais) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Valor Pago (Opcional)
                   </label>
                   <input
@@ -586,7 +586,7 @@ export const VehiclesModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Data Aquisição (Opcional)
                   </label>
                   <input
@@ -600,7 +600,7 @@ export const VehiclesModal: React.FC = () => {
 
               {/* Observações */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Observações
                 </label>
                 <textarea

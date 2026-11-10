@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { formatBRL } from '../utils/calculations';
+import { formatBRL, formatNumber } from '../utils/calculations';
 import { getRideOfferHistory, isRideOfferNativeAvailable, markRideOfferConverted, type AnalyzedRideOffer } from '../lib/rideOffer';
 
 const WINDOW_MS = 4 * 60 * 60 * 1000;
@@ -53,7 +53,7 @@ export const QuickRideRegister: React.FC = () => {
       vehicleId: activeVehicle?.id,
       date: `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`,
       time: `${pad(at.getHours())}:${pad(at.getMinutes())}`,
-      description: `Corrida ${offer.appName} · ${offer.totalKm.toFixed(1)} km (Copiloto)`,
+      description: `Corrida ${offer.appName} · ${formatNumber(offer.totalKm, 1)} km (Copiloto)`,
     });
     void markRideOfferConverted(offer.id);
     setSaved((value) => ({ ...value, [offer.id]: true }));
@@ -88,7 +88,7 @@ export const QuickRideRegister: React.FC = () => {
               </span>
               <span className="block text-[11px] text-slate-500">
                 {new Date(offer.analyzedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ·{' '}
-                {offer.totalKm.toFixed(1)} km · {Math.round(offer.minutes)} min
+                {formatNumber(offer.totalKm, 1)} km · {Math.round(offer.minutes)} min
               </span>
             </span>
             {done ? (

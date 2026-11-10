@@ -6,6 +6,8 @@ import {
   formatBRL,
   formatPercent,
   parseBRLInput,
+  formatBRLInput,
+  formatNumber,
   parseDecimalInput,
 } from '../utils/calculations';
 import {
@@ -57,27 +59,27 @@ export const SimulatorsModal: React.FC = () => {
   };
 
   // Simulator 1: Ride / Delivery
-  const defaultCostPerKm = activeVehicle.type === 'moto' ? '0.28' : '0.62';
-  const [fareOffered, setFareOffered] = useState('28.50');
-  const [distanceToPickup, setDistanceToPickup] = useState('2.5');
-  const [tripDistance, setTripDistance] = useState('8.0');
-  const [returnDistance, setReturnDistance] = useState('3.0');
+  const defaultCostPerKm = activeVehicle.type === 'moto' ? '0,28' : '0,62';
+  const [fareOffered, setFareOffered] = useState('28,50');
+  const [distanceToPickup, setDistanceToPickup] = useState('2,5');
+  const [tripDistance, setTripDistance] = useState('8,0');
+  const [returnDistance, setReturnDistance] = useState('3,0');
   const [considerReturn, setConsiderReturn] = useState(criteria.considerReturnDistance);
   const [estimatedMinutes, setEstimatedMinutes] = useState('25');
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
-  const [tollsAndParking, setTollsAndParking] = useState('0.00');
+  const [tollsAndParking, setTollsAndParking] = useState('0,00');
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   // Simulator 2: Goal
-  const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
+  const [targetProfit, setTargetProfit] = useState(formatBRLInput(String(Math.round(userProfile.monthlyGoal * 100))));
   const goalPeriod = 'mensal' as const;
   const [workDays, setWorkDays] = useState('24');
   const [hoursPerDay, setHoursPerDay] = useState('9');
-  const [averagePerHour, setAveragePerHour] = useState('36.00');
+  const [averagePerHour, setAveragePerHour] = useState('36,00');
   const [goalCostPerKm, setGoalCostPerKm] = useState(defaultCostPerKm);
   const [reservePerKm, setReservePerKm] = useState(
-    (userProfile.maintenanceReservePerKm || 0.12).toString(),
+    (userProfile.maintenanceReservePerKm || 0.12).toFixed(2).replace('.', ','),
   );
 
   const refreshOfferHistory = React.useCallback(() => {
@@ -113,11 +115,11 @@ export const SimulatorsModal: React.FC = () => {
 
   // Run calculation 2
   const goalResult = simulateGoal({
-    targetProfit: parseDecimalInput(targetProfit),
+    targetProfit: parseBRLInput(targetProfit),
     period: goalPeriod,
     workDays: parseInt(workDays, 10) || 1,
     hoursPerDay: parseDecimalInput(hoursPerDay) || 1,
-    averagePerHour: parseDecimalInput(averagePerHour) || 35,
+    averagePerHour: parseBRLInput(averagePerHour) || 35,
     costPerKm: parseDecimalInput(goalCostPerKm) || 0.25,
     reservePerKm: parseDecimalInput(reservePerKm) || 0.12,
   });
@@ -254,7 +256,7 @@ export const SimulatorsModal: React.FC = () => {
                             </span>
                             <span className="text-[11px] text-slate-400">
                               <strong className="block text-slate-200">
-                                {offer.totalKm.toFixed(1)} km
+                                {formatNumber(offer.totalKm, 1)} km
                               </strong>
                               distância
                             </span>
@@ -287,7 +289,7 @@ export const SimulatorsModal: React.FC = () => {
                                 time,
                                 vehicleId: activeVehicle.id,
                                 shiftId: activeShift?.shiftId,
-                                description: `Corrida analisada pelo Giro Certo · ${offer.totalKm.toFixed(1)} km`,
+                                description: `Corrida analisada pelo Giro Certo · ${formatNumber(offer.totalKm, 1)} km`,
                                 rideOfferId: offer.id,
                               });
                             }}
@@ -346,11 +348,11 @@ export const SimulatorsModal: React.FC = () => {
                       R$
                     </span>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={fareOffered}
-                      onChange={(e) => setFareOffered(e.target.value)}
-                      placeholder="Ex: 28.50"
+                      onChange={(e) => setFareOffered(formatBRLInput(e.target.value))}
+                      placeholder="0,00"
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-base font-bold font-mono text-emerald-400 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
@@ -363,8 +365,8 @@ export const SimulatorsModal: React.FC = () => {
                       Coleta (km)
                     </label>
                     <input
-                      type="number"
-                      step="0.1"
+                      type="text"
+                      inputMode="decimal"
                       value={distanceToPickup}
                       onChange={(e) => setDistanceToPickup(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -375,8 +377,8 @@ export const SimulatorsModal: React.FC = () => {
                       Viagem (km)
                     </label>
                     <input
-                      type="number"
-                      step="0.1"
+                      type="text"
+                      inputMode="decimal"
                       value={tripDistance}
                       onChange={(e) => setTripDistance(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -400,8 +402,8 @@ export const SimulatorsModal: React.FC = () => {
                       </button>
                     </div>
                     <input
-                      type="number"
-                      step="0.1"
+                      type="text"
+                      inputMode="decimal"
                       disabled={!considerReturn}
                       value={returnDistance}
                       onChange={(e) => setReturnDistance(e.target.value)}
@@ -419,7 +421,8 @@ export const SimulatorsModal: React.FC = () => {
                       Tempo (minutos)
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={estimatedMinutes}
                       onChange={(e) => setEstimatedMinutes(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -430,8 +433,8 @@ export const SimulatorsModal: React.FC = () => {
                       Custo/km (R$)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={costPerKm}
                       onChange={(e) => setCostPerKm(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -442,10 +445,10 @@ export const SimulatorsModal: React.FC = () => {
                       Pedágio (R$)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={tollsAndParking}
-                      onChange={(e) => setTollsAndParking(e.target.value)}
+                      onChange={(e) => setTollsAndParking(formatBRLInput(e.target.value))}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
                     />
                   </div>
@@ -506,7 +509,7 @@ export const SimulatorsModal: React.FC = () => {
                       Distância Total
                     </span>
                     <span className="text-sm font-bold text-white font-mono">
-                      {rideResult.totalDistance.toFixed(1)} km
+                      {formatNumber(rideResult.totalDistance, 1)} km
                     </span>
                     <span className="text-[11px] text-slate-500 block">
                       {considerReturn ? '(com retorno)' : '(sem retorno)'}
@@ -594,10 +597,10 @@ export const SimulatorsModal: React.FC = () => {
                     Meta de Lucro Disponível (R$) *
                   </label>
                   <input
-                    type="number"
-                    step="100"
+                    type="text"
+                    inputMode="decimal"
                     value={targetProfit}
-                    onChange={(e) => setTargetProfit(e.target.value)}
+                    onChange={(e) => setTargetProfit(formatBRLInput(e.target.value))}
                     placeholder="Ex: 5400"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-base font-bold font-mono text-blue-400 focus:outline-none focus:border-blue-500"
                   />
@@ -609,7 +612,8 @@ export const SimulatorsModal: React.FC = () => {
                       Dias de Trabalho ({goalPeriod === 'mensal' ? 'no Mês' : 'na Semana'})
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={workDays}
                       onChange={(e) => setWorkDays(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -620,7 +624,8 @@ export const SimulatorsModal: React.FC = () => {
                       Horas por Dia
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={hoursPerDay}
                       onChange={(e) => setHoursPerDay(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -634,9 +639,10 @@ export const SimulatorsModal: React.FC = () => {
                       Ganho/h Atual (R$)
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={averagePerHour}
-                      onChange={(e) => setAveragePerHour(e.target.value)}
+                      onChange={(e) => setAveragePerHour(formatBRLInput(e.target.value))}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
                     />
                   </div>
@@ -645,8 +651,8 @@ export const SimulatorsModal: React.FC = () => {
                       Custo/km (R$)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={goalCostPerKm}
                       onChange={(e) => setGoalCostPerKm(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
@@ -657,8 +663,8 @@ export const SimulatorsModal: React.FC = () => {
                       Reserva/km (R$)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={reservePerKm}
                       onChange={(e) => setReservePerKm(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"

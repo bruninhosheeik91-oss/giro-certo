@@ -116,7 +116,7 @@ export const MaintenanceModal: React.FC = () => {
                 >
                   <span>
                     • <strong>{alert.label}</strong>: faltam{' '}
-                    {alert.remainingKm > 0 ? `${alert.remainingKm} km` : 'KM atingido!'}
+                    {alert.remainingKm > 0 ? `${alert.remainingKm.toLocaleString('pt-BR')} km` : 'KM atingido!'}
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded text-[11px] font-bold ${
@@ -243,7 +243,7 @@ export const MaintenanceModal: React.FC = () => {
                       </span>
                       <span className="text-xs text-slate-400">
                         {m.date} • {m.workshop ? `${m.workshop} • ` : ''}
-                        {m.currentKm ? `${m.currentKm} km` : ''}
+                        {m.currentKm ? `${m.currentKm.toLocaleString('pt-BR')} km` : ''}
                       </span>
                     </div>
                     <span className="font-mono font-bold text-rose-400">

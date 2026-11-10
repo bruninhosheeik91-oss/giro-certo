@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   formatBRL,
+  formatHours,
   safeDivide,
   formatDisplayDate,
   parseDecimalInput,
   calculateOdometerDistance,
 } from '../utils/calculations';
-import { Play, Square, Clock, Coffee, AlertTriangle, History, Trash2 } from 'lucide-react';
+import { AlertTriangle, Clock, Coffee, Play, Plus, Square, Trash2, X } from 'lucide-react';
 
 export const ShiftView: React.FC = () => {
   const {
@@ -31,7 +32,7 @@ export const ShiftView: React.FC = () => {
 
   // Start shift form state
   const [selectedVehicleId, setSelectedVehicleId] = useState(activeVehicle?.id || '');
-  const [startKmInput, setStartKmInput] = useState((activeVehicle?.currentKm || 42118).toString());
+  const [startKmInput, setStartKmInput] = useState(String(activeVehicle?.currentKm ?? ''));
   const [selectedApps, setSelectedApps] = useState<string[]>(['Uber', '99']);
   const [startNotes, setStartNotes] = useState('');
   const [startError, setStartError] = useState<string | null>(null);
@@ -57,6 +58,15 @@ export const ShiftView: React.FC = () => {
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const odometerOnly = (value: string) => value.replace(/[^\d,]/g, '').replace(/,(?=.*,)/g, '');
+
+  const formatPauses = (minutes: number) => {
+    if (!minutes) return '0 min';
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return h > 0 ? `${h}h${m ? ` ${String(m).padStart(2, '0')}` : ''}` : `${m} min`;
   };
 
   const handleToggleApp = (appName: string) => {
@@ -122,83 +132,74 @@ export const ShiftView: React.FC = () => {
   const currentExpense = activeTotals.expense;
   const currentPerHour = safeDivide(currentGain, currentWorkHoursDecimal);
 
+  const card = 'rounded-[20px] border border-slate-800/70 bg-slate-900';
+  const label = 'mb-1.5 block text-[13px] font-semibold text-slate-300';
+  const field =
+    'w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-[15px] text-white focus:border-emerald-400 focus:outline-none';
+
   return (
     <div className="space-y-4 pb-2">
-      {/* Shift State Header */}
       {!activeShift ? (
-        /* State 1: Shift Not Started */
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white tracking-tight">
-                Iniciar Nova Jornada
-              </h2>
-              <p className="text-xs text-slate-400">
-                Registre seu turno, pausas e desempenho por hora
-              </p>
-            </div>
+        <section aria-label="Iniciar jornada" className={`${card} space-y-4 p-5`}>
+          <div>
+            <h2 className="text-xl font-extrabold tracking-tight text-white">Iniciar jornada</h2>
+            <p className="text-[13px] text-slate-400">Registre seu turno, pausas e quanto rende cada hora.</p>
           </div>
 
           {startError && (
-            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-300 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-              <span>{startError}</span>
-            </div>
+            <p role="alert" className="flex items-center gap-2 rounded-xl bg-rose-500/10 p-3 text-[13px] text-rose-400">
+              <AlertTriangle className="h-4 w-4 flex-none" /> {startError}
+            </p>
           )}
 
-          <form onSubmit={handleStartSubmit} className="space-y-3.5">
-            {/* Vehicle Selector */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Veículo para esta Jornada *
-              </label>
-              <select
-                value={selectedVehicleId || activeVehicle.id}
-                onChange={(e) => {
-                  setSelectedVehicleId(e.target.value);
-                  const v = vehicles.find((item) => item.id === e.target.value);
-                  if (v) setStartKmInput(v.currentKm.toString());
-                }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.nickname} ({v.brand} {v.model}) {v.isActive ? '• Ativo' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <form onSubmit={handleStartSubmit} className="space-y-4">
+            {vehicles.length > 1 && (
+              <div>
+                <label htmlFor="jornada-veiculo" className={label}>Veículo</label>
+                <select
+                  id="jornada-veiculo"
+                  value={selectedVehicleId || activeVehicle.id}
+                  onChange={(e) => {
+                    setSelectedVehicleId(e.target.value);
+                    const v = vehicles.find((item) => item.id === e.target.value);
+                    if (v) setStartKmInput(String(v.currentKm));
+                  }}
+                  className={`${field} h-12`}
+                >
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.nickname} · {v.brand} {v.model}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* Start Km */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Quilometragem Inicial do Odômetro *
-              </label>
+              <label htmlFor="jornada-km" className={label}>Odômetro agora</label>
               <div className="relative">
                 <input
-                  type="number"
-                  step="0.1"
+                  id="jornada-km"
+                  type="text"
+                  inputMode="numeric"
                   required
                   value={startKmInput}
-                  onChange={(e) => setStartKmInput(e.target.value)}
-                  placeholder="Ex: 42118"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500"
+                  onChange={(e) => setStartKmInput(odometerOnly(e.target.value))}
+                  placeholder="Ex.: 42118"
+                  className={`${field} h-12 pr-12 font-semibold`}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">
-                  KM
-                </span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-400">km</span>
               </div>
+              <p className="mt-1.5 text-xs text-slate-400">
+                {parseDecimalInput(startKmInput) > 0
+                  ? `${parseDecimalInput(startKmInput).toLocaleString('pt-BR')} km · último registro ${activeVehicle.currentKm.toLocaleString('pt-BR')} km`
+                  : 'Digite o número que aparece no painel do veículo.'}
+              </p>
             </div>
 
-            {/* Apps to work with */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Aplicativos que serão utilizados hoje *
-              </label>
-              <div className="grid grid-cols-3 gap-2">
+            <fieldset>
+              <legend className={label}>Aplicativos de hoje</legend>
+              <div className="flex flex-wrap gap-2">
                 {registeredApps
                   .filter((a) => a.isActive)
                   .map((app) => {
@@ -207,259 +208,207 @@ export const ShiftView: React.FC = () => {
                       <button
                         key={app.id}
                         type="button"
+                        aria-pressed={isChecked}
                         onClick={() => handleToggleApp(app.name)}
-                        className={`py-2 px-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all ${
+                        className={`h-10 rounded-full border px-4 text-[13px] font-semibold active:scale-95 ${
                           isChecked
-                            ? 'bg-blue-500/20 border-blue-500 text-blue-300 shadow-sm'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            ? 'border-emerald-400 bg-emerald-500/10 text-emerald-400'
+                            : 'border-slate-700 bg-slate-950 text-slate-300'
                         }`}
                       >
-                        <span>{app.name}</span>
+                        {app.name}
                       </button>
                     );
                   })}
               </div>
-            </div>
+            </fieldset>
 
-            {/* Start Notes */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Objetivo ou Observação do Dia (Opcional)
+              <label htmlFor="jornada-obs" className={label}>
+                Objetivo do dia <span className="font-normal text-slate-400">(opcional)</span>
               </label>
               <input
+                id="jornada-obs"
                 type="text"
-                placeholder="Ex: Focar na zona Sul e almoço corporativo"
+                placeholder="Ex.: focar na zona Sul no almoço"
                 value={startNotes}
                 onChange={(e) => setStartNotes(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                className={`${field} h-12`}
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition-all active:scale-98 flex items-center justify-center gap-2"
+              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-emerald-500 text-base font-bold text-on-accent active:scale-[0.98]"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>INICIAR JORNADA AGORA</span>
+              <Play className="h-4 w-4 fill-current" /> Iniciar jornada
             </button>
           </form>
-        </div>
+        </section>
       ) : (
-        /* State 2 & 3: Shift Active or Paused */
-        <div
-          className={`p-5 rounded-2xl border shadow-xl space-y-4 transition-all ${
-            activeShift.isPaused
-              ? 'bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 border-amber-500/40'
-              : 'bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30 border-emerald-500/40'
-          }`}
+        <section
+          aria-label="Jornada em andamento"
+          className={`${card} space-y-4 p-5 ${activeShift.isPaused ? 'border-amber-400/50' : ''}`}
         >
-          {/* Status badge and vehicle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-3 w-3">
-                <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    activeShift.isPaused ? 'bg-amber-400' : 'bg-emerald-400'
-                  }`}
-                ></span>
-                <span
-                  className={`relative inline-flex rounded-full h-3 w-3 ${
-                    activeShift.isPaused ? 'bg-amber-500' : 'bg-emerald-500'
-                  }`}
-                ></span>
-              </span>
-              <span
-                className={`text-xs font-extrabold uppercase tracking-wider ${
-                  activeShift.isPaused ? 'text-amber-400' : 'text-emerald-400'
-                }`}
-              >
-                {activeShift.isPaused ? 'Jornada Pausada (Descanso)' : 'Jornada em Andamento'}
-              </span>
-            </div>
-
-            <span className="text-xs text-slate-300 font-medium">
-              Início: <strong className="font-mono text-white">{activeShift.startTime}</strong>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              {!activeShift.isPaused && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              )}
+              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${activeShift.isPaused ? 'bg-amber-400' : 'bg-emerald-400'}`} />
             </span>
-          </div>
-
-          {/* Timers Display */}
-          <div className="text-center py-2 bg-slate-950/80 rounded-2xl border border-slate-800/80 space-y-1">
-            <span className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">
-              Tempo Efetivo de Trabalho
+            <span className={`text-sm font-semibold ${activeShift.isPaused ? 'text-amber-400' : 'text-white'}`}>
+              {activeShift.isPaused ? 'Jornada pausada' : 'Jornada em andamento'}
             </span>
-            <div className="text-4xl font-extrabold font-mono tracking-tight text-white">
-              {formatSeconds(elapsedWorkSeconds)}
+            <span className="ml-auto text-[13px] text-slate-400">desde {activeShift.startTime.slice(0, 5)}</span>
+          </div>
+
+          <div className="text-center">
+            <p className="text-[13px] text-slate-400">Tempo trabalhando</p>
+            <p className="mt-1 text-5xl font-extrabold tracking-tight text-white">{formatSeconds(elapsedWorkSeconds)}</p>
+            <p className="mt-2 text-[13px] text-slate-400">
+              Total {formatSeconds(elapsedShiftSeconds)} · pausas{' '}
+              <span className="font-semibold text-amber-400">{formatSeconds(elapsedPausedSeconds)}</span>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 border-y border-slate-800 py-3 text-center">
+            <div>
+              <p className="text-[13px] text-slate-400">Ganho</p>
+              <p className={`mt-0.5 text-base font-bold ${currentGain > 0 ? 'text-emerald-400' : 'text-white'}`}>{formatBRL(currentGain)}</p>
             </div>
-            <div className="flex items-center justify-center gap-4 text-xs text-slate-400 pt-1">
-              <span>
-                Corrido:{' '}
-                <strong className="text-slate-200 font-mono">
-                  {formatSeconds(elapsedShiftSeconds)}
-                </strong>
-              </span>
-              <span>•</span>
-              <span>
-                Pausas:{' '}
-                <strong className="text-amber-400 font-mono">
-                  {formatSeconds(elapsedPausedSeconds)}
-                </strong>
-              </span>
+            <div className="border-x border-slate-800">
+              <p className="text-[13px] text-slate-400">Gastos</p>
+              <p className={`mt-0.5 text-base font-bold ${currentExpense > 0 ? 'text-rose-400' : 'text-white'}`}>{formatBRL(currentExpense)}</p>
+            </div>
+            <div>
+              <p className="text-[13px] text-slate-400">Por hora</p>
+              <p className="mt-0.5 text-base font-bold text-white">{formatBRL(currentPerHour)}</p>
             </div>
           </div>
 
-          {/* Real-time Earnings of this shift */}
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
-                Ganhos
-              </span>
-              <span className="text-xs font-bold text-emerald-400 font-mono">
-                {formatBRL(currentGain)}
-              </span>
-            </div>
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
-                Despesas
-              </span>
-              <span className="text-xs font-bold text-rose-400 font-mono">
-                -{formatBRL(currentExpense)}
-              </span>
-            </div>
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase block font-semibold">
-                Ganho / Hora
-              </span>
-              <span className="text-xs font-bold text-blue-400 font-mono">
-                {formatBRL(currentPerHour)}/h
-              </span>
-            </div>
-          </div>
-
-          {/* Shift Control Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="grid grid-cols-2 gap-2">
             {activeShift.isPaused ? (
               <button
+                type="button"
                 onClick={resumeShift}
-                className="py-3 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-emerald-500 text-[15px] font-bold text-on-accent active:scale-[0.98]"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Retomar Trabalho</span>
+                <Play className="h-4 w-4 fill-current" /> Retomar
               </button>
             ) : (
               <button
+                type="button"
                 onClick={pauseShift}
-                className="py-3 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex h-12 items-center justify-center gap-2 rounded-[14px] border border-slate-700 bg-slate-800 text-[15px] font-semibold text-white active:scale-[0.98]"
               >
-                <Coffee className="w-4 h-4" />
-                <span>Pausar (Almoço/Café)</span>
+                <Coffee className="h-4 w-4" /> Pausar
               </button>
             )}
-
             <button
+              type="button"
               onClick={handleOpenEndModal}
-              className="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-on-accent font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-white text-[15px] font-bold text-app active:scale-[0.98]"
             >
-              <Square className="w-4 h-4 fill-current" />
-              <span>Finalizar Turno</span>
+              <Square className="h-3.5 w-3.5 fill-current" /> Encerrar
             </button>
           </div>
 
-          {/* Quick launch for earnings during shift */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-            <span className="text-xs text-slate-400">Registrar ganhos enquanto roda:</span>
-            <button
-              onClick={() => openNewTransactionModal('ganho')}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-colors"
-            >
-              + Lançar Ganho
-            </button>
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => openNewTransactionModal('ganho')}
+            className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 text-sm font-semibold text-emerald-400 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" /> Lançar ganho desta jornada
+          </button>
+        </section>
       )}
 
       {/* Ofertas do Copiloto: registrar ganho com 1 toque */}
       <QuickRideRegister />
 
-      {/* End Shift Modal Dialog */}
       {isEndModalOpen && activeShift && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="encerrar-titulo"
+            className="w-full max-w-md space-y-4 rounded-t-[24px] border border-slate-800 bg-slate-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-[24px]"
+          >
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white tracking-tight">Finalizar Turno</h3>
+              <h3 id="encerrar-titulo" className="text-lg font-bold text-white">Encerrar jornada</h3>
               <button
+                type="button"
                 onClick={() => setIsEndModalOpen(false)}
-                className="p-1 rounded-full bg-slate-800 text-slate-400"
+                aria-label="Fechar"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {endError && (
-              <div className="p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-xs text-rose-300">
-                {endError}
-              </div>
+              <p role="alert" className="rounded-xl bg-rose-500/10 p-3 text-[13px] text-rose-400">{endError}</p>
             )}
 
-            <form onSubmit={handleConfirmEndShift} className="space-y-3">
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-                <div className="flex justify-between text-slate-400">
-                  <span>KM Inicial informado:</span>
-                  <strong className="text-white font-mono">{activeShift.startKm} km</strong>
+            <form onSubmit={handleConfirmEndShift} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 rounded-2xl bg-slate-950 p-3.5">
+                <div>
+                  <p className="text-xs text-slate-400">Odômetro no início</p>
+                  <p className="text-[15px] font-bold text-white">{activeShift.startKm.toLocaleString('pt-BR')} km</p>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Tempo de trabalho líquido:</span>
-                  <strong className="text-emerald-400 font-mono">
-                    {formatSeconds(elapsedWorkSeconds)}
-                  </strong>
+                <div>
+                  <p className="text-xs text-slate-400">Tempo trabalhando</p>
+                  <p className="text-[15px] font-bold text-emerald-400">{formatSeconds(elapsedWorkSeconds)}</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Quilometragem Final do Odômetro *
-                </label>
-                <input
-                  type="number"
-                  min={activeShift.startKm}
-                  step="0.1"
-                  required
-                  value={endKmInput}
-                  onChange={(e) => setEndKmInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500"
-                />
+                <label htmlFor="encerrar-km" className={label}>Odômetro agora</label>
+                <div className="relative">
+                  <input
+                    id="encerrar-km"
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    autoFocus
+                    value={endKmInput}
+                    onChange={(e) => setEndKmInput(odometerOnly(e.target.value))}
+                    className={`${field} h-12 pr-12 font-semibold`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-400">km</span>
+                </div>
                 <p className="mt-1.5 text-xs text-slate-400">
                   {parseDecimalInput(endKmInput) >= activeShift.startKm
                     ? `Distância da jornada: ${calculateOdometerDistance(activeShift.startKm, parseDecimalInput(endKmInput)).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`
-                    : 'Digite exatamente o número exibido no odômetro do veículo.'}
+                    : 'Digite exatamente o número exibido no odômetro.'}
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Observações de Fechamento (Opcional)
+                <label htmlFor="encerrar-obs" className={label}>
+                  Como foi o dia? <span className="font-normal text-slate-400">(opcional)</span>
                 </label>
                 <textarea
+                  id="encerrar-obs"
                   rows={2}
-                  placeholder="Ex: Dia muito produtivo, tarifa dinâmica no fim da tarde..."
+                  placeholder="Ex.: dinâmica alta no fim da tarde"
                   value={endNotes}
                   onChange={(e) => setEndNotes(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                  className={`${field} py-2.5`}
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEndModalOpen(false)}
-                  className="w-1/2 py-2.5 rounded-xl border border-slate-800 text-slate-300 text-xs font-bold"
+                  className="h-12 rounded-[14px] border border-slate-700 text-[15px] font-semibold text-slate-200"
                 >
-                  Continuar Rodando
+                  Continuar
                 </button>
-                <button
-                  type="submit"
-                  className="w-1/2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-md"
-                >
-                  Confirmar e Salvar
+                <button type="submit" className="h-12 rounded-[14px] bg-emerald-500 text-[15px] font-bold text-on-accent">
+                  Salvar jornada
                 </button>
               </div>
             </form>
@@ -467,104 +416,65 @@ export const ShiftView: React.FC = () => {
         </div>
       )}
 
-      {/* Shifts History List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-slate-400" />
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Histórico de Jornadas Anteriores
-            </h3>
-          </div>
-          <span className="text-xs text-slate-500 font-mono">{shifts.length} jornadas</span>
+      <section aria-label="Histórico de jornadas" className="space-y-3">
+        <div className="flex items-baseline justify-between px-1">
+          <h3 className="text-[15px] font-bold text-white">Jornadas anteriores</h3>
+          <span className="text-[13px] text-slate-400">
+            {shifts.length} {shifts.length === 1 ? 'jornada' : 'jornadas'}
+          </span>
         </div>
 
         {shifts.length === 0 ? (
-          <div className="text-center py-8 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800">
-            <Clock className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-xs text-slate-400">Nenhuma jornada concluída ainda.</p>
+          <div className={`${card} py-10 text-center`}>
+            <Clock className="mx-auto mb-2 h-8 w-8 text-slate-600" />
+            <p className="text-sm text-slate-400">Suas jornadas encerradas aparecem aqui.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <ul className="space-y-2.5">
             {shifts.map((s) => {
               const totals = getShiftTotals(s.id);
               const netProfit = totals.gain - totals.expense;
-              const perHour = safeDivide(totals.gain, s.totalWorkHours);
-
+              const perHour = safeDivide(netProfit, s.totalWorkHours);
               return (
-                <div
-                  key={s.id}
-                  className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 hover:border-slate-700 transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white tracking-tight">
-                          {formatDisplayDate(s.date)}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          {s.startTime} às {s.endTime}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">
-                        Veículo:{' '}
-                        <strong className="text-slate-300">
-                          {s.vehicleName || 'Moto do Dia a Dia'}
-                        </strong>
+                <li key={s.id} className={`${card} p-4`}>
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-bold text-white">{formatDisplayDate(s.date)}</p>
+                      <p className="text-[13px] text-slate-400">
+                        {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)} · {formatHours(s.totalWorkHours)} trabalhando
                       </p>
                     </div>
-
                     <div className="text-right">
-                      <span className="text-sm font-extrabold text-emerald-400 font-mono block">
-                        {formatBRL(totals.gain)}
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-mono">
-                        Líquido: {formatBRL(netProfit)}
-                      </span>
+                      <p className="text-lg font-extrabold text-emerald-400">{formatBRL(netProfit)}</p>
+                      <p className="text-xs text-slate-400">lucro · ganho {formatBRL(totals.gain)}</p>
                     </div>
                   </div>
 
-                  {/* 4 Metrics in pill grid */}
-                  <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
-                    <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[11px] text-slate-500 block uppercase">Trabalho</span>
-                      <span className="font-bold text-slate-200 font-mono text-xs">
-                        {s.totalWorkHours}h
-                      </span>
-                    </div>
-                    <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[11px] text-slate-500 block uppercase">Pausas</span>
-                      <span className="font-bold text-amber-400 font-mono text-xs">
-                        {s.totalPauseMinutes || 0}m
-                      </span>
-                    </div>
-                    <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[11px] text-slate-500 block uppercase">Distância</span>
-                      <span className="font-bold text-slate-200 font-mono text-xs">
-                        {s.totalKm} km
-                      </span>
-                    </div>
-                    <div className="bg-slate-950/60 p-1.5 rounded-lg">
-                      <span className="text-[11px] text-slate-500 block uppercase">Ganho/h</span>
-                      <span className="font-bold text-blue-400 font-mono text-xs">
-                        {formatBRL(perHour)}/h
-                      </span>
-                    </div>
+                  <div className="mt-3 flex items-center gap-x-4 gap-y-1 text-[13px] text-slate-400">
+                    <span><b className="font-semibold text-white">{s.totalKm.toLocaleString('pt-BR')}</b> km</span>
+                    <span><b className="font-semibold text-white">{formatBRL(perHour)}</b>/h</span>
+                    <span>pausas <b className="font-semibold text-white">{formatPauses(s.totalPauseMinutes || 0)}</b></span>
+                    {deleteConfirmId !== s.id && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(s.id)}
+                        aria-label={`Excluir jornada de ${formatDisplayDate(s.date)}`}
+                        className="-mr-2 ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 active:bg-slate-800"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
 
-                  {s.notes && (
-                    <p className="text-xs text-slate-400 bg-slate-950/40 p-2 rounded-lg italic">
-                      "{s.notes}"
-                    </p>
-                  )}
+                  {s.notes && <p className="mt-2 text-[13px] italic text-slate-400">“{s.notes}”</p>}
 
-                  {deleteConfirmId === s.id ? (
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <span className="text-xs text-rose-300">Excluir esta jornada?</span>
+                  {deleteConfirmId === s.id && (
+                    <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-500/10 p-2.5">
+                      <span className="flex-1 text-[13px] text-rose-400">Excluir esta jornada?</span>
                       <button
                         type="button"
                         onClick={() => setDeleteConfirmId(null)}
-                        className="px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300"
+                        className="h-9 rounded-lg bg-slate-800 px-3 text-[13px] font-semibold text-slate-200"
                       >
                         Cancelar
                       </button>
@@ -574,30 +484,18 @@ export const ShiftView: React.FC = () => {
                           removeShift(s.id);
                           setDeleteConfirmId(null);
                         }}
-                        className="px-2.5 py-1 rounded-lg text-xs bg-rose-500 text-on-accent font-semibold"
+                        className="h-9 rounded-lg bg-rose-600 px-3 text-[13px] font-semibold text-on-accent"
                       >
                         Excluir
                       </button>
                     </div>
-                  ) : (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirmId(s.id)}
-                        title="Excluir jornada"
-                        aria-label="Excluir jornada"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   )}
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
     </div>
   );
 };

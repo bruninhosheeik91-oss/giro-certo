@@ -265,7 +265,7 @@ export const AppsManagementModal: React.FC = () => {
             /* Form View */
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Nome do Aplicativo *
                 </label>
                 <input
@@ -280,7 +280,7 @@ export const AppsManagementModal: React.FC = () => {
 
               {/* Color Picker */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Cor da Identidade
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -311,7 +311,7 @@ export const AppsManagementModal: React.FC = () => {
 
               {/* Icon selector */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Ícone Representativo
                 </label>
                 <div className="grid grid-cols-6 gap-2">

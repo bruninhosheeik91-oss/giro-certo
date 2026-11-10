@@ -268,7 +268,7 @@ export const ProfileView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Nome</label>
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Nome</label>
                 <input
                   type="text"
                   value={name}
@@ -277,7 +277,7 @@ export const ProfileView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Cidade / UF
                 </label>
                 <input
@@ -291,7 +291,7 @@ export const ProfileView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Meta Mensal (R$)
                 </label>
                 <input
@@ -302,7 +302,7 @@ export const ProfileView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Reserva/KM (R$)
                 </label>
                 <input

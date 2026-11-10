@@ -176,7 +176,7 @@ export const TransactionsView: React.FC = () => {
                             </span>
                             {t.type === 'ganho' && t.ridesCount && (
                               <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold">
-                                {t.ridesCount} corridas
+                                {t.ridesCount} {t.ridesCount === 1 ? 'corrida' : 'corridas'}
                               </span>
                             )}
                           </div>

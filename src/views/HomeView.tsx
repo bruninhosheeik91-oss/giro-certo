@@ -466,7 +466,7 @@ export const HomeView: React.FC = () => {
           </div>
           <div className="border-l border-slate-800 pl-3">
             <p className="text-[13px] text-slate-400">Gastos</p>
-            <p className="mt-1 text-base font-bold text-rose-400">{formatBRL(monthSummary.totalDespesas)}</p>
+            <p className={`mt-1 text-base font-bold ${monthSummary.totalDespesas > 0 ? 'text-rose-400' : 'text-white'}`}>{formatBRL(monthSummary.totalDespesas)}</p>
           </div>
           <div className="border-l border-slate-800 pl-3">
             <p className="text-[13px] text-slate-400">Lucro/hora</p>

@@ -532,7 +532,7 @@ export const PayablesModal: React.FC = () => {
         )}
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">Nome *</label>
+          <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Nome *</label>
           <input
             aria-label="Nome da conta"
             value={form.title}
@@ -543,7 +543,7 @@ export const PayablesModal: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">Tipo *</label>
+          <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Tipo *</label>
           <select
             aria-label="Tipo da conta"
             value={form.type}
@@ -561,7 +561,7 @@ export const PayablesModal: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
               Valor {fixedInstallments ? 'da parcela' : ''} *
             </label>
             <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">
@@ -577,7 +577,7 @@ export const PayablesModal: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
               Primeiro vencimento *
             </label>
             <input
@@ -593,7 +593,7 @@ export const PayablesModal: React.FC = () => {
         {fixedInstallments && (
           <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-900/70 border border-slate-800">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                 Total de parcelas
               </label>
               <input
@@ -606,7 +606,7 @@ export const PayablesModal: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                 Já pagas
               </label>
               <input
@@ -630,7 +630,7 @@ export const PayablesModal: React.FC = () => {
 
         {form.type === 'conta_recorrente' && (
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
               Data final (opcional)
             </label>
             <input
@@ -646,7 +646,7 @@ export const PayablesModal: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">Categoria</label>
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Categoria</label>
             <select
               aria-label="Categoria da conta"
               value={form.category}
@@ -661,7 +661,7 @@ export const PayablesModal: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
               Instituição
             </label>
             <input
@@ -676,7 +676,7 @@ export const PayablesModal: React.FC = () => {
 
         {form.type === 'financiamento_veiculo' && (
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
               Veículo relacionado
             </label>
             <select
@@ -696,7 +696,7 @@ export const PayablesModal: React.FC = () => {
         )}
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">Observação</label>
+          <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Observação</label>
           <input
             aria-label="Observação da conta"
             value={form.notes}

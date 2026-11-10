@@ -380,7 +380,7 @@ export const NewTransactionModal: React.FC = () => {
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
           <div>
-            <h2 className="text-base font-bold text-white tracking-tight">Novo Lançamento</h2>
+            <h2 className="text-base font-bold text-white tracking-tight">Novo lançamento</h2>
             <p className="text-xs text-slate-400">Registre ganhos, combustível ou despesas</p>
           </div>
           <button
@@ -491,8 +491,8 @@ export const NewTransactionModal: React.FC = () => {
             <div className="space-y-4 animate-in fade-in">
               {/* Tipo de Registro */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Tipo de Registro
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                  Como registrar
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -504,7 +504,7 @@ export const NewTransactionModal: React.FC = () => {
                         : 'bg-slate-900 border-slate-800 text-slate-400'
                     }`}
                   >
-                    Total do Período
+                    Total do turno
                   </button>
                   <button
                     type="button"
@@ -515,15 +515,15 @@ export const NewTransactionModal: React.FC = () => {
                         : 'bg-slate-900 border-slate-800 text-slate-400'
                     }`}
                   >
-                    Corrida / Entrega Individual
+                    Uma corrida
                   </button>
                 </div>
               </div>
 
               {/* Origem (App) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Aplicativo de Origem *
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                  Aplicativo
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {registeredApps
@@ -547,8 +547,8 @@ export const NewTransactionModal: React.FC = () => {
 
               {/* Valor Principal (com máscara BRL) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Valor Principal (R$) *
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                  Valor recebido
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
@@ -571,8 +571,8 @@ export const NewTransactionModal: React.FC = () => {
               {/* Gorjeta & Bônus (Opcionais) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
-                    Gorjeta (R$)
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                    Gorjeta
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -590,8 +590,8 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
-                    Bônus / Promoção (R$)
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                    Bônus ou promoção
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -611,7 +611,7 @@ export const NewTransactionModal: React.FC = () => {
 
               {/* Total Calculado Display */}
               <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium">Valor Total do Ganho:</span>
+                <span className="text-xs text-slate-400 font-medium">Total do ganho</span>
                 <span className="text-base font-extrabold text-emerald-400 font-mono">
                   {formatBRL(totalGain)}
                 </span>
@@ -619,8 +619,8 @@ export const NewTransactionModal: React.FC = () => {
 
               {/* Quantidade de Corridas */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Quantidade de Corridas / Entregas *
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                  Quantas corridas ou entregas
                 </label>
                 <input
                   type="number"
@@ -686,7 +686,7 @@ export const NewTransactionModal: React.FC = () => {
               ) : shifts.length > 0 ? (
                 <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-300">
-                    Vincular a uma Jornada Anterior (Opcional)
+                    Jornada (opcional)
                   </label>
                   <select
                     value={linkedShiftId}
@@ -710,7 +710,7 @@ export const NewTransactionModal: React.FC = () => {
             <div className="space-y-4 animate-in fade-in">
               {/* Veículo Selector */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Veículo Abastecido *
                 </label>
                 <select
@@ -740,7 +740,7 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Valor Total Abastecido (R$) *
                   </label>
                   <div className="relative">
@@ -763,7 +763,7 @@ export const NewTransactionModal: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Litros Abastecidos *
                     </label>
                     <input
@@ -777,7 +777,7 @@ export const NewTransactionModal: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Preço por Litro (R$)
                     </label>
                     <input
@@ -794,7 +794,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Combustível & KM */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Tipo de Combustível
                   </label>
                   <select
@@ -812,7 +812,7 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Quilometragem Atual
                   </label>
                   <input
@@ -829,7 +829,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Posto e Tanque Cheio */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Posto (Opcional)
                   </label>
                   <input
@@ -862,7 +862,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Veículo & Categoria */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Veículo *
                   </label>
                   <select
@@ -883,7 +883,7 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Categoria *
                   </label>
                   <select
@@ -902,7 +902,7 @@ export const NewTransactionModal: React.FC = () => {
 
               {/* Serviço Realizado */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Serviço Realizado *
                 </label>
                 <input
@@ -921,7 +921,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Peças e Mão de Obra */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Valor Peças (R$)
                   </label>
                   <div className="relative">
@@ -940,7 +940,7 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Mão de Obra (R$)
                   </label>
                   <div className="relative">
@@ -972,7 +972,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Oficina & KM */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Oficina / Profissional
                   </label>
                   <input
@@ -984,7 +984,7 @@ export const NewTransactionModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     KM Atual
                   </label>
                   <input
@@ -1001,7 +1001,7 @@ export const NewTransactionModal: React.FC = () => {
               {/* Próxima Troca (KM e Data) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Próxima Troca (KM)
                   </label>
                   <input
@@ -1013,7 +1013,7 @@ export const NewTransactionModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Próxima Troca (Data)
                   </label>
                   <input
@@ -1032,7 +1032,7 @@ export const NewTransactionModal: React.FC = () => {
             <div className="space-y-4 animate-in fade-in">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Categoria *
                   </label>
                   <select
@@ -1049,7 +1049,7 @@ export const NewTransactionModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                     Veículo Relacionado
                   </label>
                   <select
@@ -1068,7 +1068,7 @@ export const NewTransactionModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Valor da Despesa (R$) *
                 </label>
                 <div className="relative">
@@ -1090,7 +1090,7 @@ export const NewTransactionModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                   Descrição / Motivo *
                 </label>
                 <input
@@ -1122,7 +1122,7 @@ export const NewTransactionModal: React.FC = () => {
 
                 {isRecurring && (
                   <div className="pt-2 pl-6">
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Frequência de Cobrança
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -1150,7 +1150,7 @@ export const NewTransactionModal: React.FC = () => {
           {/* ================= COMMON: DATA E HORA ================= */}
           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800/80">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Data *</label>
+              <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Data *</label>
               <input
                 type="date"
                 required
@@ -1160,7 +1160,7 @@ export const NewTransactionModal: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Horário</label>
+              <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">Horário</label>
               <input
                 type="time"
                 value={time}
@@ -1173,7 +1173,7 @@ export const NewTransactionModal: React.FC = () => {
           {/* Observação comum para ganho/abastecer/manutenção */}
           {activeType !== 'outra_despesa' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                 Observação (Opcional)
               </label>
               <input
@@ -1204,7 +1204,7 @@ export const NewTransactionModal: React.FC = () => {
               }`}
             >
               <Check className="w-5 h-5 text-slate-950" />
-              <span>{isSubmitting ? 'Salvando...' : 'Salvar Lançamento'}</span>
+              <span>{isSubmitting ? 'Salvando...' : 'Salvar'}</span>
             </button>
           </div>
         </form>
