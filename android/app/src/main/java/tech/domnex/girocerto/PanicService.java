@@ -51,6 +51,10 @@ public class PanicService extends Service {
     static final String KEY_ALERT_ID = "alertId";
     static final String KEY_STARTED_AT = "startedAt";
     static final String KEY_STATUS = "status";
+    static final String KEY_ENDED_AT = "endedAt";
+    static final String KEY_LAST_TRIGGER = "lastTrigger";
+    /** Depois do "Estou bem", ignora qualquer disparo por 15 s (evita religar sozinho). */
+    private static final long COOLDOWN_MS = 15000L;
 
     private static final String CHANNEL_ID = "giro_certo_protecao";
     private static final int NOTIFICATION_ID = 9052;
@@ -80,7 +84,15 @@ public class PanicService extends Service {
     }
 
     /** Disparo completo: câmera silenciosa + alerta. Deve ser chamado com uma Activity visível. */
-    static void trigger(Context context) {
+    static void trigger(Context context, String source) {
+        SharedPreferences p = context.getSharedPreferences(PREFS, MODE_PRIVATE);
+        String when = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(new java.util.Date());
+        long sinceEnd = System.currentTimeMillis() - p.getLong(KEY_ENDED_AT, 0L);
+        if (!isActive(context) && sinceEnd < COOLDOWN_MS) {
+            p.edit().putString(KEY_LAST_TRIGGER, when + " · " + source + " · ignorado (acabou de encerrar)").apply();
+            return;
+        }
+        p.edit().putString(KEY_LAST_TRIGGER, when + " · " + source).apply();
         if (SecurityCameraService.hasCameraPermission(context) && !SecurityCameraService.isRecording(context)) {
             context.getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean("cameraByPanic", true).apply();
             SecurityCameraService.start(context, true);
@@ -101,7 +113,6 @@ public class PanicService extends Service {
         String action = intent == null ? ACTION_START : intent.getAction();
         ensureWorker();
         if (ACTION_END.equals(action)) {
-            if (!prefs().getBoolean(KEY_ACTIVE, false) && worker == null) { stopSelf(); return START_NOT_STICKY; }
             ending = true;
             worker.removeCallbacksAndMessages(null);
             worker.post(this::sendEnd);
@@ -114,7 +125,14 @@ public class PanicService extends Service {
         } catch (RuntimeException error) {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(), 0);
         }
+        boolean systemRestart = intent == null || (flags & START_FLAG_REDELIVERY) != 0;
+        if (systemRestart && !prefs().getBoolean(KEY_ACTIVE, false)) {
+            // Reinício/reentrega do sistema sem alerta em andamento: nunca abre alerta novo.
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         if (!prefs().getBoolean(KEY_ACTIVE, false)) {
+            ending = false;
             prefs().edit().putBoolean(KEY_ACTIVE, true).putLong(KEY_STARTED_AT, System.currentTimeMillis())
                 .remove(KEY_ALERT_ID).putString(KEY_STATUS, "Acionado, buscando GPS…").apply();
             startSent = false;
@@ -236,7 +254,8 @@ public class PanicService extends Service {
         if (ending && prefs().getBoolean("cameraByPanic", false) && SecurityCameraService.isRecording(this)) {
             SecurityCameraService.stop(this);
         }
-        prefs().edit().putBoolean(KEY_ACTIVE, false).putBoolean("cameraByPanic", false).putString(KEY_STATUS, "Encerrado").apply();
+        prefs().edit().putBoolean(KEY_ACTIVE, false).putBoolean("cameraByPanic", false)
+            .putLong(KEY_ENDED_AT, System.currentTimeMillis()).putString(KEY_STATUS, "Encerrado").apply();
         new Handler(Looper.getMainLooper()).post(() -> {
             if (locationManager != null) {
                 try { locationManager.removeUpdates(listener); } catch (RuntimeException ignored) { }

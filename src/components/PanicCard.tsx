@@ -112,16 +112,21 @@ export const PanicCard: React.FC = () => {
   };
 
   const startHold = () => {
-    if (!status?.configured || status.active) return;
+    // Um único cronômetro por toque: um 2º pointerdown não pode criar outro que fique órfão
+    // e dispare o pânico de novo depois do "Estou bem".
+    if (timer.current || !status?.configured || status.active) return;
     started.current = Date.now();
-    timer.current = window.setInterval(() => {
+    const id = window.setInterval(() => {
       const value = Math.min(1, (Date.now() - started.current) / HOLD_MS);
       setProgress(value);
       if (value >= 1) {
-        cancelHold();
-        void nativePanic.trigger().then(setStatus);
+        window.clearInterval(id);
+        if (timer.current === id) timer.current = null;
+        setProgress(0);
+        void nativePanic.trigger('app').then(setStatus);
       }
     }, 30);
+    timer.current = id;
   };
 
   if (!cloud) {
@@ -150,6 +155,7 @@ export const PanicCard: React.FC = () => {
       {status?.active ? (
         <div className="space-y-2">
           <p className="rounded-lg bg-slate-950/60 p-2.5 text-[11px] text-slate-200">{status.status || 'Enviando…'}</p>
+          {status.lastTrigger && <p className="text-[10px] text-slate-500">Acionado: {status.lastTrigger}</p>}
           <button
             type="button"
             onClick={() => void nativePanic.end().then(() => window.setTimeout(() => void refresh(), 1500))}

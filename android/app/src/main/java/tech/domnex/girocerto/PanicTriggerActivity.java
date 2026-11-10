@@ -11,8 +11,8 @@ public class PanicTriggerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PanicService.trigger(this);
-        finish();
+        PanicService.trigger(this, "bolinha");
+        finishAndRemoveTask();
         overridePendingTransition(0, 0);
     }
 }

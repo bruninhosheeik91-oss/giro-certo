@@ -148,6 +148,7 @@ public class SecurityCameraPlugin extends Plugin {
         result.put("startedAt", p.getLong(PanicService.KEY_STARTED_AT, 0L));
         result.put("status", p.getString(PanicService.KEY_STATUS, ""));
         result.put("locationGranted", getPermissionState("location") == PermissionState.GRANTED);
+        result.put("lastTrigger", p.getString(PanicService.KEY_LAST_TRIGGER, ""));
         call.resolve(result);
     }
 
@@ -164,7 +165,7 @@ public class SecurityCameraPlugin extends Plugin {
     }
 
     @PluginMethod public void triggerPanic(PluginCall call) {
-        PanicService.trigger(getContext());
+        PanicService.trigger(getContext(), call.getString("source", "app"));
         panicStatus(call);
     }
 

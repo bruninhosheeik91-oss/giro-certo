@@ -173,6 +173,11 @@ public class FloatingButtonService extends Service {
                             snapToEdge(shell, size);
                         }
                         return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        press.removeCallbacks(longPress);
+                        hideDismissTarget();
+                        shell.setAlpha(0.92f);
+                        return true;
                     default:
                         return false;
                 }

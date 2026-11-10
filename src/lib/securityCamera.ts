@@ -18,6 +18,7 @@ export interface PanicStatus {
   startedAt: number;
   status: string;
   locationGranted: boolean;
+  lastTrigger: string;
 }
 
 export interface FloatingButtonState {
@@ -41,7 +42,7 @@ interface SecurityCameraPlugin {
   clearPanic(): Promise<PanicStatus>;
   getPanicStatus(): Promise<PanicStatus>;
   requestLocation(): Promise<PanicStatus>;
-  triggerPanic(): Promise<PanicStatus>;
+  triggerPanic(options: { source: string }): Promise<PanicStatus>;
   endPanic(): Promise<void>;
 }
 
@@ -79,7 +80,7 @@ export const nativePanic = {
   clear: () => SecurityCamera.clearPanic(),
   status: () => SecurityCamera.getPanicStatus(),
   requestLocation: () => SecurityCamera.requestLocation(),
-  trigger: () => SecurityCamera.triggerPanic(),
+  trigger: (source = 'app') => SecurityCamera.triggerPanic({ source }),
   end: () => SecurityCamera.endPanic(),
 };
 
