@@ -15,11 +15,35 @@ import { TransactionsView } from './views/TransactionsView';
 import { ShiftView } from './views/ShiftView';
 import { ReportsView } from './views/ReportsView';
 import { ProfileView } from './views/ProfileView';
+import { SecurityView } from './views/SecurityView';
+import { consumeSecurityOpenRequest } from './lib/securityCamera';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bike, CheckCircle2, Plus, Smartphone, Target } from 'lucide-react';
 import { SessionProvider } from './context/SessionContext';
 import { formatBRLInput, parseBRLInput } from './utils/calculations';
 import { TrialExpiryNotice } from './components/TrialExpiryNotice';
+import { useTargetBar } from './hooks/useTargetBar';
+import { useCopilotSync } from './hooks/useCopilot';
+
+const TargetBarSync: React.FC = () => {
+  useTargetBar();
+  useCopilotSync();
+  const { setActiveTab } = useApp();
+  React.useEffect(() => {
+    const check = () => {
+      void consumeSecurityOpenRequest().then((open) => {
+        if (open) setActiveTab('seguranca');
+      });
+    };
+    check();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [setActiveTab]);
+  return null;
+};
 
 const MainAppContent: React.FC = () => {
   const {
@@ -159,6 +183,7 @@ const MainAppContent: React.FC = () => {
               {activeTab === 'jornada' && <ShiftView />}
               {activeTab === 'relatorios' && <ReportsView />}
               {activeTab === 'perfil' && <ProfileView />}
+              {activeTab === 'seguranca' && <SecurityView />}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -188,6 +213,7 @@ const MainAppContent: React.FC = () => {
         <VehiclesModal />
         <MaintenanceModal />
         <SimulatorsModal />
+        <TargetBarSync />
         <AppsManagementModal />
         <MaintenanceReserveModal />
         <PayablesModal />

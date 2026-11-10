@@ -13,35 +13,21 @@ import {
   Calculator,
   Navigation,
   Target,
-  ShieldCheck,
   ChevronDown,
   History,
   Trash2,
-  Crown,
-  LockKeyhole,
   RefreshCw,
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { SubscriptionPlansModal } from './SubscriptionPlansModal';
+import { TargetBarCard } from './TargetBarCard';
+import { CopilotCard } from './CopilotCard';
 import {
-  isRideOfferAccessGranted,
-  isRideAccessibilityGranted,
   isRideOfferNativeAvailable,
-  isRideOverlayGranted,
-  openRideOfferAccessSettings,
-  openRideAccessibilitySettings,
-  openRideOverlaySettings,
-  saveNativeRideCriteria,
-  testRideOverlay,
   clearRideOfferHistory,
   getRideOfferHistory,
   type AnalyzedRideOffer,
-  getRideAnalyzerEnabled,
-  setRideAnalyzerEnabled,
   setRideProEntitlement,
-  requestAnalyzerNotificationPermission,
-  getAnalyzerDiagnostic,
-  type AnalyzerDiagnostic,
 } from '../lib/rideOffer';
 
 export const SimulatorsModal: React.FC = () => {
@@ -80,17 +66,8 @@ export const SimulatorsModal: React.FC = () => {
   const [estimatedMinutes, setEstimatedMinutes] = useState('25');
   const [costPerKm, setCostPerKm] = useState(defaultCostPerKm);
   const [tollsAndParking, setTollsAndParking] = useState('0.00');
-  const [notificationAccess, setNotificationAccess] = useState(false);
-  const [accessibilityAccess, setAccessibilityAccess] = useState(false);
-  const [overlayAccess, setOverlayAccess] = useState(false);
-  const [overlayTestMessage, setOverlayTestMessage] = useState('');
-  const [permissionTarget, setPermissionTarget] = useState<
-    'accessibility' | 'notifications' | 'overlay' | null
-  >(null);
   const [offerHistory, setOfferHistory] = useState<AnalyzedRideOffer[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [analyzerEnabled, setAnalyzerEnabled] = useState(true);
-  const [analyzerDiagnostic, setAnalyzerDiagnostic] = useState<AnalyzerDiagnostic | null>(null);
 
   // Simulator 2: Goal
   const [targetProfit, setTargetProfit] = useState(userProfile.monthlyGoal.toString());
@@ -103,54 +80,19 @@ export const SimulatorsModal: React.FC = () => {
     (userProfile.maintenanceReservePerKm || 0.12).toString(),
   );
 
-  useEffect(() => {
-    void isRideOfferAccessGranted().then(setNotificationAccess);
-    void isRideAccessibilityGranted().then(setAccessibilityAccess);
-    void isRideOverlayGranted().then(setOverlayAccess);
-    void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
-    void saveNativeRideCriteria({
-      minProfitPerKm: criteria.minProfitPerKm,
-      minProfitPerHour: criteria.minProfitPerHour,
-      minAcceptableValue: criteria.minAcceptableValue,
-      costPerKm: Number(defaultCostPerKm),
-    });
-
-    const refreshAccess = () => {
-      if (document.visibilityState === 'visible') {
-        void isRideOfferAccessGranted().then(setNotificationAccess);
-        void isRideAccessibilityGranted().then(setAccessibilityAccess);
-        void isRideOverlayGranted().then(setOverlayAccess);
-        void getRideAnalyzerEnabled().then(setAnalyzerEnabled);
-        void getAnalyzerDiagnostic().then(setAnalyzerDiagnostic);
-      }
-    };
-    document.addEventListener('visibilitychange', refreshAccess);
-    return () => {
-      document.removeEventListener('visibilitychange', refreshAccess);
-    };
-  }, [
-    criteria.minAcceptableValue,
-    criteria.minProfitPerHour,
-    criteria.minProfitPerKm,
-    defaultCostPerKm,
-  ]);
+  const refreshOfferHistory = React.useCallback(() => {
+    void getRideOfferHistory().then(setOfferHistory);
+  }, []);
 
   useEffect(() => {
-    if (isSimulatorsModalOpen) {
-      void getRideOfferHistory().then(setOfferHistory);
-      void getAnalyzerDiagnostic().then(setAnalyzerDiagnostic);
-    }
-  }, [isSimulatorsModalOpen]);
+    if (isSimulatorsModalOpen) refreshOfferHistory();
+  }, [isSimulatorsModalOpen, refreshOfferHistory]);
 
   useEffect(() => {
     if (subscriptionLoading) return;
     const entitlementEnd = reason === 'owner' ? 0 : expiresAt ? Date.parse(expiresAt) : 0;
     void setRideProEntitlement(hasProAccess, entitlementEnd);
-    if (!subscriptionLoading && !hasProAccess && analyzerEnabled) {
-      setAnalyzerEnabled(false);
-      void setRideAnalyzerEnabled(false);
-    }
-  }, [analyzerEnabled, expiresAt, hasProAccess, reason, subscriptionLoading]);
+  }, [expiresAt, hasProAccess, reason, subscriptionLoading]);
 
   if (!isSimulatorsModalOpen) return null;
 
@@ -179,26 +121,6 @@ export const SimulatorsModal: React.FC = () => {
     costPerKm: parseDecimalInput(goalCostPerKm) || 0.25,
     reservePerKm: parseDecimalInput(reservePerKm) || 0.12,
   });
-
-  const continuePermission = () => {
-    const target = permissionTarget;
-    setPermissionTarget(null);
-    localStorage.setItem('giro_certo_ride_analyzer_consent_v2', new Date().toISOString());
-    if (target === 'notifications') void openRideOfferAccessSettings();
-    if (target === 'accessibility') void openRideAccessibilitySettings();
-    if (target === 'overlay') void openRideOverlaySettings();
-  };
-
-  const requestPermission = (target: 'accessibility' | 'notifications' | 'overlay') => {
-    const consented = Boolean(localStorage.getItem('giro_certo_ride_analyzer_consent_v2'));
-    if (consented) {
-      if (target === 'notifications') void openRideOfferAccessSettings();
-      else if (target === 'accessibility') void openRideAccessibilitySettings();
-      else void openRideOverlaySettings();
-      return;
-    }
-    setPermissionTarget(target);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -261,158 +183,11 @@ export const SimulatorsModal: React.FC = () => {
           {activeTab === 'corrida' ? (
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
-              {isRideOfferNativeAvailable() && !subscriptionLoading && !hasProAccess && (
-                <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
-                      <LockKeyhole className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-bold text-white">Copiloto Giro Certo</p>
-                        <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-300">
-                          PRO
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                        Analise ofertas sobre a tela da Uber, 99 e apps compatíveis sem sair do
-                        aplicativo de corrida.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPlansOpen(true)}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-3 py-2.5 text-[11px] font-bold text-slate-950 active:scale-[0.99]"
-                  >
-                    <Crown className="h-4 w-4" />
-                    Conhecer o Giro Certo Pro
-                  </button>
-                </div>
-              )}
-              {isRideOfferNativeAvailable() && hasProAccess && (
-                <div
-                  className={`p-3 rounded-xl border ${accessibilityAccess && overlayAccess && analyzerEnabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-blue-500/25 bg-blue-500/10'}`}
-                >
-                  <div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-100">Copiloto Giro Certo</p>
-                      <p className="mt-0.5 text-[10px] leading-relaxed text-slate-400">
-                        {accessibilityAccess && overlayAccess && analyzerEnabled
-                          ? 'Ativo. Lê as ofertas visíveis da 99 e mostra a análise sobre o aplicativo.'
-                          : accessibilityAccess && overlayAccess
-                            ? 'Pausado. Reative o interruptor para voltar a analisar ofertas.'
-                            : 'Autorize a leitura da tela da 99 e a sobreposição do resultado.'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => requestPermission('accessibility')}
-                      className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
-                        accessibilityAccess
-                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
-                          : 'bg-blue-500 text-white'
-                      }`}
-                    >
-                      {accessibilityAccess ? '✓ Tela da 99 ativa' : '1. Ler tela da 99'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => requestPermission('notifications')}
-                      className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold active:scale-95 ${
-                        notificationAccess
-                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
-                          : 'bg-blue-500 text-white'
-                      }`}
-                    >
-                      {notificationAccess ? '✓ Notificações ativas' : '2. Outros apps'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => requestPermission('overlay')}
-                      className={`rounded-lg px-2 py-2 text-[11px] font-bold active:scale-95 ${
-                        overlayAccess
-                          ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
-                          : 'bg-blue-500 text-white'
-                      }`}
-                    >
-                      {overlayAccess ? '✓ Sobreposição ativa' : '3. Exibir resultado'}
-                    </button>
-                  </div>
-                  {accessibilityAccess && overlayAccess && (
-                    <label className="mt-2 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
-                      <span>
-                        <span className="block text-[11px] font-bold text-slate-200">
-                          Copiloto em segundo plano
-                        </span>
-                        <span className="block text-[9px] text-slate-500">
-                          Pause sem remover as permissões
-                        </span>
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={analyzerEnabled}
-                        onChange={(event) => {
-                          const enabled = event.target.checked;
-                          setAnalyzerEnabled(enabled);
-                          const apply = async () => {
-                            if (enabled) await requestAnalyzerNotificationPermission();
-                            setAnalyzerEnabled(await setRideAnalyzerEnabled(enabled));
-                          };
-                          void apply();
-                        }}
-                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-500"
-                      />
-                    </label>
-                  )}
-                  <button
-                    type="button"
-                    disabled={!accessibilityAccess || !overlayAccess}
-                    onClick={() => {
-                      setOverlayTestMessage('');
-                      const overlayStatus =
-                        rideResult.status === 'Compensa'
-                          ? 'COMPENSA'
-                          : rideResult.status === 'Atenção'
-                            ? 'ATENÇÃO'
-                            : 'NÃO COMPENSA';
-                      void testRideOverlay({
-                        fare: parseBRLInput(fareOffered),
-                        status: overlayStatus,
-                        body: `Simulador • Lucro ${formatBRL(rideResult.estimatedProfit)} • ${formatBRL(rideResult.profitPerKm)}/km • ${formatBRL(rideResult.profitPerHour)}/h`,
-                      })
-                        .then(() =>
-                          setOverlayTestMessage('Cartão de teste exibido por 12 segundos.'),
-                        )
-                        .catch(() =>
-                          setOverlayTestMessage('Não foi possível exibir. Confira as permissões.'),
-                        );
-                    }}
-                    className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/50 py-2 text-[11px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99]"
-                  >
-                    Testar cartão com estes valores
-                  </button>
-                  {overlayTestMessage && (
-                    <p className="mt-2 text-center text-[10px] text-emerald-300">
-                      {overlayTestMessage}
-                    </p>
-                  )}
-                  {analyzerDiagnostic && (
-                    <div
-                      className={`mt-2 rounded-lg border px-3 py-2 text-[10px] ${
-                        analyzerDiagnostic.analyzed
-                          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
-                          : 'border-amber-500/20 bg-amber-500/10 text-amber-200'
-                      }`}
-                    >
-                      <span className="font-bold">Última detecção: </span>
-                      {analyzerDiagnostic.message}
-                    </div>
-                  )}
-                </div>
-              )}
+              <CopilotCard onRequestUpgrade={() => setPlansOpen(true)} />
+              <TargetBarCard
+                subscriptionLoading={subscriptionLoading}
+                onRequestUpgrade={() => setPlansOpen(true)}
+              />
               {isRideOfferNativeAvailable() && hasProAccess && (
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
                   <button
@@ -964,63 +739,6 @@ export const SimulatorsModal: React.FC = () => {
           )}
         </div>
 
-        {permissionTarget && (
-          <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm">
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="ride-consent-title"
-              className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl"
-            >
-              <div className="mb-3 flex items-center gap-2 text-emerald-400">
-                <ShieldCheck className="h-5 w-5" />
-                <h3 id="ride-consent-title" className="text-sm font-bold text-white">
-                  Antes de ativar
-                </h3>
-              </div>
-              <p className="text-xs leading-relaxed text-slate-300">
-                {permissionTarget === 'accessibility'
-                  ? 'O Giro Certo usará a acessibilidade somente para ler valor, distância e tempo exibidos na tela de ofertas da 99.'
-                  : permissionTarget === 'notifications'
-                    ? 'O Giro Certo lerá somente notificações de aplicativos de corrida e entrega para identificar ofertas compatíveis.'
-                    : 'O Giro Certo exibirá o resultado da análise em um cartão sobre o aplicativo de corrida.'}
-              </p>
-              <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-200">
-                O texto das ofertas é processado no próprio celular. Ele não é enviado ao Supabase,
-                não é usado para publicidade e o Giro Certo não aceita corridas automaticamente.
-              </div>
-              {permissionTarget === 'accessibility' && (
-                <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-100">
-                  <strong className="block text-amber-300">
-                    Atenção sobre aplicativos bancários
-                  </strong>
-                  CAIXA e FGTS podem bloquear o acesso enquanto a acessibilidade do Giro Certo
-                  estiver ativada. Antes de usar esses aplicativos, desligue o analisador. Em alguns
-                  aparelhos também poderá ser necessário reiniciar o celular.
-                </div>
-              )}
-              <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                Você pode retirar as autorizações a qualquer momento nas configurações do Android.
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPermissionTarget(null)}
-                  className="rounded-xl border border-slate-700 py-2.5 text-xs font-bold text-slate-300"
-                >
-                  Agora não
-                </button>
-                <button
-                  type="button"
-                  onClick={continuePermission}
-                  className="rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-slate-950"
-                >
-                  Li e quero continuar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         <SubscriptionPlansModal
           open={plansOpen}
           onClose={() => setPlansOpen(false)}

@@ -40,7 +40,7 @@ export const SubscriptionStatusCard: React.FC = () => {
         </div>
         <p className="text-[10px] leading-relaxed text-slate-400">
           {isTrial
-            ? 'O analisador automático é exclusivo para assinantes Pro. O Essencial e o simulador manual continuam disponíveis.'
+            ? 'O copiloto por leitura de tela é um recurso experimental em validação (Android 14+). O Essencial e o simulador manual continuam disponíveis.'
             : isPro
               ? 'Você tem acesso aos recursos Essencial e Pro.'
               : 'Ganhos, gastos, jornadas, metas, contas e relatórios continuam disponíveis sem prazo.'}

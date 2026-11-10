@@ -14,8 +14,8 @@ export const TrialExpiryNotice: React.FC = () => {
       <div className="flex-1">
         <p className="text-xs font-bold">Sua apresentação termina {deadline}</p>
         <p className="mt-1 text-[10px] leading-relaxed text-amber-100/70">
-          O Essencial continuará funcionando. O analisador automático só é liberado com uma
-          assinatura Pro ativa.
+          O Essencial continuará funcionando. O copiloto por leitura de tela é um recurso
+          experimental em validação (Android 14+).
         </p>
       </div>
       <button

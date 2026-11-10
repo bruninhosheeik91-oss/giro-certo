@@ -19,6 +19,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -45,19 +46,36 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Câmera de segurança do motorista: grava sem pré-visualização, com a notificação
+             obrigatória do Android. Vídeos em Filmes/GiroCerto. -->
         <service
-            android:name=".RideNotificationListenerService"
-            android:label="Analisador de ofertas do Giro Certo"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
+            android:name=".SecurityCameraService"
+            android:exported="false"
+            android:foregroundServiceType="camera|microphone" />
+
+        <activity
+            android:name=".CameraShortcutActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Botão flutuante (atalho) do Giro Certo sobre a tela inicial e outros apps. -->
+        <service
+            android:name=".FloatingButtonService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Botão flutuante de atalho para abrir o app, ativado pelo usuário" />
         </service>
 
+        <!-- Copiloto: acessibilidade restrita aos apps de corrida (ver ride_accessibility_service.xml).
+             Ligada só durante a jornada; o app a desliga ao encerrar o turno (disableSelf). -->
         <service
             android:name=".RideAccessibilityService"
-            android:label="Analisador de ofertas da 99"
+            android:label="Copiloto Giro Certo"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -68,14 +86,21 @@
                 android:resource="@xml/ride_accessibility_service" />
         </service>
 
-        <receiver
-            android:name=".AnalyzerToggleReceiver"
-            android:exported="false" />
+
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
 </manifest>

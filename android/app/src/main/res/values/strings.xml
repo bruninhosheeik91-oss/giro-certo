@@ -6,5 +6,7 @@
     <string name="custom_url_scheme">tech.domnex.girocerto</string>
     <string name="auth_redirect_host" translatable="false">login-callback</string>
     <string name="billing_redirect_host" translatable="false">billing-result</string>
-    <string name="ride_accessibility_description">Lê somente os dados visíveis das ofertas da 99 para calcular a viabilidade da corrida. Não toca nem aceita corridas.</string>
+    <string name="ride_accessibility_description">Copiloto Giro Certo: lê somente as ofertas da Uber, 99 e inDrive para mostrar se a corrida compensa. Tudo é processado no seu celular e nada é enviado. Use só durante a jornada: ao encerrar o turno no Giro Certo, este serviço se desliga sozinho.</string>
+    <string name="shortcut_camera_short">Gravar câmera</string>
+    <string name="shortcut_camera_long">Ligar/desligar câmera de segurança</string>
 </resources>

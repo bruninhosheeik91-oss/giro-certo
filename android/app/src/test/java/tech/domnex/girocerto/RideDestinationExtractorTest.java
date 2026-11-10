@@ -12,12 +12,33 @@ public class RideDestinationExtractorTest {
 
         assertEquals(
             "Avenida Dr Francisco Junqueira, 2030, Campos Elíseos",
-            RideNotificationListenerService.extractDestination(content)
+            RideDestinationExtractor.extractDestination(content)
         );
     }
 
     @Test
     public void returnsEmptyWhenNoLegMarkerExists() {
-        assertEquals("", RideNotificationListenerService.extractDestination("R$ 14,80 6,9 km Aceitar"));
+        assertEquals("", RideDestinationExtractor.extractDestination("R$ 14,80 6,9 km Aceitar"));
+    }
+
+    @Test
+    public void extractsPickupAndDestinationFromNinetyNineScreen() {
+        String content = "Moto · Exclusivo · R$ 15 · Est. de R$0,86/km · 4,77 (869) · 6 min (3.0 km) · "
+            + "Rua Deputado Orlando Jurca, · Subsetor Norte Dez, Ribeirão Preto · 22 minutos (14.4 km) · "
+            + "Rua Marechal Milton Freitas de Almeida, 934, Subsetor Oeste Sete, · Ribeirão Preto · Aceitar";
+
+        assertEquals(
+            "Rua Deputado Orlando Jurca, Subsetor Norte Dez, Ribeirão Preto",
+            RideDestinationExtractor.extractPickup(content)
+        );
+        assertEquals(
+            "Rua Marechal Milton Freitas de Almeida, 934, Subsetor Oeste Sete, Ribeirão Preto",
+            RideDestinationExtractor.extractDestination(content)
+        );
+    }
+
+    @Test
+    public void pickupIsEmptyWithSingleLeg() {
+        assertEquals("", RideDestinationExtractor.extractPickup("R$ 9 · 5 min (2 km) · Rua A, 10 · Aceitar"));
     }
 }

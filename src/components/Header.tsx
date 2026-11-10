@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Car, Bike, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Car, Bike, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
 
 export const Header: React.FC = () => {
@@ -100,6 +100,16 @@ export const Header: React.FC = () => {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          {/* Segurança (câmera) — acesso discreto */}
+          <button
+            onClick={() => setActiveTab('seguranca')}
+            className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700/80 text-slate-400 hover:text-emerald-400 flex items-center justify-center active:scale-95"
+            title="Segurança"
+            aria-label="Segurança"
+          >
+            <Shield className="w-4 h-4" />
+          </button>
 
           {/* User Avatar */}
           <button

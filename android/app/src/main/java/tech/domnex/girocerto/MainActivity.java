@@ -8,6 +8,20 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeCoachPlugin.class);
         registerPlugin(RideOfferPlugin.class);
+        registerPlugin(SecurityCameraPlugin.class);
         super.onCreate(savedInstanceState);
+        if (FloatingButtonService.isEnabled(this)) FloatingButtonService.setEnabled(this, true);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        FloatingButtonService.onAppVisibilityChanged(true);
+    }
+
+    @Override
+    public void onPause() {
+        FloatingButtonService.onAppVisibilityChanged(false);
+        super.onPause();
     }
 }

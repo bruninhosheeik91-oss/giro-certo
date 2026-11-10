@@ -28,8 +28,8 @@ const essentialBenefits = [
 ];
 const proBenefits = [
   'Tudo do Essencial',
-  'Analisador automático de corridas',
-  'Cartão sobre Uber e 99',
+  'Copiloto por leitura de tela (experimental, Android 14+)',
+  'Cartão sobre Uber e 99 (em breve)',
   'Histórico das ofertas analisadas',
 ];
 
@@ -91,7 +91,7 @@ export const SubscriptionPlansModal: React.FC<SubscriptionPlansModalProps> = ({
                 {subscriptionActive
                   ? `Seu plano ${activePlan === 'annual' ? 'Pro Anual' : 'Pro Mensal'} está ativo.`
                   : daysRemaining !== undefined && daysRemaining > 0
-                  ? `Sua apresentação termina em ${daysRemaining} dia${daysRemaining === 1 ? '' : 's'}. O analisador exige assinatura Pro.`
+                  ? `Sua apresentação termina em ${daysRemaining} dia${daysRemaining === 1 ? '' : 's'}. O copiloto por leitura de tela é um recurso experimental em validação.`
                   : 'Compare os recursos disponíveis em cada plano.'}
               </p>
             </div>

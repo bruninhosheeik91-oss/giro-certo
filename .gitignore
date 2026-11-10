@@ -11,3 +11,6 @@ coverage/
 android/keystore.properties
 *.jks
 *.keystore
+
+# IDE
+android/.idea/

@@ -24,9 +24,9 @@ describe('billing catalog', () => {
   });
 
   it('never enables checkout without an explicit provider flag', () => {
-    expect(isBillingEnabled('direct', undefined, undefined)).toBe(false);
-    expect(isBillingEnabled('google_play', undefined, undefined)).toBe(false);
-    expect(isBillingEnabled('direct', undefined, 'true')).toBe(true);
-    expect(isBillingEnabled('google_play', 'true', undefined)).toBe(true);
+    expect(isBillingEnabled('direct', '', '')).toBe(false);
+    expect(isBillingEnabled('google_play', '', '')).toBe(false);
+    expect(isBillingEnabled('direct', '', 'true')).toBe(true);
+    expect(isBillingEnabled('google_play', 'true', '')).toBe(true);
   });
 });

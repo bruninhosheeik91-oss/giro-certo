@@ -115,8 +115,8 @@ interface AppContextType {
   enableCloudMode: () => void;
 
   // Navigation
-  activeTab: 'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil';
-  setActiveTab: (tab: 'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil') => void;
+  activeTab: 'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil' | 'seguranca';
+  setActiveTab: (tab: 'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil' | 'seguranca') => void;
 
   // Transactions
   transactions: Transaction[];
@@ -277,7 +277,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   );
 
   const [activeTab, setActiveTab] = useState<
-    'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil'
+    'inicio' | 'lancamentos' | 'jornada' | 'relatorios' | 'perfil' | 'seguranca'
   >('inicio');
   const [selectedMonth, setSelectedMonthState] = useState<string>(
     () => initialSnapshot.selectedMonth,
