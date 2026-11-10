@@ -328,9 +328,9 @@ export const SimulatorsModal: React.FC = () => {
                 </div>
               )}
               {/* Inputs Card */}
-              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                  <h3 className="text-[15px] font-bold text-white">
                     Dados da Corrida / Entrega
                   </h3>
                   <span className="text-xs text-slate-400">
@@ -456,7 +456,7 @@ export const SimulatorsModal: React.FC = () => {
               </div>
 
               {/* Simulation Result Card */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-3 shadow-lg">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
                 {/* Result Badge & Status */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -587,8 +587,8 @@ export const SimulatorsModal: React.FC = () => {
           ) : (
             /* Tab 2: Goal Simulator */
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
-                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                <h3 className="text-[15px] font-bold text-white">
                   Parâmetros da Meta Desejada
                 </h3>
 
@@ -674,9 +674,9 @@ export const SimulatorsModal: React.FC = () => {
               </div>
 
               {/* Goal Projection Breakdown */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-3">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                  <h3 className="text-[15px] font-bold text-white">
                     Plano de Ação para Alcançar a Meta
                   </h3>
                   <span

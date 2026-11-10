@@ -370,7 +370,7 @@ export const PayablesModal: React.FC = () => {
 
   const renderList = () => (
     <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950/30 border border-slate-800 space-y-3">
+      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
@@ -482,7 +482,7 @@ export const PayablesModal: React.FC = () => {
                 type="button"
                 onClick={() => openDetail(commitment.id)}
                 aria-label={`Abrir conta ${commitment.title}`}
-                className="w-full p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-left flex items-center justify-between gap-3 transition-colors"
+                className="w-full p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-left flex items-center justify-between gap-3 transition-colors"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -751,7 +751,7 @@ export const PayablesModal: React.FC = () => {
 
     return (
       <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950/20 border border-slate-800 space-y-3">
+        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
@@ -858,11 +858,11 @@ export const PayablesModal: React.FC = () => {
           </button>
         </div>
 
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-blue-400" />
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Parcelas</h3>
+              <h3 className="text-[15px] font-bold text-white">Parcelas</h3>
             </div>
             <span className="text-[11px] text-slate-500">{related.length} registradas</span>
           </div>

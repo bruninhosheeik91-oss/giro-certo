@@ -4,6 +4,8 @@ import { MaintenanceTransaction } from '../types';
 import { calculateVehiclePartsHealth, formatBRL } from '../utils/calculations';
 import { X, Wrench, Bike, Plus, ShieldAlert } from 'lucide-react';
 
+const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
 export const MaintenanceModal: React.FC = () => {
   const {
     isMaintenanceModalOpen,
@@ -69,11 +71,11 @@ export const MaintenanceModal: React.FC = () => {
         {/* Scrollable Body */}
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
           {/* Active Vehicle & Total Costs Header Card */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-slate-800 shadow-md">
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Bike className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                <span className="text-[15px] font-bold text-white">
                   Odômetro Atual
                 </span>
               </div>
@@ -85,7 +87,7 @@ export const MaintenanceModal: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800/80">
               <div>
                 <span className="text-[11px] text-slate-400 uppercase font-medium block">
-                  Custo no Mês ({selectedMonth})
+                  Custo em {MONTHS[Number(selectedMonth.split('-')[1]) - 1]}
                 </span>
                 <span className="text-sm font-bold text-white font-mono">
                   {formatBRL(monthCost)}
@@ -93,7 +95,7 @@ export const MaintenanceModal: React.FC = () => {
               </div>
               <div>
                 <span className="text-[11px] text-slate-400 uppercase font-medium block">
-                  Custo no Ano ({currentYear})
+                  Custo em {currentYear}
                 </span>
                 <span className="text-sm font-bold text-amber-400 font-mono">
                   {formatBRL(yearCost)}
@@ -115,8 +117,12 @@ export const MaintenanceModal: React.FC = () => {
                   className="text-xs text-amber-200/90 pl-6 flex items-center justify-between"
                 >
                   <span>
-                    • <strong>{alert.label}</strong>: faltam{' '}
-                    {alert.remainingKm > 0 ? `${alert.remainingKm.toLocaleString('pt-BR')} km` : 'KM atingido!'}
+                    • <strong>{alert.label}</strong>:{' '}
+                    {alert.remainingKm > 0
+                      ? `faltam ${alert.remainingKm.toLocaleString('pt-BR')} km`
+                      : alert.remainingKm === 0
+                        ? 'troca no km atual'
+                        : `vencida há ${Math.abs(alert.remainingKm).toLocaleString('pt-BR')} km`}
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded text-[11px] font-bold ${
@@ -137,7 +143,7 @@ export const MaintenanceModal: React.FC = () => {
           {/* Parts Health Cards List */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              <h3 className="text-[15px] font-bold text-white">
                 Vida Útil Estimada das Peças
               </h3>
               <button
@@ -171,7 +177,7 @@ export const MaintenanceModal: React.FC = () => {
                 return (
                   <div
                     key={part.partKey}
-                    className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 hover:border-slate-700 transition-all"
+                    className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 hover:border-slate-700 transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -198,20 +204,20 @@ export const MaintenanceModal: React.FC = () => {
                       <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
                         <span>Última: {part.lastChangeKm.toLocaleString('pt-BR')} km</span>
                         <span>
-                          Faltam:{' '}
+                          {part.remainingKm > 0 ? 'Faltam ' : 'Vencida há '}
                           <strong
                             className={
-                              part.remainingKm <= 800
-                                ? 'text-amber-400 font-bold'
-                                : 'text-slate-200'
+                              part.remainingKm <= 0
+                                ? 'font-bold text-rose-400'
+                                : part.remainingKm <= 800
+                                  ? 'font-bold text-amber-400'
+                                  : 'text-slate-200'
                             }
                           >
-                            {part.remainingKm > 0
-                              ? `${part.remainingKm.toLocaleString('pt-BR')} km`
-                              : 'Troca Vencida!'}
+                            {Math.abs(part.remainingKm).toLocaleString('pt-BR')} km
                           </strong>
                         </span>
-                        <span>Meta: {part.nextChangeKm.toLocaleString('pt-BR')} km</span>
+                        <span>Próxima: {part.nextChangeKm.toLocaleString('pt-BR')} km</span>
                       </div>
                     </div>
                   </div>
@@ -222,7 +228,7 @@ export const MaintenanceModal: React.FC = () => {
 
           {/* History of Services Performed */}
           <div className="space-y-2.5 pt-2">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            <h3 className="text-[15px] font-bold text-white">
               Histórico Recente de Manutenções
             </h3>
 

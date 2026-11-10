@@ -23,14 +23,14 @@ export const SubscriptionStatusCard: React.FC = () => {
 
   return (
     <>
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950/40 border border-blue-500/25 space-y-3 shadow-md">
+      <div className="p-4 rounded-2xl bg-slate-900 border border-blue-500/25 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-300">
               {isPro ? <Crown className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
             </div>
             <div>
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Meu Plano</h3>
+              <h3 className="text-[15px] font-bold text-white">Meu Plano</h3>
               <p className="text-[11px] text-slate-400">{subtitle}</p>
             </div>
           </div>

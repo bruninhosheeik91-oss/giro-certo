@@ -39,9 +39,9 @@ export const AdminOverviewCard: React.FC = () => {
   ] as const;
 
   return (
-    <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-violet-950/40 border border-violet-500/30 space-y-3 shadow-md">
+    <div className="p-4 rounded-2xl bg-slate-900 border border-violet-500/30 space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-300" /><h3 className="text-xs font-bold text-white uppercase tracking-wider">Painel do Proprietário</h3></div>
+        <div className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-300" /><h3 className="text-[15px] font-bold text-white">Painel do Proprietário</h3></div>
         <span className="px-2 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-[11px] font-bold text-violet-200">OWNER</span>
       </div>
       <div className="grid grid-cols-2 gap-2">

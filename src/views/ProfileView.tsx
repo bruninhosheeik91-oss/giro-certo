@@ -172,10 +172,10 @@ export const ProfileView: React.FC = () => {
   return (
     <div className="space-y-4 pb-2">
       {/* Profile Header Card (Without PRO badge or rating as requested) */}
-      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="relative">
+      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="relative flex-none">
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
@@ -206,23 +206,21 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-base font-bold text-white tracking-tight">{userProfile.name}</h2>
-              <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-slate-500" />
-                  {userProfile.city}
-                </span>
-                <span>•</span>
-                <span>Desde {userProfile.startDate}</span>
-              </div>
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-bold tracking-tight text-white">{userProfile.name}</h2>
+              <p className="mt-0.5 flex items-center gap-1 truncate text-[13px] text-slate-400">
+                <MapPin className="h-3.5 w-3.5 flex-none" />
+                <span className="truncate">{userProfile.city}</span>
+              </p>
+              <p className="text-[13px] text-slate-400">No Giro Certo desde {userProfile.startDate}</p>
             </div>
           </div>
 
           <button
             onClick={() => (isEditingProfile ? setIsEditingProfile(false) : openProfileEditor())}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-slate-800 text-slate-300"
             title="Editar perfil"
+            aria-label="Editar perfil"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -262,7 +260,7 @@ export const ProfileView: React.FC = () => {
             onSubmit={handleSaveProfile}
             className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 animate-in fade-in"
           >
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+            <h4 className="text-[15px] font-bold text-white">
               Editar Dados Principais
             </h4>
 
@@ -358,7 +356,6 @@ export const ProfileView: React.FC = () => {
                   id="considerReturnEdit"
                   checked={considerReturn}
                   onChange={(e) => setConsiderReturn(e.target.checked)}
-                  className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-800"
                 />
                 <label htmlFor="considerReturnEdit" className="text-xs text-slate-300">
                   Considerar distância de retorno por padrão no simulador
@@ -390,7 +387,7 @@ export const ProfileView: React.FC = () => {
       {/* Meus Veículos Card (Requirement 3) */}
       <div
         onClick={openVehiclesModal}
-        className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer shadow-md transition-all space-y-3"
+        className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -430,7 +427,7 @@ export const ProfileView: React.FC = () => {
       {/* Aplicativos Cadastrados Card (Requirement 2) */}
       <div
         onClick={openAppsModal}
-        className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer shadow-md transition-all space-y-3"
+        className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -469,7 +466,7 @@ export const ProfileView: React.FC = () => {
       <button
         type="button"
         onClick={openPayablesModal}
-        className="w-full p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/40 cursor-pointer shadow-md transition-all text-left"
+        className="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-blue-500/40 cursor-pointer transition-all text-left"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -495,7 +492,7 @@ export const ProfileView: React.FC = () => {
       </button>
 
       {/* Critérios de Aceite de Corrida Card */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
+      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -554,10 +551,10 @@ export const ProfileView: React.FC = () => {
       {/* Notification Preferences */}
       <AchievementsCard />
 
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
+      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-slate-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+          <h3 className="text-[15px] font-bold text-white">
             Lembretes e Alertas
           </h3>
         </div>
@@ -574,7 +571,6 @@ export const ProfileView: React.FC = () => {
               type="checkbox"
               checked={userProfile.notificationPreferences.dailyGoalAlert}
               onChange={() => handleToggleNotification('dailyGoalAlert')}
-              className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
             />
           </div>
 
@@ -603,7 +599,7 @@ export const ProfileView: React.FC = () => {
                   <span className="text-slate-200 font-medium block">Saudação com voz ao abrir</span>
                   <span className="text-[11px] text-slate-400">Uma vez por dia e fora da jornada</span>
                 </div>
-                <input type="checkbox" checked={coachVoice.greetingEnabled} onChange={() => updateCoachVoice({ greetingEnabled: !coachVoice.greetingEnabled })} className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700" />
+                <input type="checkbox" checked={coachVoice.greetingEnabled} onChange={() => updateCoachVoice({ greetingEnabled: !coachVoice.greetingEnabled })} />
               </label>
               <button type="button" onClick={() => { const hour = new Date().getHours(); const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'; const firstName = userProfile.name?.trim().split(/\s+/)[0] || 'motorista'; void speakGoalCoach(`${greeting}, ${firstName}! Não desista da sua meta. Continue firme, porque cada giro conta!`); }} className="w-full py-2 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-bold active:scale-95">Ouvir saudação agora</button>
             </div>
@@ -622,7 +618,6 @@ export const ProfileView: React.FC = () => {
               type="checkbox"
               checked={userProfile.notificationPreferences.maintenanceAlert}
               onChange={() => handleToggleNotification('maintenanceAlert')}
-              className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
             />
           </div>
 
@@ -637,7 +632,6 @@ export const ProfileView: React.FC = () => {
               type="checkbox"
               checked={userProfile.notificationPreferences.fuelReminder}
               onChange={() => handleToggleNotification('fuelReminder')}
-              className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
             />
           </div>
         </div>

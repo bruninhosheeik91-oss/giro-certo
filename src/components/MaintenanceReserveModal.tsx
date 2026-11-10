@@ -232,7 +232,7 @@ export const MaintenanceReserveModal: React.FC = () => {
           <div className="bg-slate-900/70 border border-slate-800 rounded-xl">
             <div className="p-3 flex items-center gap-2 border-b border-slate-800">
               <History className="w-3.5 h-3.5 text-slate-400" />
-              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+              <h4 className="text-[15px] font-bold text-white">
                 Histórico da Reserva
               </h4>
               <span className="text-[11px] text-slate-500 ml-auto">

@@ -141,7 +141,7 @@ export const ReportsView: React.FC = () => {
       {viewMode === 'mensal' && (
         <div className="space-y-4 animate-in fade-in">
           {/* Period selector */}
-          <div className="flex items-center justify-between bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+          <div className="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-800">
             <span className="text-xs font-semibold text-slate-400">Filtrar Período:</span>
             <div className="flex items-center gap-1">
               {(['hoje', 'semana', 'mes', 'ano'] as const).map((p) => (
@@ -161,8 +161,8 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* Month Overview Summary Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-3">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <h3 className="text-[15px] font-bold text-white">
               Balanço · {PERIOD_LABEL[periodFilter]}
             </h3>
 
@@ -185,8 +185,8 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* Detailed Category Expense Breakdown */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <h3 className="text-[15px] font-bold text-white">
               Despesas por Categoria
             </h3>
 
@@ -256,9 +256,9 @@ export const ReportsView: React.FC = () => {
           )}
 
           {/* App List Breakdown */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3.5 shadow-md">
+          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h3 className="text-[15px] font-bold text-white">
                 Desempenho por Plataforma
               </h3>
               <span className="text-xs text-slate-400 font-mono">
@@ -333,7 +333,7 @@ export const ReportsView: React.FC = () => {
       {viewMode === 'anual' && (
         <div className="space-y-4 animate-in fade-in">
           {annualSummaries.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
               <Award className="w-8 h-8 mx-auto mb-2 text-slate-600" />
               <h3 className="text-sm font-bold text-white">Nenhum histórico disponível</h3>
               <p className="mt-1 text-xs text-slate-400">
@@ -368,7 +368,7 @@ export const ReportsView: React.FC = () => {
             {annualSummaries.map((yr, index) => (
               <div
                 key={yr.year}
-                className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md hover:border-slate-700 transition-all"
+                className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition-all"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

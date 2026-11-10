@@ -175,7 +175,7 @@ export const AppsManagementModal: React.FC = () => {
                     key={app.id}
                     className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                       app.isActive
-                        ? 'bg-slate-900/90 border-slate-800'
+                        ? 'bg-slate-900 border-slate-800'
                         : 'bg-slate-900/40 border-slate-800/40 opacity-60'
                     }`}
                   >
@@ -341,7 +341,6 @@ export const AppsManagementModal: React.FC = () => {
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-800"
                 />
                 <span className="text-xs text-slate-200 font-medium">
                   Ativo para seleção de novos ganhos

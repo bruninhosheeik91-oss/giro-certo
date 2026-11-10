@@ -94,7 +94,7 @@ const Field: React.FC<{
             onEnter();
           }
         }}
-        className={`w-full bg-slate-900/80 border rounded-xl pl-10 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-colors ${
+        className={`w-full bg-slate-900 border rounded-xl pl-10 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-colors ${
           trailing ? 'pr-11' : 'pr-3'
         } ${
           invalid

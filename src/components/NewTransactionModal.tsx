@@ -663,7 +663,7 @@ export const NewTransactionModal: React.FC = () => {
                   </div>
 
                   {linkedShiftId ? (
-                    <div className="p-2.5 rounded-lg bg-slate-900/90 border border-blue-500/20 flex items-center justify-between text-xs">
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-blue-500/20 flex items-center justify-between text-xs">
                       <div>
                         <span className="font-semibold text-white block">
                           Turno iniciado às {activeShift.startTime.slice(0, 5)}
@@ -847,7 +847,6 @@ export const NewTransactionModal: React.FC = () => {
                       type="checkbox"
                       checked={fullTank}
                       onChange={(e) => setFullTank(e.target.checked)}
-                      className="w-4 h-4 rounded text-rose-500 bg-slate-900 border-slate-800"
                     />
                     <span className="text-xs text-slate-300 font-medium">Completou tanque</span>
                   </label>
@@ -1113,7 +1112,6 @@ export const NewTransactionModal: React.FC = () => {
                     type="checkbox"
                     checked={isRecurring}
                     onChange={(e) => setIsRecurring(e.target.checked)}
-                    className="w-4 h-4 rounded text-purple-500 bg-slate-900 border-slate-800"
                   />
                   <span className="text-xs text-slate-200 font-medium">
                     Despesa recorrente (fixa)

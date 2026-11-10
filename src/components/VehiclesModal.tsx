@@ -229,7 +229,7 @@ export const VehiclesModal: React.FC = () => {
                           ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20'
                           : v.isArchived
                             ? 'bg-slate-900/40 border-slate-800/50 opacity-60'
-                            : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -618,7 +618,6 @@ export const VehiclesModal: React.FC = () => {
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-800"
                 />
                 <span className="text-xs text-slate-200 font-medium">
                   Definir como veículo ativo agora

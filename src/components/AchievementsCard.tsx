@@ -60,11 +60,11 @@ export const AchievementsCard: React.FC = () => {
   const unlockedCount = achievements.filter((achievement) => achievement.unlocked).length;
 
   return (
-    <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
+    <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-amber-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Conquistas</h3>
+          <h3 className="text-[15px] font-bold text-white">Conquistas</h3>
         </div>
         <span className="text-[11px] font-bold text-amber-300">{unlockedCount}/{achievements.length}</span>
       </div>

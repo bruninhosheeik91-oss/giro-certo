@@ -61,7 +61,7 @@ export const QuickRideRegister: React.FC = () => {
   };
 
   return (
-    <div className="space-y-2 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-4">
+    <div className="space-y-2 rounded-2xl border border-emerald-500/25 bg-slate-900 p-4">
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4 text-emerald-400" />
         <span className="text-sm font-bold text-white">Registrar corrida com 1 toque</span>
