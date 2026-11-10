@@ -538,7 +538,7 @@ export const PayablesModal: React.FC = () => {
             value={form.title}
             onChange={(event) => updateForm('title', event.target.value)}
             placeholder="Ex.: Financiamento da moto"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white focus:outline-none focus:border-emerald-500"
           />
         </div>
 
@@ -549,7 +549,7 @@ export const PayablesModal: React.FC = () => {
             value={form.type}
             onChange={(event) => handleTypeChange(event.target.value as FinancialCommitmentType)}
             disabled={Boolean(editingCommitmentId)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white disabled:opacity-60"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white disabled:opacity-60"
           >
             {Object.entries(TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -572,7 +572,7 @@ export const PayablesModal: React.FC = () => {
                 onChange={(event) => updateForm('amount', formatBRLInput(event.target.value))}
                 inputMode="decimal"
                 placeholder="0,00"
-                className="w-full bg-transparent text-xs font-bold font-mono text-white focus:outline-none"
+                className="w-full bg-transparent text-[15px] font-bold font-mono text-white focus:outline-none h-12"
               />
             </div>
           </div>
@@ -585,7 +585,7 @@ export const PayablesModal: React.FC = () => {
               type="date"
               value={form.firstDueDate}
               onChange={(event) => updateForm('firstDueDate', event.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
             />
           </div>
         </div>
@@ -602,7 +602,7 @@ export const PayablesModal: React.FC = () => {
                 min="1"
                 value={form.totalInstallments}
                 onChange={(event) => updateForm('totalInstallments', event.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono"
               />
             </div>
             <div>
@@ -616,7 +616,7 @@ export const PayablesModal: React.FC = () => {
                 value={form.initialPaidInstallments}
                 disabled={Boolean(editingCommitmentId)}
                 onChange={(event) => updateForm('initialPaidInstallments', event.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono disabled:opacity-60"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono disabled:opacity-60"
               />
             </div>
             {!editingCommitmentId && Number(form.initialPaidInstallments) > 0 && (
@@ -639,7 +639,7 @@ export const PayablesModal: React.FC = () => {
               value={form.endDate}
               min={form.firstDueDate}
               onChange={(event) => updateForm('endDate', event.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
             />
           </div>
         )}
@@ -653,7 +653,7 @@ export const PayablesModal: React.FC = () => {
               onChange={(event) =>
                 updateForm('category', event.target.value as OtherExpenseCategory)
               }
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
             >
               {CATEGORY_OPTIONS.map((category) => (
                 <option key={category}>{category}</option>
@@ -669,7 +669,7 @@ export const PayablesModal: React.FC = () => {
               value={form.creditor}
               onChange={(event) => updateForm('creditor', event.target.value)}
               placeholder="Opcional"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
             />
           </div>
         </div>
@@ -683,7 +683,7 @@ export const PayablesModal: React.FC = () => {
               aria-label="Veículo relacionado"
               value={form.vehicleId}
               onChange={(event) => updateForm('vehicleId', event.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
             >
               <option value="">Nenhum</option>
               {vehicles.map((vehicle) => (
@@ -702,7 +702,7 @@ export const PayablesModal: React.FC = () => {
             value={form.notes}
             onChange={(event) => updateForm('notes', event.target.value)}
             placeholder="Opcional"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12.5 text-[15px] text-white"
           />
         </div>
 
@@ -936,7 +936,7 @@ export const PayablesModal: React.FC = () => {
                               setPaymentAmount(formatBRLInput(event.target.value))
                             }
                             inputMode="decimal"
-                            className="w-full bg-transparent text-xs text-white font-mono focus:outline-none"
+                            className="w-full bg-transparent text-[15px] text-white font-mono focus:outline-none h-12"
                           />
                         </div>
                         <input
@@ -944,7 +944,7 @@ export const PayablesModal: React.FC = () => {
                           type="date"
                           value={paymentDate}
                           onChange={(event) => setPaymentDate(event.target.value)}
-                          className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white"
+                          className="bg-slate-900 border border-slate-700 rounded-xl px-2.5 h-12 text-[15px] text-white"
                         />
                       </div>
                       <div className="flex gap-2">

@@ -449,7 +449,7 @@ export const VehiclesModal: React.FC = () => {
                   placeholder='Ex: "Fazer 250 do trampo", "Onix da família"'
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -463,7 +463,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: Yamaha, Honda, Chevrolet"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -476,7 +476,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: Fazer 250 FZ25, CG 160 Fan"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -490,7 +490,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: 2024"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -502,7 +502,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: ABC-1D23"
                     value={plate}
                     onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white uppercase focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -519,7 +519,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: 24850"
                     value={currentKm}
                     onChange={(e) => setCurrentKm(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -529,7 +529,7 @@ export const VehiclesModal: React.FC = () => {
                   <select
                     value={fuelType}
                     onChange={(e) => setFuelType(e.target.value as FuelType)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   >
                     {FUEL_OPTIONS.map((f) => (
                       <option key={f} value={f}>
@@ -552,7 +552,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder={type === 'moto' ? '32.5' : '12.0'}
                     value={fuelAverageKmPerLiter}
                     onChange={(e) => setFuelAverageKmPerLiter(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -565,7 +565,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: 5.89"
                     value={refPricePerLiter}
                     onChange={(e) => setRefPricePerLiter(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -582,7 +582,7 @@ export const VehiclesModal: React.FC = () => {
                     placeholder="Ex: 22900"
                     value={acquisitionPrice}
                     onChange={(e) => setAcquisitionPrice(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -593,7 +593,7 @@ export const VehiclesModal: React.FC = () => {
                     type="date"
                     value={acquisitionDate}
                     onChange={(e) => setAcquisitionDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -608,7 +608,7 @@ export const VehiclesModal: React.FC = () => {
                   placeholder="Ex: Pneu traseiro trocado aos 20.000 km, revisão em dia..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 

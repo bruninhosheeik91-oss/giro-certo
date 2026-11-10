@@ -560,7 +560,7 @@ export const NewTransactionModal: React.FC = () => {
                     placeholder="0,00"
                     value={baseAmountStr}
                     onChange={(e) => setBaseAmountStr(formatBRLInput(e.target.value))}
-                    className="w-full bg-slate-950 border border-emerald-500/40 rounded-xl py-2.5 pl-11 pr-4 text-xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-emerald-500/40 rounded-xl h-12.5 pl-11 pr-4 text-xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 {errors.baseAmount && (
@@ -584,7 +584,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="0,00"
                       value={tipAmountStr}
                       onChange={(e) => setTipAmountStr(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 pl-9 pr-3 text-[15px] font-mono text-white"
                     />
                   </div>
                 </div>
@@ -603,7 +603,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="0,00"
                       value={bonusAmountStr}
                       onChange={(e) => setBonusAmountStr(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 pl-9 pr-3 text-[15px] font-mono text-white"
                     />
                   </div>
                 </div>
@@ -628,7 +628,7 @@ export const NewTransactionModal: React.FC = () => {
                   required
                   value={ridesCount}
                   onChange={(e) => setRidesCount(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono focus:outline-none focus:border-emerald-500"
                 />
                 {errors.ridesCount && (
                   <p className="text-xs text-rose-400 mt-1">{errors.ridesCount}</p>
@@ -691,7 +691,7 @@ export const NewTransactionModal: React.FC = () => {
                   <select
                     value={linkedShiftId}
                     onChange={(e) => setLinkedShiftId(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                   >
                     <option value="">Nenhuma jornada (Lançamento avulso)</option>
                     {shifts.slice(0, 5).map((s) => (
@@ -720,7 +720,7 @@ export const NewTransactionModal: React.FC = () => {
                     const selected = vehicles.find((v) => v.id === e.target.value);
                     if (selected) setFuelKmStr(selected.currentKm.toString());
                   }}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-rose-500"
                 >
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -753,7 +753,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="0,00"
                       value={fuelTotalStr}
                       onChange={(e) => handleFuelTotalChange(e.target.value)}
-                      className="w-full bg-slate-900 border border-rose-500/40 rounded-xl py-2 pl-9 pr-3 text-lg font-bold font-mono text-white focus:outline-none focus:border-rose-500"
+                      className="w-full bg-slate-900 border border-rose-500/40 rounded-xl h-12 pl-9 pr-3 text-lg font-bold font-mono text-white focus:outline-none focus:border-rose-500"
                     />
                   </div>
                   {errors.fuelTotal && (
@@ -771,7 +771,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="Ex: 12.5"
                       value={litersStr}
                       onChange={(e) => handleLitersChange(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] font-mono text-white"
                     />
                     {errors.liters && <p className="text-xs text-rose-400 mt-1">{errors.liters}</p>}
                   </div>
@@ -785,7 +785,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="Ex: 5.79"
                       value={pricePerLiterStr}
                       onChange={(e) => handlePricePerLiterChange(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] font-mono text-white"
                     />
                   </div>
                 </div>
@@ -800,7 +800,7 @@ export const NewTransactionModal: React.FC = () => {
                   <select
                     value={fuelType}
                     onChange={(e) => setFuelType(e.target.value as FuelType)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-rose-500"
                   >
                     <option value="Gasolina">Gasolina</option>
                     <option value="Etanol">Etanol</option>
@@ -820,7 +820,7 @@ export const NewTransactionModal: React.FC = () => {
                     value={fuelKmStr}
                     onChange={(e) => setFuelKmStr(e.target.value)}
                     placeholder="Ex: 42118"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono"
                   />
                   {errors.fuelKm && <p className="text-xs text-rose-400 mt-1">{errors.fuelKm}</p>}
                 </div>
@@ -837,7 +837,7 @@ export const NewTransactionModal: React.FC = () => {
                     placeholder="Ex: Posto Ipiranga"
                     value={stationName}
                     onChange={(e) => setStationName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   />
                 </div>
 
@@ -871,7 +871,7 @@ export const NewTransactionModal: React.FC = () => {
                       const selected = vehicles.find((v) => v.id === e.target.value);
                       if (selected) setMaintKmStr(selected.currentKm.toString());
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   >
                     {vehicles.map((v) => (
                       <option key={v.id} value={v.id}>
@@ -888,7 +888,7 @@ export const NewTransactionModal: React.FC = () => {
                   <select
                     value={maintenanceCategory}
                     onChange={(e) => setMaintenanceCategory(e.target.value as MaintenanceCategory)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   >
                     {MAINTENANCE_CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -910,7 +910,7 @@ export const NewTransactionModal: React.FC = () => {
                   placeholder="Ex: Troca de óleo Yamalube + Filtro original"
                   value={servicePerformed}
                   onChange={(e) => setServicePerformed(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-amber-500"
                 />
                 {errors.servicePerformed && (
                   <p className="text-xs text-rose-400 mt-1">{errors.servicePerformed}</p>
@@ -933,7 +933,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="0,00"
                       value={partsAmountStr}
                       onChange={(e) => setPartsAmountStr(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 pl-9 pr-3 text-[15px] font-mono text-white"
                     />
                   </div>
                 </div>
@@ -952,7 +952,7 @@ export const NewTransactionModal: React.FC = () => {
                       placeholder="0,00"
                       value={laborAmountStr}
                       onChange={(e) => setLaborAmountStr(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm font-mono text-white"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 pl-9 pr-3 text-[15px] font-mono text-white"
                     />
                   </div>
                 </div>
@@ -979,7 +979,7 @@ export const NewTransactionModal: React.FC = () => {
                     placeholder="Ex: Moto Speed Centro"
                     value={workshop}
                     onChange={(e) => setWorkshop(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   />
                 </div>
                 <div>
@@ -991,7 +991,7 @@ export const NewTransactionModal: React.FC = () => {
                     value={maintKmStr}
                     onChange={(e) => setMaintKmStr(e.target.value)}
                     placeholder="Ex: 42118"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono"
                   />
                   {errors.maintKm && <p className="text-xs text-rose-400 mt-1">{errors.maintKm}</p>}
                 </div>
@@ -1008,7 +1008,7 @@ export const NewTransactionModal: React.FC = () => {
                     placeholder="Ex: 27850"
                     value={nextMaintenanceKmStr}
                     onChange={(e) => setNextMaintenanceKmStr(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white font-mono"
                   />
                 </div>
                 <div>
@@ -1019,7 +1019,7 @@ export const NewTransactionModal: React.FC = () => {
                     type="date"
                     value={nextMaintenanceDate}
                     onChange={(e) => setNextMaintenanceDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   />
                 </div>
               </div>
@@ -1037,7 +1037,7 @@ export const NewTransactionModal: React.FC = () => {
                   <select
                     value={otherCategory}
                     onChange={(e) => setOtherCategory(e.target.value as OtherExpenseCategory)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   >
                     {OTHER_CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -1054,7 +1054,7 @@ export const NewTransactionModal: React.FC = () => {
                   <select
                     value={otherVehicleId}
                     onChange={(e) => setOtherVehicleId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
                   >
                     <option value="">Nenhum (Geral)</option>
                     {vehicles.map((v) => (
@@ -1080,7 +1080,7 @@ export const NewTransactionModal: React.FC = () => {
                     placeholder="0,00"
                     value={otherAmountStr}
                     onChange={(e) => setOtherAmountStr(formatBRLInput(e.target.value))}
-                    className="w-full bg-slate-950 border border-purple-500/40 rounded-xl py-2.5 pl-11 pr-4 text-xl font-bold font-mono text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-slate-950 border border-purple-500/40 rounded-xl h-12.5 pl-11 pr-4 text-xl font-bold font-mono text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 {errors.otherAmount && (
@@ -1098,7 +1098,7 @@ export const NewTransactionModal: React.FC = () => {
                   placeholder="Ex: Almoço PF na rua, Pedágio Anchieta, Suporte de celular..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-purple-500"
                 />
                 {errors.description && (
                   <p className="text-xs text-rose-400 mt-1">{errors.description}</p>
@@ -1154,7 +1154,7 @@ export const NewTransactionModal: React.FC = () => {
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
               />
             </div>
             <div>
@@ -1163,7 +1163,7 @@ export const NewTransactionModal: React.FC = () => {
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white"
               />
             </div>
           </div>
@@ -1179,7 +1179,7 @@ export const NewTransactionModal: React.FC = () => {
                 placeholder="Ex.: Turno da manhã, região central."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white placeholder-slate-600"
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Gauge, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { Crown, Gauge, LockKeyhole } from 'lucide-react';
 import { useTargetBar } from '../hooks/useTargetBar';
 import { formatBRL } from '../utils/calculations';
 
@@ -33,11 +33,10 @@ export const TargetBarCard: React.FC<TargetBarCardProps> = ({ subscriptionLoadin
         </p>
       </div>
 
-      <p className="text-xs text-slate-400">
-        Compare com o "R$/km" que a Uber e a 99 mostram na oferta. Seu custo é {formatBRL(bar.costPerKm)}/km
-        {bar.costSource === 'real' ? ' (real, dos seus lançamentos do mês)' : ' (estimado — fica real após 100 km lançados no mês)'}
-        {' '}+ lucro mínimo de {formatBRL(bar.minGrossPerKm - bar.costPerKm)}/km.
-        {bar.dailyGoal > 0 && (bar.goalReached ? ' Meta do dia batida.' : ` Faltam ${formatBRL(bar.goalRemaining)} para a meta do dia.`)}
+      <p className="text-[13px] leading-relaxed text-slate-400">
+        Compare com o “R$/km” que a Uber e a 99 mostram na oferta. Seu custo:{' '}
+        <b className="text-white">{formatBRL(bar.costPerKm)}/km</b>
+        {bar.costSource === 'padrao' ? ' (estimado até 100 km lançados no mês)' : bar.costSource === 'manual' ? ' (informado por você)' : ''}.
       </p>
 
       {!native ? (
@@ -52,10 +51,6 @@ export const TargetBarCard: React.FC<TargetBarCardProps> = ({ subscriptionLoadin
         </button>
       )}
       {blocked && <p className="text-xs text-amber-300">Permita as notificações do Giro Certo nas configurações do Android.</p>}
-      <p className="flex items-start gap-1.5 text-[11px] text-slate-500">
-        <ShieldCheck className="mt-0.5 h-3 w-3 shrink-0 text-emerald-400" />
-        A régua só usa os seus números: funciona mesmo com o Copiloto desligado.
-      </p>
     </div>
   );
 };

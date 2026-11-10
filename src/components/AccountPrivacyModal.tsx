@@ -118,7 +118,7 @@ export const AccountPrivacyModal: React.FC<AccountPrivacyModalProps> = ({ open, 
                 <Download className="h-4 w-4" /> Fazer backup antes de excluir
               </button>
               <label className="block text-xs font-semibold text-slate-300">Digite <strong className="text-white">EXCLUIR</strong> para confirmar
-                <input value={confirmation} onChange={(event) => setConfirmation(event.target.value.toUpperCase())} autoCapitalize="characters" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm font-bold tracking-widest text-white outline-none focus:border-rose-500" />
+                <input value={confirmation} onChange={(event) => setConfirmation(event.target.value.toUpperCase())} autoCapitalize="characters" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 h-12 text-[15px] font-bold tracking-widest text-white outline-none focus:border-rose-500" />
               </label>
               <button type="button" disabled={busy || confirmation !== 'EXCLUIR'} onClick={() => void deleteAccount()} className="w-full rounded-xl bg-rose-500 px-4 py-3 text-xs font-black text-on-accent disabled:cursor-not-allowed disabled:opacity-40">
                 {busy ? 'Excluindo…' : 'Excluir conta permanentemente'}

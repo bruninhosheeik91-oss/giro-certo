@@ -120,12 +120,12 @@ export const MaintenanceReserveModal: React.FC = () => {
 
           {showForm && (
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da reserva" className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da reserva" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white" />
               <div className="grid grid-cols-2 gap-2">
-                <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Banco ou carteira" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
-                <input value={goalStr} onChange={(e) => setGoalStr(formatBRLInput(e.target.value))} placeholder="Meta: R$ 0,00" inputMode="decimal" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+                <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Banco ou carteira" className="bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white" />
+                <input value={goalStr} onChange={(e) => setGoalStr(formatBRLInput(e.target.value))} placeholder="Meta: R$ 0,00" inputMode="decimal" className="bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white" />
               </div>
-              <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+              <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white">
                 <option value="manutencao">Manutenção</option><option value="emergencia">Emergência</option><option value="impostos">Impostos</option><option value="veiculo">Troca/financiamento do veículo</option><option value="outro">Outro objetivo</option>
               </select>
               <div className="flex gap-2">
@@ -190,7 +190,7 @@ export const MaintenanceReserveModal: React.FC = () => {
                 value={amountStr}
                 onChange={(e) => setAmountStr(formatBRLInput(e.target.value))}
                 placeholder="0,00"
-                className="w-full bg-transparent text-sm font-bold text-white font-mono focus:outline-none"
+                className="w-full bg-transparent text-[15px] font-bold text-white font-mono focus:outline-none h-12"
               />
             </div>
 

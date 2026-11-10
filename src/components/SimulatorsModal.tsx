@@ -138,7 +138,7 @@ export const SimulatorsModal: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base font-bold text-white tracking-tight">
-                Simuladores Financeiros
+                Simuladores
               </h2>
               <p className="text-xs text-slate-400">
                 Tome decisões com base no lucro real por km e hora
@@ -164,7 +164,7 @@ export const SimulatorsModal: React.FC = () => {
             }`}
           >
             <Navigation className="w-4 h-4" />
-            <span>Viabilidade de Corrida</span>
+            <span>Corrida</span>
           </button>
 
           <button
@@ -176,7 +176,7 @@ export const SimulatorsModal: React.FC = () => {
             }`}
           >
             <Target className="w-4 h-4" />
-            <span>Simulador de Meta</span>
+            <span>Meta</span>
           </button>
         </div>
 
@@ -331,7 +331,7 @@ export const SimulatorsModal: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-white">
-                    Dados da Corrida / Entrega
+                    Dados da corrida
                   </h3>
                   <span className="text-xs text-slate-400">
                     Veículo: <strong className="text-slate-200">{activeVehicle.nickname}</strong>
@@ -341,7 +341,7 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Valor Oferecido */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Valor Oferecido pelo App (R$) *
+                    Valor oferecido
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -353,7 +353,7 @@ export const SimulatorsModal: React.FC = () => {
                       value={fareOffered}
                       onChange={(e) => setFareOffered(formatBRLInput(e.target.value))}
                       placeholder="0,00"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-base font-bold font-mono text-emerald-400 focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 pl-9 pr-3 text-base font-bold font-mono text-emerald-400 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Distâncias */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Coleta (km)
                     </label>
                     <input
@@ -369,11 +369,11 @@ export const SimulatorsModal: React.FC = () => {
                       inputMode="decimal"
                       value={distanceToPickup}
                       onChange={(e) => setDistanceToPickup(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Viagem (km)
                     </label>
                     <input
@@ -381,18 +381,18 @@ export const SimulatorsModal: React.FC = () => {
                       inputMode="decimal"
                       value={tripDistance}
                       onChange={(e) => setTripDistance(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-slate-400">
-                        Retorno (km)
+                    <div className="mb-1.5 flex items-center justify-between gap-1">
+                      <label className="whitespace-nowrap text-[13px] font-semibold text-slate-300">
+                        Volta (km)
                       </label>
                       <button
                         type="button"
                         onClick={() => setConsiderReturn(!considerReturn)}
-                        className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
+                        className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
                           considerReturn
                             ? 'bg-emerald-500/20 text-emerald-400'
                             : 'bg-slate-800 text-slate-500'
@@ -407,7 +407,7 @@ export const SimulatorsModal: React.FC = () => {
                       disabled={!considerReturn}
                       value={returnDistance}
                       onChange={(e) => setReturnDistance(e.target.value)}
-                      className={`w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono ${
+                      className={`h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-[15px] text-white ${
                         !considerReturn ? 'opacity-40 cursor-not-allowed' : ''
                       }`}
                     />
@@ -417,7 +417,7 @@ export const SimulatorsModal: React.FC = () => {
                 {/* Tempo & Custos */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
                       Tempo (minutos)
                     </label>
                     <input
@@ -425,31 +425,31 @@ export const SimulatorsModal: React.FC = () => {
                       inputMode="decimal"
                       value={estimatedMinutes}
                       onChange={(e) => setEstimatedMinutes(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
-                      Custo/km (R$)
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                      Custo/km
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={costPerKm}
                       onChange={(e) => setCostPerKm(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
-                      Pedágio (R$)
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                      Pedágio
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={tollsAndParking}
                       onChange={(e) => setTollsAndParking(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                 </div>
@@ -536,7 +536,7 @@ export const SimulatorsModal: React.FC = () => {
                     <span className="text-[11px] text-slate-500 block">valor − custos</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-[11px] text-slate-400 block uppercase">Lucro por KM</span>
+                    <span className="text-[11px] text-slate-400 block uppercase">Lucro por km</span>
                     <span
                       className={`text-sm font-bold font-mono ${rideResult.profitPerKm >= rideResult.appliedCriteria.minProfitPerKm ? 'text-emerald-400' : 'text-rose-400'}`}
                     >
@@ -589,12 +589,12 @@ export const SimulatorsModal: React.FC = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <h3 className="text-[15px] font-bold text-white">
-                  Parâmetros da Meta Desejada
+                  Sua meta
                 </h3>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Meta de Lucro Disponível (R$) *
+                    Lucro que você quer no mês
                   </label>
                   <input
                     type="text"
@@ -602,72 +602,72 @@ export const SimulatorsModal: React.FC = () => {
                     value={targetProfit}
                     onChange={(e) => setTargetProfit(formatBRLInput(e.target.value))}
                     placeholder="Ex: 5400"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-base font-bold font-mono text-blue-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-base font-bold font-mono text-blue-400 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Dias de Trabalho ({goalPeriod === 'mensal' ? 'no Mês' : 'na Semana'})
+                      Dias de trabalho ({goalPeriod === 'mensal' ? 'no mês' : 'na semana'})
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={workDays}
                       onChange={(e) => setWorkDays(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Horas por Dia
+                      Horas por dia
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={hoursPerDay}
                       onChange={(e) => setHoursPerDay(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 items-end gap-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
-                      Ganho/h Atual (R$)
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                      Ganho/hora
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={averagePerHour}
                       onChange={(e) => setAveragePerHour(formatBRLInput(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
-                      Custo/km (R$)
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                      Custo/km
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={goalCostPerKm}
                       onChange={(e) => setGoalCostPerKm(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">
-                      Reserva/km (R$)
+                    <label className="block text-[13px] font-semibold text-slate-300 mb-1.5">
+                      Reserva/km
                     </label>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={reservePerKm}
                       onChange={(e) => setReservePerKm(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                     />
                   </div>
                 </div>
@@ -677,7 +677,7 @@ export const SimulatorsModal: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-white">
-                    Plano de Ação para Alcançar a Meta
+                    Plano para chegar lá
                   </h3>
                   <span
                     className={`px-2 py-0.5 rounded text-[11px] font-bold ${

@@ -236,7 +236,7 @@ export const PanicCard: React.FC = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome do contato (ex.: Esposa)"
-              className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-xs text-white"
+              className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-2 h-12 text-[15px] text-white"
             />
             <button type="button" disabled={busy || !name.trim()} onClick={() => void add()} className="rounded-lg bg-slate-700 px-2.5 text-white disabled:opacity-40" aria-label="Adicionar contato">
               <UserPlus className="h-4 w-4" />

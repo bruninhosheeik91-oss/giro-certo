@@ -111,7 +111,7 @@ const MainAppContent: React.FC = () => {
                   onChange={(event) => setFirstGoal(formatBRLInput(event.target.value))}
                   aria-label="Meta mensal"
                   placeholder="5.400,00"
-                  className="w-full bg-transparent px-2 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600"
+                  className="w-full bg-transparent px-2 h-12 text-[15px] font-bold text-white outline-none placeholder:text-slate-600"
                 />
               </div>
             </section>

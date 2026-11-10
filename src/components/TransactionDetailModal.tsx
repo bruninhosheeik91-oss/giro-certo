@@ -120,7 +120,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   inputMode="decimal"
                   value={amountStr}
                   onChange={(e) => setAmountStr(formatBRLInput(e.target.value))}
-                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-2xl font-bold font-mono text-center text-white focus:outline-none"
+                  className="w-36 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1 text-2xl font-bold font-mono text-center text-white focus:outline-none h-12"
                   autoFocus
                 />
               </div>
@@ -195,7 +195,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                       value={currentKmStr}
                       onChange={(e) => setCurrentKmStr(e.target.value.replace(/\D/g, ''))}
                       placeholder="Informe o KM atual"
-                      className="w-32 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-right text-white focus:outline-none"
+                      className="w-32 bg-slate-950 border border-slate-700 rounded-xl px-2 py-1 text-[15px] font-mono text-right text-white focus:outline-none h-12"
                     />
                   </div>
                 )}
@@ -222,7 +222,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                       value={currentKmStr}
                       onChange={(e) => setCurrentKmStr(e.target.value.replace(/\D/g, ''))}
                       placeholder="Informe o KM atual"
-                      className="w-32 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-right text-white focus:outline-none"
+                      className="w-32 bg-slate-950 border border-slate-700 rounded-xl px-2 py-1 text-[15px] font-mono text-right text-white focus:outline-none h-12"
                     />
                   </div>
                 )}
@@ -246,7 +246,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Adicione uma observação..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 h-12 text-[15px] text-white"
                 />
               ) : (
                 <p className="text-slate-300 italic">

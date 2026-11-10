@@ -22,14 +22,16 @@ interface SubscriptionPlansModalProps {
 
 const essentialBenefits = [
   'Ganhos, gastos e jornadas',
-  'Metas e relatórios',
-  'Contas e parcelas',
-  'Simulador manual',
+  'Metas, relatórios e Modo Sol',
+  'Contas, parcelas e reservas',
+  'Simulador de corrida e de meta',
+  'Segurança: câmera e botão de pânico',
 ];
 const proBenefits = [
   'Tudo do Essencial',
-  'Copiloto por leitura de tela (experimental, Android 14+)',
-  'Cartão sobre Uber e 99 (em breve)',
+  'Copiloto: cartão verde, amarelo ou vermelho em cada oferta da Uber, 99 e inDrive',
+  'Régua de aceite fixa na barra de notificações',
+  'Registro de corrida com 1 toque',
   'Histórico das ofertas analisadas',
 ];
 

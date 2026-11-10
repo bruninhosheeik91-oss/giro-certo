@@ -271,7 +271,7 @@ export const ProfileView: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white"
                 />
               </div>
               <div>
@@ -282,7 +282,7 @@ export const ProfileView: React.FC = () => {
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white"
                 />
               </div>
             </div>
@@ -296,7 +296,7 @@ export const ProfileView: React.FC = () => {
                   type="number"
                   value={monthlyGoalStr}
                   onChange={(e) => setMonthlyGoalStr(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                 />
               </div>
               <div>
@@ -308,7 +308,7 @@ export const ProfileView: React.FC = () => {
                   step="0.01"
                   value={reservePerKmStr}
                   onChange={(e) => setReservePerKmStr(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                 />
               </div>
             </div>
@@ -326,7 +326,7 @@ export const ProfileView: React.FC = () => {
                     step="0.05"
                     value={minProfitPerKmStr}
                     onChange={(e) => setMinProfitPerKmStr(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                   />
                 </div>
                 <div>
@@ -336,7 +336,7 @@ export const ProfileView: React.FC = () => {
                     step="1"
                     value={minProfitPerHourStr}
                     onChange={(e) => setMinProfitPerHourStr(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                   />
                 </div>
                 <div>
@@ -346,7 +346,7 @@ export const ProfileView: React.FC = () => {
                     step="0.5"
                     value={minAcceptableValueStr}
                     onChange={(e) => setMinAcceptableValueStr(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl h-12 px-3 text-[15px] text-white font-mono"
                   />
                 </div>
               </div>
@@ -577,18 +577,18 @@ export const ProfileView: React.FC = () => {
           {userProfile.notificationPreferences.dailyGoalAlert && (
             <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5">
               <span className="text-[11px] font-bold text-slate-300 uppercase">Voz do Coach</span>
-              <select value={coachVoice.voiceId ?? ''} onChange={(e) => updateCoachVoice({ voiceId: e.target.value || undefined })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200">
+              <select value={coachVoice.voiceId ?? ''} onChange={(e) => updateCoachVoice({ voiceId: e.target.value || undefined })} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 h-12 text-[15px] text-slate-200">
                 <option value="">Voz padrão do celular</option>
                 {coachVoices.map((voice, index) => <option key={voice.id} value={voice.id}>Voz {index + 1} · {voice.name}</option>)}
               </select>
               <div className="grid grid-cols-2 gap-2">
                 <label className="text-[11px] text-slate-400">Velocidade
-                  <select value={coachVoice.rate} onChange={(e) => updateCoachVoice({ rate: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                  <select value={coachVoice.rate} onChange={(e) => updateCoachVoice({ rate: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-2 h-12 text-[15px] text-slate-200">
                     <option value="0.82">Calma</option><option value="0.95">Normal</option><option value="1.08">Dinâmica</option>
                   </select>
                 </label>
                 <label className="text-[11px] text-slate-400">Tom
-                  <select value={coachVoice.pitch} onChange={(e) => updateCoachVoice({ pitch: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                  <select value={coachVoice.pitch} onChange={(e) => updateCoachVoice({ pitch: Number(e.target.value) })} className="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-2 h-12 text-[15px] text-slate-200">
                     <option value="0.8">Grave</option><option value="0.92">Natural</option><option value="1.08">Agudo</option>
                   </select>
                 </label>

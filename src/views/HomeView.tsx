@@ -413,7 +413,7 @@ export const HomeView: React.FC = () => {
               inputMode="decimal"
               value={newGoalInput}
               onChange={(e) => setNewGoalInput(e.target.value)}
-              className="w-full bg-transparent text-base font-bold text-white focus:outline-none"
+              className="w-full bg-transparent text-base font-bold text-white focus:outline-none h-12"
             />
             <button type="button" onClick={handleSaveGoal} className="h-10 rounded-lg bg-emerald-500 px-4 text-sm font-bold text-on-accent">
               Salvar

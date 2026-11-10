@@ -274,7 +274,7 @@ export const AppsManagementModal: React.FC = () => {
                   placeholder="Ex: Uber, 99, iFood, Borzo..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 h-12 text-[15px] text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
