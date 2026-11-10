@@ -39,6 +39,7 @@ public class FloatingButtonService extends Service {
     private static final String CHANNEL_ID = "giro_certo_atalho";
     private static final int NOTIFICATION_ID = 9061;
 
+    private static final long LONG_PRESS_MS = 2000L;
     private static FloatingButtonService instance;
     private static boolean appInFront;
 
@@ -127,6 +128,13 @@ public class FloatingButtonService extends Service {
             private int startX, startY;
             private float touchX, touchY;
             private boolean moved;
+            private boolean longFired;
+            private final android.os.Handler press = new android.os.Handler(android.os.Looper.getMainLooper());
+            private final Runnable longPress = () -> {
+                if (moved) return;
+                longFired = true;
+                triggerPanic();
+            };
 
             @Override public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -134,6 +142,8 @@ public class FloatingButtonService extends Service {
                         startX = params.x; startY = params.y;
                         touchX = event.getRawX(); touchY = event.getRawY();
                         moved = false;
+                        longFired = false;
+                        press.postDelayed(longPress, LONG_PRESS_MS);
                         shell.setAlpha(1f);
                         return true;
                     case MotionEvent.ACTION_MOVE:
@@ -141,6 +151,7 @@ public class FloatingButtonService extends Service {
                         int dy = Math.round(event.getRawY() - touchY);
                         if (!moved && (Math.abs(dx) > dp(6) || Math.abs(dy) > dp(6))) {
                             moved = true;
+                            press.removeCallbacks(longPress);
                             showDismissTarget();
                         }
                         params.x = startX + dx;
@@ -149,7 +160,9 @@ public class FloatingButtonService extends Service {
                         if (moved) updateTargetHighlight(event.getRawX(), event.getRawY());
                         return true;
                     case MotionEvent.ACTION_UP:
+                        press.removeCallbacks(longPress);
                         shell.setAlpha(0.92f);
+                        if (longFired) return true;
                         boolean dismiss = moved && overTarget;
                         hideDismissTarget();
                         if (!moved) {
@@ -237,6 +250,13 @@ public class FloatingButtonService extends Service {
         });
         animator.start();
         getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(KEY_RIGHT, right).putInt(KEY_Y, params.y).apply();
+    }
+
+    /** Segurar 2s: pânico silencioso, sem nenhuma mudança na tela. */
+    private void triggerPanic() {
+        Intent open = new Intent(this, PanicTriggerActivity.class)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        try { startActivity(open); } catch (RuntimeException ignored) { }
     }
 
     private void openApp() {

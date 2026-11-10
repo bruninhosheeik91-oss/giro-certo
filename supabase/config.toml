@@ -419,3 +419,9 @@ verify_jwt = false
 
 [functions.stripe-return]
 verify_jwt = false
+
+[functions.panic-alert]
+verify_jwt = false
+
+[functions.panic-live]
+verify_jwt = false

@@ -1,90 +1,87 @@
-import { openExternal, requestSecurityCameraAccess, startSecurityCamera, getSecurityCameraStatus } from './securityCamera';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseClient, SUPABASE_ANON_KEY, SUPABASE_URL } from './auth';
+import { nativePanic, openExternal, type PanicStatus } from './securityCamera';
 
-export interface EmergencyContact {
+export interface PanicContact {
+  id: string;
   name: string;
   phone: string;
 }
 
-const CONTACT_KEY = 'giro_certo_emergency_contact_v1';
+export const MAX_PANIC_CONTACTS = 5;
 
-export function readEmergencyContact(): EmergencyContact | null {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(CONTACT_KEY) ?? 'null') as EmergencyContact | null;
-    return parsed && parsed.phone ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveEmergencyContact(contact: EmergencyContact | null): void {
-  try {
-    if (contact) localStorage.setItem(CONTACT_KEY, JSON.stringify(contact));
-    else localStorage.removeItem(CONTACT_KEY);
-  } catch {
-    /* só local */
-  }
-}
-
-/** Normaliza para o formato internacional do WhatsApp (55 + DDD + número). */
+/** Normaliza para o formato internacional usado pelo WhatsApp (55 + DDD + número). */
 export function normalizeBrazilPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (digits.startsWith('55') && digits.length >= 12) return digits;
   return `55${digits.replace(/^0+/, '')}`;
 }
 
-export function getCurrentPosition(timeoutMs = 8000): Promise<GeolocationPosition | null> {
-  return new Promise((resolve) => {
-    if (!('geolocation' in navigator)) {
-      resolve(null);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => resolve(position),
-      () => resolve(null),
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 30000 },
+export function isValidBrazilPhone(raw: string): boolean {
+  return /^55\d{10,11}$/.test(normalizeBrazilPhone(raw));
+}
+
+export function formatPhone(phone: string): string {
+  const d = phone.replace(/^55/, '');
+  return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+}
+
+function client(): SupabaseClient | null {
+  return getSupabaseClient() as unknown as SupabaseClient | null;
+}
+
+export async function listPanicContacts(): Promise<PanicContact[]> {
+  const db = client();
+  if (!db) return [];
+  const { data, error } = await db.from('panic_contacts').select('id, name, phone').order('created_at');
+  if (error) throw new Error('Não foi possível carregar os contatos.');
+  return (data ?? []) as PanicContact[];
+}
+
+export async function addPanicContact(name: string, phone: string): Promise<void> {
+  const db = client();
+  if (!db) throw new Error('Entre na sua conta para usar o pânico.');
+  const { error } = await db.from('panic_contacts').insert({ name: name.trim() || 'Contato', phone: normalizeBrazilPhone(phone) });
+  if (error) {
+    throw new Error(
+      error.message.includes('Limite') ? `Máximo de ${MAX_PANIC_CONTACTS} contatos.`
+        : error.code === '23505' ? 'Esse número já está cadastrado.'
+        : 'Não foi possível salvar o contato.',
     );
+  }
+}
+
+export async function removePanicContact(id: string): Promise<void> {
+  const db = client();
+  if (!db) return;
+  await db.from('panic_contacts').delete().eq('id', id);
+}
+
+async function callFunction<T>(body: Record<string, unknown>): Promise<T> {
+  const db = client();
+  if (!db) throw new Error('Entre na sua conta para usar o pânico.');
+  const { data, error } = await db.functions.invoke('panic-alert', { body });
+  if (error) throw new Error('Servidor do pânico indisponível. Verifique a internet.');
+  return data as T;
+}
+
+/** Cria a credencial do aparelho e entrega ao Android, que dispara mesmo com o app fechado. */
+export async function activateSilentPanic(driverName: string): Promise<PanicStatus> {
+  const { deviceId, secret } = await callFunction<{ deviceId: string; secret: string }>({
+    action: 'register_device',
+    driverName,
+  });
+  await nativePanic.requestLocation();
+  return nativePanic.configure({
+    endpoint: `${SUPABASE_URL}/functions/v1/panic-alert`,
+    anonKey: SUPABASE_ANON_KEY,
+    deviceId,
+    secret,
   });
 }
 
-export function buildPanicMessage(position: GeolocationPosition | null, now = new Date()): string {
-  const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const where = position
-    ? `Minha localização: https://maps.google.com/?q=${position.coords.latitude.toFixed(6)},${position.coords.longitude.toFixed(6)}`
-    : 'Não consegui pegar minha localização agora.';
-  return `🚨 PRECISO DE AJUDA! Estou em uma corrida e posso estar em perigo. ${where} (enviado pelo Giro Certo às ${time})`;
-}
-
-export interface PanicResult {
-  recording: boolean;
-  location: boolean;
-  opened: 'whatsapp' | 'sms' | 'nenhum';
-}
-
-/** Liga a câmera, pega a localização e abre o WhatsApp (ou SMS) do contato com a mensagem pronta. */
-export async function triggerPanic(contact: EmergencyContact): Promise<PanicResult> {
-  let recording = false;
-  try {
-    const status = await getSecurityCameraStatus();
-    const access = status.cameraGranted ? status : await requestSecurityCameraAccess();
-    if (access.cameraGranted && !access.recording) await startSecurityCamera();
-    recording = access.cameraGranted;
-  } catch {
-    recording = false;
-  }
-
-  const position = await getCurrentPosition();
-  const text = buildPanicMessage(position);
-  const phone = normalizeBrazilPhone(contact.phone);
-
-  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-  if (await openExternal(whatsappUrl, 'com.whatsapp')) {
-    return { recording, location: Boolean(position), opened: 'whatsapp' };
-  }
-  if (await openExternal(whatsappUrl, 'com.whatsapp.w4b')) {
-    return { recording, location: Boolean(position), opened: 'whatsapp' };
-  }
-  const sms = await openExternal(`smsto:+${phone}?body=${encodeURIComponent(text)}`);
-  return { recording, location: Boolean(position), opened: sms ? 'sms' : 'nenhum' };
+export async function sendPanicTest(driverName: string): Promise<{ total: number; sent: number; errors: string[] }> {
+  return callFunction({ action: 'test', driverName });
 }
 
 export const callPolice = () => openExternal('tel:190');

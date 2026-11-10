@@ -54,6 +54,8 @@ export default defineConfig(() => {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
           globIgnores: ['**/branding/**', '**/giro-certo-icon-original.png'],
           navigateFallback: '/index.html',
+          // Páginas avulsas (pânico, privacidade) não podem cair no app.
+          navigateFallbackDenylist: [/^\/(panico|privacy|delete-account)\.html/],
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             {

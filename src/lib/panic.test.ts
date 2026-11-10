@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPanicMessage, normalizeBrazilPhone } from './panic';
+import { formatPhone, isValidBrazilPhone, normalizeBrazilPhone } from './panic';
 
 describe('botão de pânico', () => {
   it('normaliza telefones brasileiros para o WhatsApp', () => {
@@ -8,14 +8,13 @@ describe('botão de pânico', () => {
     expect(normalizeBrazilPhone('016 99123-4567')).toBe('5516991234567');
   });
 
-  it('monta a mensagem com link do mapa', () => {
-    const position = { coords: { latitude: -21.177, longitude: -47.81 } } as GeolocationPosition;
-    const text = buildPanicMessage(position, new Date(2026, 10, 10, 22, 5));
-    expect(text).toContain('https://maps.google.com/?q=-21.177000,-47.810000');
-    expect(text).toContain('22:05');
+  it('valida celular e fixo com DDD', () => {
+    expect(isValidBrazilPhone('16 99123-4567')).toBe(true);
+    expect(isValidBrazilPhone('16 3333-4444')).toBe(true);
+    expect(isValidBrazilPhone('99123-4567')).toBe(false);
   });
 
-  it('avisa quando não há localização', () => {
-    expect(buildPanicMessage(null)).toContain('Não consegui pegar minha localização');
+  it('formata para exibição', () => {
+    expect(formatPhone('5516991234567')).toBe('(16) 99123-4567');
   });
 });

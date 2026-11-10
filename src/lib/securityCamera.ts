@@ -12,6 +12,14 @@ export interface SecurityCameraStatus {
   lastError: string;
 }
 
+export interface PanicStatus {
+  configured: boolean;
+  active: boolean;
+  startedAt: number;
+  status: string;
+  locationGranted: boolean;
+}
+
 export interface FloatingButtonState {
   canDraw: boolean;
   enabled: boolean;
@@ -28,6 +36,12 @@ interface SecurityCameraPlugin {
   setFloatingButton(options: { enabled: boolean }): Promise<FloatingButtonState>;
   openOverlaySettings(): Promise<void>;
   openExternal(options: { url: string; package?: string }): Promise<{ opened: boolean }>;
+  configurePanic(options: { endpoint: string; anonKey: string; deviceId: string; secret: string }): Promise<PanicStatus>;
+  clearPanic(): Promise<PanicStatus>;
+  getPanicStatus(): Promise<PanicStatus>;
+  requestLocation(): Promise<PanicStatus>;
+  triggerPanic(): Promise<PanicStatus>;
+  endPanic(): Promise<void>;
 }
 
 const SecurityCamera = registerPlugin<SecurityCameraPlugin>('SecurityCamera');
@@ -57,3 +71,13 @@ export async function openExternal(url: string, packageName?: string): Promise<b
   }
   return (await SecurityCamera.openExternal({ url, package: packageName })).opened;
 }
+
+export const nativePanic = {
+  configure: (options: { endpoint: string; anonKey: string; deviceId: string; secret: string }) =>
+    SecurityCamera.configurePanic(options),
+  clear: () => SecurityCamera.clearPanic(),
+  status: () => SecurityCamera.getPanicStatus(),
+  requestLocation: () => SecurityCamera.requestLocation(),
+  trigger: () => SecurityCamera.triggerPanic(),
+  end: () => SecurityCamera.endPanic(),
+};

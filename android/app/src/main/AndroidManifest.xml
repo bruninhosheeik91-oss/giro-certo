@@ -61,6 +61,20 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <!-- Pânico silencioso: alerta no servidor + posição a cada 30 s. -->
+        <service
+            android:name=".PanicService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <activity
+            android:name=".PanicTriggerActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- Botão flutuante (atalho) do Giro Certo sobre a tela inicial e outros apps. -->
         <service
             android:name=".FloatingButtonService"
@@ -103,6 +117,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 

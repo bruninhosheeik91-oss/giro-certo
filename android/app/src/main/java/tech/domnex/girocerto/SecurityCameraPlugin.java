@@ -15,7 +15,8 @@ import com.getcapacitor.annotation.PermissionCallback;
     name = "SecurityCamera",
     permissions = {
         @Permission(alias = "camera", strings = { Manifest.permission.CAMERA }),
-        @Permission(alias = "microphone", strings = { Manifest.permission.RECORD_AUDIO })
+        @Permission(alias = "microphone", strings = { Manifest.permission.RECORD_AUDIO }),
+        @Permission(alias = "location", strings = { Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION })
     }
 )
 public class SecurityCameraPlugin extends Plugin {
@@ -118,6 +119,58 @@ public class SecurityCameraPlugin extends Plugin {
             result.put("opened", false);
         }
         call.resolve(result);
+    }
+
+    @PluginMethod public void configurePanic(PluginCall call) {
+        getContext().getSharedPreferences(PanicService.PREFS, android.content.Context.MODE_PRIVATE).edit()
+            .putString(PanicService.KEY_ENDPOINT, call.getString("endpoint", ""))
+            .putString(PanicService.KEY_ANON, call.getString("anonKey", ""))
+            .putString(PanicService.KEY_DEVICE, call.getString("deviceId", ""))
+            .putString(PanicService.KEY_SECRET, call.getString("secret", ""))
+            .apply();
+        panicStatus(call);
+    }
+
+    @PluginMethod public void clearPanic(PluginCall call) {
+        getContext().getSharedPreferences(PanicService.PREFS, android.content.Context.MODE_PRIVATE).edit().clear().apply();
+        panicStatus(call);
+    }
+
+    @PluginMethod public void getPanicStatus(PluginCall call) {
+        panicStatus(call);
+    }
+
+    private void panicStatus(PluginCall call) {
+        SharedPreferences p = getContext().getSharedPreferences(PanicService.PREFS, android.content.Context.MODE_PRIVATE);
+        JSObject result = new JSObject();
+        result.put("configured", PanicService.isConfigured(getContext()));
+        result.put("active", p.getBoolean(PanicService.KEY_ACTIVE, false));
+        result.put("startedAt", p.getLong(PanicService.KEY_STARTED_AT, 0L));
+        result.put("status", p.getString(PanicService.KEY_STATUS, ""));
+        result.put("locationGranted", getPermissionState("location") == PermissionState.GRANTED);
+        call.resolve(result);
+    }
+
+    @PluginMethod public void requestLocation(PluginCall call) {
+        if (getPermissionState("location") == PermissionState.GRANTED) {
+            panicStatus(call);
+            return;
+        }
+        requestPermissionForAlias("location", call, "locationResult");
+    }
+
+    @PermissionCallback private void locationResult(PluginCall call) {
+        panicStatus(call);
+    }
+
+    @PluginMethod public void triggerPanic(PluginCall call) {
+        PanicService.trigger(getContext());
+        panicStatus(call);
+    }
+
+    @PluginMethod public void endPanic(PluginCall call) {
+        PanicService.end(getContext());
+        call.resolve();
     }
 
     @PluginMethod public void consumeOpenRequest(PluginCall call) {

@@ -67,6 +67,7 @@ public class SecurityCameraService extends LifecycleService {
     private Recording recording;
     private VideoCapture<Recorder> videoCapture;
     private boolean stopRequested;
+    private boolean silent;
 
     static boolean hasCameraPermission(Context context) {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
@@ -77,7 +78,12 @@ public class SecurityCameraService extends LifecycleService {
     }
 
     static void start(Context context) {
-        Intent intent = new Intent(context, SecurityCameraService.class).setAction(ACTION_START);
+        start(context, false);
+    }
+
+    /** silent = true: sem vibração (pânico com passageiro por perto). */
+    static void start(Context context, boolean silent) {
+        Intent intent = new Intent(context, SecurityCameraService.class).setAction(ACTION_START).putExtra("silent", silent);
         ContextCompat.startForegroundService(context, intent);
     }
 
@@ -108,6 +114,7 @@ public class SecurityCameraService extends LifecycleService {
                 return START_NOT_STICKY;
             }
             if (recording == null) {
+                silent = intent.getBooleanExtra("silent", false);
                 stopRequested = false;
                 prefs().edit().putBoolean(KEY_RECORDING, true).putLong(KEY_STARTED_AT, System.currentTimeMillis())
                     .remove(KEY_ERROR).apply();
@@ -235,6 +242,7 @@ public class SecurityCameraService extends LifecycleService {
 
     @SuppressWarnings("deprecation")
     private void vibrate(int pulses) {
+        if (silent) return;
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator == null || !vibrator.hasVibrator()) return;
         long[] pattern = pulses == 1 ? new long[] { 0, 60 } : new long[] { 0, 60, 120, 60 };
