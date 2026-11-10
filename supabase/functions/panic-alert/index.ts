@@ -8,9 +8,10 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.5
  * - test (JWT): envia uma mensagem de teste aos contatos.
  * - start / update / end (credencial do aparelho): abre o alerta, atualiza a posição e encerra.
  *
- * O envio usa a API oficial do WhatsApp (Meta Cloud API) com um modelo aprovado
- * (WHATSAPP_TEMPLATE, padrão "alerta_panico") com 2 variáveis: {{1}} nome do motorista,
- * {{2}} link de acompanhamento.
+ * - bot (JWT): nome de usuário do bot, para montar o link de convite dos contatos.
+ *
+ * O envio usa o bot do Telegram (TELEGRAM_BOT_TOKEN), gratuito. Cada contato precisa abrir
+ * o convite t.me/<bot>?start=<link_code> e tocar em Iniciar uma vez (função telegram-webhook).
  */
 
 const corsHeaders = {
@@ -46,32 +47,33 @@ function shareLink(token: string, lat?: number | null, lng?: number | null): str
   return 'localização indisponível no momento';
 }
 
-async function sendWhatsApp(phone: string, driverName: string, link: string, template = env('WHATSAPP_TEMPLATE', 'alerta_panico')) {
-  const token = env('WHATSAPP_TOKEN');
-  const phoneId = env('WHATSAPP_PHONE_NUMBER_ID');
-  if (!token || !phoneId) return { ok: false, error: 'WhatsApp não configurado no servidor' };
-  const response = await fetch(`https://graph.facebook.com/${env('WHATSAPP_API_VERSION', 'v21.0')}/${phoneId}/messages`, {
+export async function sendTelegram(chatId: number, text: string) {
+  const token = env('TELEGRAM_BOT_TOKEN');
+  if (!token) return { ok: false, error: 'Telegram não configurado no servidor' };
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to: phone,
-      type: 'template',
-      template: {
-        name: template,
-        language: { code: env('WHATSAPP_TEMPLATE_LANG', 'pt_BR') },
-        components: [{ type: 'body', parameters: [{ type: 'text', text: driverName }, { type: 'text', text: link }] }],
-      },
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false }),
   });
   if (response.ok) return { ok: true };
   const detail = await response.text();
   return { ok: false, error: `${response.status}: ${detail.slice(0, 200)}` };
 }
 
-async function notifyContacts(admin: SupabaseClient, userId: string, driverName: string, link: string) {
-  const { data: contacts } = await admin.from('panic_contacts').select('name, phone').eq('user_id', userId);
-  const results = await Promise.all((contacts ?? []).map((c) => sendWhatsApp(c.phone, driverName, link)));
+function alertText(driverName: string, link: string, test = false): string {
+  if (test) {
+    return `✅ TESTE do botão de pânico do Giro Certo.\n${driverName} confirmou que você vai receber os alertas por aqui. Não precisa fazer nada.`;
+  }
+  return `🚨 ALERTA DE PÂNICO 🚨\n${driverName} acionou o botão de pânico do Giro Certo e pode estar em perigo.\n\n📍 Acompanhe a localização: ${link}\n\nSe não conseguir falar com ${driverName}, ligue 190.`;
+}
+
+async function notifyContacts(admin: SupabaseClient, userId: string, text: string) {
+  const { data: contacts } = await admin
+    .from('panic_contacts')
+    .select('name, telegram_chat_id')
+    .eq('user_id', userId)
+    .not('telegram_chat_id', 'is', null);
+  const results = await Promise.all((contacts ?? []).map((c) => sendTelegram(Number(c.telegram_chat_id), text)));
   const errors = results.filter((r) => !r.ok).map((r) => r.error);
   return { total: contacts?.length ?? 0, sent: results.filter((r) => r.ok).length, errors };
 }
@@ -104,13 +106,18 @@ Deno.serve(async (request) => {
   const action = String(body.action ?? '');
 
   // Ações do usuário logado (feitas pelo app aberto)
-  if (action === 'register_device' || action === 'test') {
+  if (action === 'register_device' || action === 'test' || action === 'bot') {
     const authorization = request.headers.get('Authorization') ?? '';
     const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authorization } } });
     const { data: userData } = await userClient.auth.getUser();
     const user = userData.user;
     if (!user) return json({ error: 'Autenticação necessária.' }, 401);
     const driverName = String(body.driverName ?? '').trim().slice(0, 60) || 'Motorista';
+
+    if (action === 'bot') {
+      const username = env('TELEGRAM_BOT_USERNAME').replace(/^@/, '');
+      return json({ username, configured: Boolean(username && env('TELEGRAM_BOT_TOKEN')) });
+    }
 
     if (action === 'register_device') {
       const secret = randomSecret();
@@ -123,7 +130,7 @@ Deno.serve(async (request) => {
       return json({ deviceId: user.id, secret });
     }
 
-    const result = await notifyContacts(admin, user.id, `TESTE (ignore) – ${driverName}`, 'teste do botão de pânico do Giro Certo');
+    const result = await notifyContacts(admin, user.id, alertText(driverName, '', true));
     return json(result);
   }
 
@@ -162,7 +169,7 @@ Deno.serve(async (request) => {
     if (hasPoint) await admin.from('panic_locations').insert({ alert_id: alert.id, lat, lng, accuracy });
 
     const link = shareLink(alert.share_token, hasPoint ? lat : null, hasPoint ? (lng as number) : null);
-    const result = await notifyContacts(admin, device.user_id, device.driver_name, link);
+    const result = await notifyContacts(admin, device.user_id, alertText(device.driver_name, link));
     await admin
       .from('panic_alerts')
       .update({ notified_count: result.sent, notify_errors: result.errors.join(' | ') || null })
@@ -191,7 +198,16 @@ Deno.serve(async (request) => {
   }
 
   if (action === 'end') {
-    await admin.from('panic_alerts').update({ ended_at: new Date().toISOString() }).eq('id', alert.id).is('ended_at', null);
+    const { data: closed } = await admin
+      .from('panic_alerts')
+      .update({ ended_at: new Date().toISOString() })
+      .eq('id', alert.id)
+      .is('ended_at', null)
+      .select('driver_name')
+      .maybeSingle();
+    if (closed) {
+      await notifyContacts(admin, device.user_id, `✅ ${closed.driver_name} encerrou o alerta de pânico e informou que está bem.`);
+    }
     return json({ ok: true });
   }
 

@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
 
 /**
- * Pânico silencioso: abre o alerta no servidor (que avisa os contatos no WhatsApp) e envia a
+ * Pânico silencioso: abre o alerta no servidor (que avisa os contatos no Telegram) e envia a
  * posição a cada 30 s até o motorista encerrar. Funciona com o app fechado: usa a credencial
  * do aparelho criada na ativação. Nada aparece na tela além da notificação discreta exigida
  * pelo Android ("Proteção ativa").

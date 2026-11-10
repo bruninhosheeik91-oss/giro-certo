@@ -36,6 +36,7 @@ interface SecurityCameraPlugin {
   setFloatingButton(options: { enabled: boolean }): Promise<FloatingButtonState>;
   openOverlaySettings(): Promise<void>;
   openExternal(options: { url: string; package?: string }): Promise<{ opened: boolean }>;
+  shareText(options: { title: string; text: string }): Promise<void>;
   configurePanic(options: { endpoint: string; anonKey: string; deviceId: string; secret: string }): Promise<PanicStatus>;
   clearPanic(): Promise<PanicStatus>;
   getPanicStatus(): Promise<PanicStatus>;
@@ -81,3 +82,11 @@ export const nativePanic = {
   trigger: () => SecurityCamera.triggerPanic(),
   end: () => SecurityCamera.endPanic(),
 };
+
+export async function shareText(title: string, text: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    await navigator.clipboard?.writeText(text);
+    return;
+  }
+  await SecurityCamera.shareText({ title, text });
+}

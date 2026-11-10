@@ -1,6 +1,6 @@
--- Pânico silencioso: contatos (WhatsApp), alertas e acompanhamento ao vivo.
+-- Pânico silencioso: contatos, alertas e acompanhamento ao vivo.
 -- Alertas e localizações são gravados só pelas Edge Functions (service_role),
--- que também enviam o WhatsApp pela API oficial da Meta.
+-- que também enviam as mensagens (canal Telegram: ver 20261110130000).
 
 CREATE TABLE IF NOT EXISTS public.panic_contacts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

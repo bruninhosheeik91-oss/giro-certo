@@ -173,6 +173,16 @@ public class SecurityCameraPlugin extends Plugin {
         call.resolve();
     }
 
+    @PluginMethod public void shareText(PluginCall call) {
+        android.content.Intent send = new android.content.Intent(android.content.Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(android.content.Intent.EXTRA_TEXT, call.getString("text", ""));
+        android.content.Intent chooser = android.content.Intent.createChooser(send, call.getString("title", "Compartilhar"))
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(chooser);
+        call.resolve();
+    }
+
     @PluginMethod public void consumeOpenRequest(PluginCall call) {
         boolean open = prefs().getBoolean("openSecurityTab", false);
         if (open) prefs().edit().remove("openSecurityTab").apply();
