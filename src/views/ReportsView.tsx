@@ -1,3 +1,4 @@
+import { takePendingReportsMode } from '../lib/reportsNav';
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
@@ -14,7 +15,7 @@ const PERIOD_LABEL = { hoje: 'Hoje', semana: 'Semana', mes: 'Mês', ano: 'Ano' }
 
 export const ReportsView: React.FC = () => {
   const { transactions, shifts, selectedMonth, registeredApps, userProfile } = useApp();
-  const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual' | 'consumo'>('mensal');
+  const [viewMode, setViewMode] = useState<'mensal' | 'apps' | 'anual' | 'consumo'>(takePendingReportsMode);
   const [periodFilter, setPeriodFilter] = useState<'hoje' | 'semana' | 'mes' | 'ano'>('mes');
 
   // Month filtered transactions

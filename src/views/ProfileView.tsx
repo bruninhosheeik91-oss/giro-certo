@@ -21,6 +21,7 @@ import { ProfileAvatar } from '../components/ProfileAvatar';
 import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
 import { ThemeSelector } from '../components/ThemeSelector';
+import { openFuelConsumption } from '../lib/reportsNav';
 import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
 import { AdminOverviewCard } from '../components/AdminOverviewCard';
 import { AccountPrivacyModal } from '../components/AccountPrivacyModal';
@@ -45,6 +46,7 @@ export const ProfileView: React.FC = () => {
     payablesSummary,
     mode,
     cloudUserId,
+    setActiveTab,
   } = useApp();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -634,6 +636,14 @@ export const ProfileView: React.FC = () => {
               onChange={() => handleToggleNotification('fuelReminder')}
             />
           </div>
+          <button
+            type="button"
+            onClick={() => openFuelConsumption(setActiveTab)}
+            className="flex w-full items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5 text-xs font-semibold text-emerald-300"
+          >
+            Ver consumo real do veículo (km/L)
+            <span>›</span>
+          </button>
         </div>
       </div>
 

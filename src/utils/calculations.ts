@@ -481,8 +481,13 @@ export function filterTransactionsByPeriod(
   customEnd?: string,
   referenceDateStr?: string,
 ): Transaction[] {
-  const refDate = referenceDateStr ? new Date(referenceDateStr) : new Date();
-  const currentIsoDate = refDate.toISOString().split('T')[0];
+  // 'hoje' e 'semana' sempre usam a data local real; 'mes'/'ano' usam a referência (mês selecionado).
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const currentIsoDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const refDate = referenceDateStr ? new Date(referenceDateStr + 'T12:00:00') : now;
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+  const weekStartIso = `${weekStart.getFullYear()}-${pad(weekStart.getMonth() + 1)}-${pad(weekStart.getDate())}`;
 
   return transactions.filter((t) => {
     if (period === 'hoje') {
@@ -492,9 +497,7 @@ export function filterTransactionsByPeriod(
     const tDate = new Date(t.date + 'T12:00:00');
 
     if (period === 'semana') {
-      const diffTime = Math.abs(refDate.getTime() - tDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7;
+      return t.date >= weekStartIso && t.date <= currentIsoDate;
     }
 
     if (period === 'mes') {

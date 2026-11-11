@@ -5,13 +5,14 @@ import { formatBRL, formatDisplayDate } from '../utils/calculations';
 import { ChevronRight, Fuel, Plus, Search, Wallet, Wrench, X } from 'lucide-react';
 
 export const TransactionsView: React.FC = () => {
-  const { transactions, openNewTransactionModal, openTransactionDetail } = useApp();
+  const { transactions, selectedMonth, openNewTransactionModal, openTransactionDetail } = useApp();
   const [filterType, setFilterType] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filtered list
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
+      if (!t.date.startsWith(selectedMonth)) return false;
       if (filterType !== 'todos' && t.type !== filterType) return false;
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
@@ -30,7 +31,7 @@ export const TransactionsView: React.FC = () => {
       }
       return true;
     });
-  }, [transactions, filterType, searchTerm]);
+  }, [transactions, selectedMonth, filterType, searchTerm]);
 
   // Group by date
   const groupedByDate = useMemo(() => {

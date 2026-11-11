@@ -30,6 +30,7 @@ import {
 import { getCoachVoicePreferences, showGoalNotification, speakGoalCoach } from '../lib/nativeCoach';
 import { getRideAnalyzerEnabled, isRideOfferNativeAvailable } from '../lib/rideOffer';
 import { useTargetBar } from '../hooks/useTargetBar';
+import { openFuelConsumption } from '../lib/reportsNav';
 
 const MONTH_FULL = [
   'Janeiro',
@@ -524,6 +525,14 @@ export const HomeView: React.FC = () => {
             detail: `${formatBRL(maintenanceReserveBalance)} guardados · sugerido ${formatBRL(monthSummary.reservaManutencao)}`,
             alert: false,
             onClick: openReserveModal,
+          },
+          {
+            icon: Fuel,
+            tone: 'text-sky-400',
+            title: 'Consumo do veículo',
+            detail: 'km/L real, litros e custo de combustível por km',
+            alert: false,
+            onClick: () => openFuelConsumption(setActiveTab),
           },
           {
             icon: activeVehicle.type === 'moto' ? Bike : Car,
