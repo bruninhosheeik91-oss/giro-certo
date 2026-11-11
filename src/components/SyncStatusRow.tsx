@@ -11,6 +11,17 @@ const SYNCED_VISIBLE_MS = 4000;
  * está tudo certo. "Sincronizado" aparece por alguns segundos depois de uma
  * sincronização bem-sucedida e some sozinho.
  */
+const TABLE_LABEL: Record<string, string> = {
+  transactions: 'Lançamento',
+  shifts: 'Jornada',
+  vehicles: 'Veículo',
+  user_settings: 'Perfil e apps',
+  commitments: 'Conta do mês',
+  installments: 'Parcela',
+  fuel_records: 'Abastecimento',
+  shift_pauses: 'Pausa da jornada',
+};
+
 export const SyncStatusRow: React.FC = () => {
   const { mode, syncStatus, syncQueue, retryPendingSync } = useApp();
   const [showSynced, setShowSynced] = useState(false);
@@ -65,6 +76,7 @@ export const SyncStatusRow: React.FC = () => {
 
   if (syncQueue.blocked > 0 || syncStatus.state === 'error') {
     return (
+      <>
       <div className="flex items-center gap-2 px-3 py-2 text-xs">
         <AlertTriangle className="w-3 h-3 text-rose-400" />
         <span className="text-rose-300">
@@ -82,6 +94,19 @@ export const SyncStatusRow: React.FC = () => {
           Tentar novamente
         </button>
       </div>
+      {syncQueue.blockedDetails && syncQueue.blockedDetails.length > 0 && (
+        <details className="px-3 pb-2 text-[11px] text-slate-400">
+          <summary className="cursor-pointer text-slate-300">Ver motivo</summary>
+          <ul className="mt-1 space-y-1">
+            {syncQueue.blockedDetails.map((d, i) => (
+              <li key={i} className="break-words">
+                <span className="font-semibold text-slate-300">{TABLE_LABEL[d.table] || d.table}:</span> {d.error}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      </>
     );
   }
 

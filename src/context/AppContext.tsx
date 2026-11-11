@@ -99,7 +99,21 @@ export type SyncStatus =
 export interface SyncQueueSummary {
   pending: number;
   blocked: number;
+  /** Motivo de cada operação travada (tabela + erro), para diagnóstico na tela. */
+  blockedDetails?: { table: string; error: string }[];
 }
+
+const summarizeQueue = (q: { stats(): { pending: number; blocked: number }; all(): { status?: string; table: string; lastError?: string }[] }): SyncQueueSummary => {
+  const stats = q.stats();
+  return {
+    pending: stats.pending,
+    blocked: stats.blocked,
+    blockedDetails: q
+      .all()
+      .filter((op) => op.status === 'blocked')
+      .map((op) => ({ table: op.table, error: op.lastError || 'erro desconhecido' })),
+  };
+};
 
 interface AppContextType {
   mode: 'local' | 'cloud';
@@ -490,8 +504,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const run = async (): Promise<void> => {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         if (version === activeScopeVersionRef.current) {
-          const stats = queueRef.current.stats();
-          setSyncQueue({ pending: stats.pending, blocked: stats.blocked });
+          setSyncQueue(summarizeQueue(queueRef.current));
           setSyncStatus({ state: 'offline' });
         }
         return;
@@ -578,7 +591,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         writeAppSnapshot(storageKeys, merged);
         if (version !== activeScopeVersionRef.current) return;
         if (version === activeScopeVersionRef.current) {
-          setSyncQueue({ pending: stats.pending, blocked: stats.blocked });
+          setSyncQueue(summarizeQueue(queue));
         }
         if (failed === 0 && stats.blocked === 0) {
           setLastSyncedAt(Date.now());
@@ -594,9 +607,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } catch (error) {
         if (version !== activeScopeVersionRef.current) return;
         writeAppSnapshot(storageKeys, snapshotRef.current);
-        const stats = queue.stats();
         if (version === activeScopeVersionRef.current) {
-          setSyncQueue({ pending: stats.pending, blocked: stats.blocked });
+          setSyncQueue(summarizeQueue(queue));
         }
         const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
         setSyncStatus({
@@ -638,7 +650,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const retryPendingSync = useCallback(async (): Promise<void> => {
     if (mode !== 'cloud') return;
     queueRef.current.retryBlocked();
-    setSyncQueue(queueRef.current.stats());
+    setSyncQueue(summarizeQueue(queueRef.current));
     await syncNow();
   }, [mode, syncNow]);
 

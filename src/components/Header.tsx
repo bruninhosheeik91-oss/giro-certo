@@ -37,10 +37,10 @@ export const Header: React.FC = () => {
         <img src="/icons/icon-192.png" alt="" className="h-10 w-10 flex-none rounded-xl object-cover" />
         <div className="min-w-0 flex-1">
           <h1 className="text-[17px] font-bold leading-tight tracking-tight text-white">Giro Certo</h1>
-          <p className="truncate text-xs text-slate-400">{vehicleLine}</p>
+          <p className="line-clamp-2 break-words text-xs leading-snug text-slate-400">{vehicleLine}</p>
         </div>
 
-        <label className="relative flex h-11 flex-none items-center rounded-xl border border-slate-800 bg-slate-900 pl-2.5 pr-7 text-sm font-semibold text-white">
+        <label className="relative flex h-11 flex-none items-center rounded-xl border border-slate-800 bg-slate-900 pl-2 pr-6 text-[13px] font-semibold text-white">
           <span className="sr-only">Mês</span>
           {formatMonthLabel(selectedMonth)}
           <ChevronDown className="pointer-events-none absolute right-2 h-4 w-4 text-slate-400" />
