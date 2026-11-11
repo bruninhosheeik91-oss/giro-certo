@@ -6,6 +6,8 @@ export interface TargetBarInput {
   manualCostPerKm?: number;
   monthCostPerKm: number;
   monthKm: number;
+  /** Custo por km pelo consumo real (km/L de tanque cheio × último preço do litro). */
+  consumptionCostPerKm?: number;
   reservePerKm: number;
   criteria: Pick<RideCriteria, 'minProfitPerKm' | 'minAcceptableValue' | 'minProfitPerHour'>;
   todayProfit: number;
@@ -36,17 +38,18 @@ export function calculateTargetBar(input: TargetBarInput): TargetBar {
   const manual = input.manualCostPerKm && input.manualCostPerKm > 0 ? input.manualCostPerKm : 0;
   const useReal =
     input.monthKm >= MIN_KM_FOR_REAL_COST && Number.isFinite(input.monthCostPerKm) && input.monthCostPerKm > 0;
-  const costPerKm = round2(
-    manual > 0
-      ? manual
-      : (useReal ? input.monthCostPerKm : defaultCostPerKm(input.vehicleType)) + Math.max(0, input.reservePerKm || 0),
-  );
+  const consumption =
+    !useReal && input.consumptionCostPerKm && Number.isFinite(input.consumptionCostPerKm) && input.consumptionCostPerKm > 0
+      ? input.consumptionCostPerKm
+      : 0;
+  const base = useReal ? input.monthCostPerKm : consumption > 0 ? consumption : defaultCostPerKm(input.vehicleType);
+  const costPerKm = round2(manual > 0 ? manual : base + Math.max(0, input.reservePerKm || 0));
   const minGrossPerKm = round2(costPerKm + Math.max(0, input.criteria.minProfitPerKm || 0));
   const dailyGoal = Math.max(0, input.dailyGoal || 0);
   const goalRemaining = round2(Math.max(0, dailyGoal - input.todayProfit));
   return {
     costPerKm,
-    costSource: manual > 0 ? 'manual' : useReal ? 'real' : 'padrao',
+    costSource: manual > 0 ? 'manual' : useReal || consumption > 0 ? 'real' : 'padrao',
     minGrossPerKm,
     minFare: round2(Math.max(0, input.criteria.minAcceptableValue || 0)),
     minProfitPerHour: round2(Math.max(0, input.criteria.minProfitPerHour || 0)),

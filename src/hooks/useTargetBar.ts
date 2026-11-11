@@ -1,3 +1,4 @@
+import { calculateFuelConsumption } from '../utils/calculations';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useSubscription } from './useSubscription';
@@ -19,7 +20,18 @@ function readEnabled(): boolean {
 const DEFAULT_CRITERIA = { minProfitPerKm: 0.8, minProfitPerHour: 25, minAcceptableValue: 8 };
 
 export function useTargetBar() {
-  const { userProfile, activeVehicle, monthSummary, todaySummary } = useApp();
+  const { userProfile, activeVehicle, monthSummary, todaySummary, transactions } = useApp();
+
+  // Custo/km pelo consumo real do veículo: usado no começo do mês, antes de 100 km rodados.
+  const consumptionCostPerKm = useMemo(() => {
+    const fuel = transactions.filter((t) => t.type === 'abastecimento');
+    const { averageKmPerLiter } = calculateFuelConsumption(fuel, activeVehicle?.id);
+    const last = [...fuel]
+      .filter((t) => t.type === 'abastecimento' && (!activeVehicle?.id || t.vehicleId === activeVehicle.id) && t.pricePerLiter > 0)
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    const price = last && last.type === 'abastecimento' ? last.pricePerLiter : 0;
+    return averageKmPerLiter > 0 && price > 0 ? price / averageKmPerLiter : 0;
+  }, [transactions, activeVehicle?.id]);
   const { hasProAccess, loading } = useSubscription();
   const native = isRideOfferNativeAvailable();
   const [enabled, setEnabledState] = useState(readEnabled);
@@ -45,12 +57,13 @@ export function useTargetBar() {
       manualCostPerKm: manualCost,
         monthCostPerKm: monthSummary.quilometrosRodados > 0 ? monthSummary.combustivel / monthSummary.quilometrosRodados : 0,
         monthKm: monthSummary.quilometrosRodados,
+        consumptionCostPerKm,
         reservePerKm: userProfile.maintenanceReservePerKm || 0,
         criteria: userProfile.rideCriteria || DEFAULT_CRITERIA,
         todayProfit: todaySummary.lucroDisponivel,
         dailyGoal: userProfile.monthlyGoal / 30,
       }),
-    [activeVehicle?.type, monthSummary, todaySummary, userProfile, manualCost],
+    [activeVehicle?.type, monthSummary, todaySummary, userProfile, manualCost, consumptionCostPerKm],
   );
 
   const active = native && enabled && hasProAccess && !loading;

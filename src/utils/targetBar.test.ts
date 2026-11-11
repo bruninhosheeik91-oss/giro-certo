@@ -43,4 +43,19 @@ describe('régua de aceite', () => {
     expect(bar.costPerKm).toBe(0.35);
     expect(bar.minGrossPerKm).toBe(1.15);
   });
+
+  it('usa o consumo real do veículo antes de 100 km no mês', () => {
+    const bar = calculateTargetBar({
+      vehicleType: 'moto',
+      monthCostPerKm: 0,
+      monthKm: 20,
+      consumptionCostPerKm: 0.15,
+      reservePerKm: 0.05,
+      criteria: { minProfitPerKm: 0.8, minAcceptableValue: 8, minProfitPerHour: 25 },
+      todayProfit: 0,
+      dailyGoal: 100,
+    });
+    expect(bar.costPerKm).toBe(0.2);
+    expect(bar.costSource).toBe('real');
+  });
 });
