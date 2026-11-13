@@ -1,6 +1,8 @@
 import { QuickRideRegister } from '../components/QuickRideRegister';
+import { ShiftSummaryModal } from '../components/ShiftSummaryModal';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import type { Shift } from '../types';
 import {
   formatBRL,
   formatHours,
@@ -29,6 +31,8 @@ export const ShiftView: React.FC = () => {
     openNewTransactionModal,
     getShiftTotals,
   } = useApp();
+
+  const [closedShift, setClosedShift] = useState<Shift | null>(null);
 
   // Start shift form state
   const [selectedVehicleId, setSelectedVehicleId] = useState(activeVehicle?.id || '');
@@ -121,7 +125,7 @@ export const ShiftView: React.FC = () => {
       return;
     }
 
-    endShift(endKm, endNotes);
+    setClosedShift(endShift(endKm, endNotes));
     setIsEndModalOpen(false);
   };
 
@@ -496,6 +500,7 @@ export const ShiftView: React.FC = () => {
           </ul>
         )}
       </section>
+      {closedShift && <ShiftSummaryModal shift={closedShift} onClose={() => setClosedShift(null)} />}
     </div>
   );
 };
