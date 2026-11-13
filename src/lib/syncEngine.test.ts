@@ -268,5 +268,10 @@ describe('sanitizeRow', () => {
     expect(sanitizeRow('transactions', { amount: 0, origin: 'manual' })).toBeNull();
     expect(sanitizeRow('transactions', { amount: 0, origin: 'opening_balance' })).not.toBeNull();
   });
+  it('repara ID com sinal negativo', () => {
+    const row = sanitizeRow('shift_pauses', { id: '-7bb4b3f7--4b65f002-52e35c9fb-842599e2f', shift_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' });
+    expect(/^[0-9a-f]{4}(?:-?[0-9a-f]{4}){7}$/i.test(String(row?.id))).toBe(true);
+    expect(row?.shift_id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
+  });
 });
 

@@ -11,7 +11,8 @@ function hash32(value: string, seed: number): string {
   hash ^= hash >>> 13;
   hash = Math.imul(hash, 3266489909) >>> 0;
   hash ^= hash >>> 16;
-  return hash.toString(16).padStart(8, '0');
+  // `^` devolve inteiro com sinal: sem `>>> 0` o hex sairia negativo ("-7bb4…"), ID inválido.
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
 export function isUuid(value: string): boolean {
@@ -30,17 +31,27 @@ export function createUuid(): string {
 }
 
 export function deterministicUuid(value: string): string {
-  const parts = [
+  const hex = [
     hash32(value, 2166136261),
     hash32(`${value}:b`, 3339675911),
     hash32(`${value}:c`, 1013904242),
     hash32(`${value}:d`, 277803737),
-  ];
-  parts[2] = ((Number.parseInt(parts[2].slice(0, 1), 16) & 0x0f) | 0x50).toString(16) + parts[2].slice(1);
-  parts[3] = ((Number.parseInt(parts[3].slice(0, 1), 16) & 0x3f) | 0x80).toString(16) + parts[3].slice(1);
-  return `${parts[0]}-${parts[1]}-${parts[2]}-${parts[3]}`;
+  ].join('');
+  // UUID v5-like: versão 5 no 13º dígito, variante RFC 4122 no 17º.
+  const variant = ((Number.parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${variant}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
 export function normalizeUuid(id: string, namespace: string, entityType: string): string {
   return isUuid(id) ? id : deterministicUuid(`${namespace}:${entityType}:${id}`);
+}
+
+/** Aceito pelo Postgres: 32 dígitos hex, hífens só entre grupos de 4 e nunca no início/fim ou duplicados. */
+export function isPostgresUuid(value: string): boolean {
+  return /^[0-9a-f]{4}(?:-?[0-9a-f]{4}){7}$/i.test(value);
+}
+
+/** Converte IDs gerados com o bug do sinal em um UUID válido e estável. */
+export function repairUuid(value: string): string {
+  return isPostgresUuid(value) ? value : deterministicUuid(`repair:${value}`);
 }

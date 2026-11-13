@@ -1,6 +1,7 @@
 import type { Database } from './database.types';
 import { MAX_SYNC_ATTEMPTS, type OfflineOp, type OfflineQueue } from './offlineQueue';
 import { getSupabaseClient } from './auth';
+import { isPostgresUuid, repairUuid } from './uuid';
 
 export type SyncTable = keyof Database['public']['Tables'];
 
@@ -30,6 +31,16 @@ export const supabaseGateway = (): SyncGateway => {
   };
 };
 
+function repairIds(row: Record<string, unknown>): Record<string, unknown> {
+  let next = row;
+  for (const [key, value] of Object.entries(row)) {
+    if ((key === 'id' || key.endsWith('_id')) && typeof value === 'string' && !isPostgresUuid(value)) {
+      next = { ...next, [key]: repairUuid(value) };
+    }
+  }
+  return next;
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function crossMidnight(row: Record<string, unknown>): Record<string, unknown> {
@@ -46,7 +57,8 @@ function crossMidnight(row: Record<string, unknown>): Record<string, unknown> {
  * Corrige linhas que o banco recusaria para sempre (CHECK), inclusive as que já
  * estão travadas na fila. Retorna null para linhas sem valor a enviar.
  */
-export function sanitizeRow(table: string, row: Record<string, unknown>): Record<string, unknown> | null {
+export function sanitizeRow(table: string, input: Record<string, unknown>): Record<string, unknown> | null {
+  const row = repairIds(input);
   if (table === 'shift_pauses') return crossMidnight(row);
   if (table === 'shifts') {
     let next = crossMidnight(row);
@@ -179,7 +191,7 @@ export async function flushQueue(
           .filter((row): row is Record<string, unknown> => row !== null);
         if (clean.length > 0) await gateway.upsert(op.table as SyncTable, clean);
       } else {
-        await gateway.delete(op.table as SyncTable, op.entityId);
+        await gateway.delete(op.table as SyncTable, repairUuid(op.entityId));
       }
     } catch (error) {
       attempts += 1;
