@@ -346,6 +346,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   );
   const queueRef = useRef(queue);
   queueRef.current = queue;
+  // Ao abrir o app, alterações travadas ganham uma nova chance (a sincronização corrige dados antigos).
+  const autoRetriedRef = useRef(false);
   const cloudRepository = useMemo(() => {
     if (mode !== 'cloud' || !cloudUserId) return null;
     try {
@@ -502,6 +504,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const version = activeScopeVersionRef.current;
     const run = async (): Promise<void> => {
+      if (!autoRetriedRef.current) {
+        autoRetriedRef.current = true;
+        queueRef.current.retryBlocked();
+      }
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         if (version === activeScopeVersionRef.current) {
           setSyncQueue(summarizeQueue(queueRef.current));

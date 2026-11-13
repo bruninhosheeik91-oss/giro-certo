@@ -30,6 +30,43 @@ export const supabaseGateway = (): SyncGateway => {
   };
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function crossMidnight(row: Record<string, unknown>): Record<string, unknown> {
+  const start = typeof row.start_at === 'string' ? Date.parse(row.start_at) : NaN;
+  const end = typeof row.end_at === 'string' ? Date.parse(row.end_at) : NaN;
+  if (Number.isFinite(start) && Number.isFinite(end) && end < start) {
+    // Terminou depois da meia-noite: o fim pertence ao dia seguinte.
+    return { ...row, end_at: new Date(end + DAY_MS).toISOString() };
+  }
+  return row;
+}
+
+/**
+ * Corrige linhas que o banco recusaria para sempre (CHECK), inclusive as que já
+ * estão travadas na fila. Retorna null para linhas sem valor a enviar.
+ */
+export function sanitizeRow(table: string, row: Record<string, unknown>): Record<string, unknown> | null {
+  if (table === 'shift_pauses') return crossMidnight(row);
+  if (table === 'shifts') {
+    let next = crossMidnight(row);
+    const start = Number(next.km_start);
+    const end = Number(next.km_end);
+    if (next.km_start != null && Number.isFinite(start) && start < 0) next = { ...next, km_start: 0 };
+    if (next.km_end != null && next.km_start != null && Number.isFinite(end) && end < Number(next.km_start)) {
+      next = { ...next, km_end: next.km_start };
+    }
+    return next;
+  }
+  if (table === 'transactions') {
+    const amount = Number(row.amount);
+    if ('amount' in row && row.origin !== 'opening_balance' && !(amount > 0)) return null;
+    return row;
+  }
+  if (table === 'fuel_records' && 'liters' in row && !(Number(row.liters) > 0)) return null;
+  return row;
+}
+
 export interface FlushResult {
   flushed: number;
   failed: number;
@@ -137,7 +174,10 @@ export async function flushQueue(
           string,
           unknown
         >[];
-        await gateway.upsert(op.table as SyncTable, rows);
+        const clean = rows
+          .map((row) => sanitizeRow(op.table, row))
+          .filter((row): row is Record<string, unknown> => row !== null);
+        if (clean.length > 0) await gateway.upsert(op.table as SyncTable, clean);
       } else {
         await gateway.delete(op.table as SyncTable, op.entityId);
       }

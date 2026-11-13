@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createOfflineQueue, MAX_SYNC_ATTEMPTS } from './offlineQueue';
-import { flushQueue, supabaseGateway, type SyncGateway } from './syncEngine';
+import { flushQueue, sanitizeRow, supabaseGateway, type SyncGateway } from './syncEngine';
 
 function makeGateway(behavior?: {
   failUpsert?: boolean;
@@ -255,3 +255,18 @@ describe('flushQueue (ETAPA 6 — sync engine)', () => {
     expect(q.all()[0].payload).toEqual({ nome: 'novo' });
   });
 });
+
+describe('sanitizeRow', () => {
+  it('corrige km final menor que o inicial', () => {
+    expect(sanitizeRow('shifts', { km_start: 42118, km_end: 42 })?.km_end).toBe(42118);
+  });
+  it('pausa que passou da meia-noite termina no dia seguinte', () => {
+    const row = sanitizeRow('shift_pauses', { start_at: '2026-11-10T23:50:00.000Z', end_at: '2026-11-10T00:10:00.000Z' });
+    expect(row?.end_at).toBe('2026-11-11T00:10:00.000Z');
+  });
+  it('ignora lançamento com valor zero', () => {
+    expect(sanitizeRow('transactions', { amount: 0, origin: 'manual' })).toBeNull();
+    expect(sanitizeRow('transactions', { amount: 0, origin: 'opening_balance' })).not.toBeNull();
+  });
+});
+
