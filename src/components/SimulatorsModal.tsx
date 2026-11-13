@@ -21,7 +21,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
-import { SubscriptionPlansModal } from './SubscriptionPlansModal';
 import { TargetBarCard } from './TargetBarCard';
 import { CopilotCard } from './CopilotCard';
 import {
@@ -44,12 +43,10 @@ export const SimulatorsModal: React.FC = () => {
   const {
     hasProAccess,
     loading: subscriptionLoading,
-    daysRemaining,
     expiresAt,
     reason,
   } = useSubscription();
   const [activeTab, setActiveTab] = useState<'corrida' | 'meta'>('corrida');
-  const [plansOpen, setPlansOpen] = useState(false);
 
   const criteria = userProfile.rideCriteria || {
     minProfitPerKm: 0.8,
@@ -185,10 +182,9 @@ export const SimulatorsModal: React.FC = () => {
           {activeTab === 'corrida' ? (
             /* Tab 1: Ride Simulator */
             <div className="space-y-4">
-              <CopilotCard onRequestUpgrade={() => setPlansOpen(true)} />
+              <CopilotCard />
               <TargetBarCard
                 subscriptionLoading={subscriptionLoading}
-                onRequestUpgrade={() => setPlansOpen(true)}
               />
               {isRideOfferNativeAvailable() && hasProAccess && (
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
@@ -744,12 +740,6 @@ export const SimulatorsModal: React.FC = () => {
             </div>
           )}
         </div>
-
-        <SubscriptionPlansModal
-          open={plansOpen}
-          onClose={() => setPlansOpen(false)}
-          daysRemaining={daysRemaining}
-        />
       </div>
     </div>
   );

@@ -22,7 +22,6 @@ import { removeProfileAvatar, uploadProfileAvatar } from '../lib/profileAvatar';
 import { AchievementsCard } from '../components/AchievementsCard';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { openFuelConsumption } from '../lib/reportsNav';
-import { SubscriptionStatusCard } from '../components/SubscriptionStatusCard';
 import { AdminOverviewCard } from '../components/AdminOverviewCard';
 import { AccountPrivacyModal } from '../components/AccountPrivacyModal';
 import {
@@ -547,7 +546,6 @@ export const ProfileView: React.FC = () => {
         </div>
       </div>
 
-      <SubscriptionStatusCard />
       <AdminOverviewCard />
 
       {/* Notification Preferences */}

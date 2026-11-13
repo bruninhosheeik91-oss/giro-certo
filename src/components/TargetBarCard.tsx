@@ -1,14 +1,13 @@
 import React from 'react';
-import { Crown, Gauge, LockKeyhole } from 'lucide-react';
+import { Gauge } from 'lucide-react';
 import { useTargetBar } from '../hooks/useTargetBar';
 import { formatBRL } from '../utils/calculations';
 
 interface TargetBarCardProps {
   subscriptionLoading: boolean;
-  onRequestUpgrade: () => void;
 }
 
-export const TargetBarCard: React.FC<TargetBarCardProps> = ({ subscriptionLoading, onRequestUpgrade }) => {
+export const TargetBarCard: React.FC<TargetBarCardProps> = ({ subscriptionLoading }) => {
   const { native, enabled, blocked, bar, setEnabled, hasProAccess } = useTargetBar();
 
   if (subscriptionLoading) return null;
@@ -42,9 +41,7 @@ export const TargetBarCard: React.FC<TargetBarCardProps> = ({ subscriptionLoadin
       {!native ? (
         <p className="text-xs text-slate-500">No app Android a régua fica fixa na barra de notificações.</p>
       ) : !hasProAccess ? (
-        <button type="button" onClick={onRequestUpgrade} className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950">
-          <LockKeyhole className="h-3.5 w-3.5" /> <Crown className="h-3.5 w-3.5" /> Régua na barra é Pro
-        </button>
+        <p className="text-xs text-slate-500">Acesso suspenso. Fale com o suporte: suporte@domnex.tech</p>
       ) : (
         <button type="button" onClick={() => void setEnabled(!enabled)} className={`w-full rounded-lg px-3 py-2.5 text-xs font-bold ${enabled ? 'bg-slate-800 text-slate-200' : 'bg-emerald-600 text-on-accent'}`}>
           {enabled ? 'Tirar régua da barra de notificações' : 'Fixar régua na barra de notificações'}

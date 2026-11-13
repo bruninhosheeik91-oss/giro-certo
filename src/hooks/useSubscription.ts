@@ -52,7 +52,11 @@ export function useSubscription() {
         setServerAccess({
           tier: value.tier === 'pro' ? 'pro' : 'essential',
           reason:
-            value.reason === 'owner' || value.reason === 'trial' || value.reason === 'subscription'
+            value.reason === 'owner' ||
+            value.reason === 'trial' ||
+            value.reason === 'subscription' ||
+            value.reason === 'free' ||
+            value.reason === 'blocked'
               ? value.reason
               : 'essential',
           hasProAccess: value.hasProAccess === true,
@@ -82,10 +86,9 @@ export function useSubscription() {
   }, [mode, refreshRevision, userId]);
 
   return useMemo(() => {
-    const access =
-      mode === 'local'
-        ? deriveSubscriptionAccess({})
-        : (serverAccess ?? deriveSubscriptionAccess({}));
+    // Fase de lançamento: acesso completo para todos, exceto contas bloqueadas pelo admin.
+    const free: SubscriptionAccess = { ...deriveSubscriptionAccess({}), tier: 'pro', reason: 'free', hasProAccess: true };
+    const access = mode === 'local' ? free : (serverAccess ?? free);
     return {
       loading,
       ...access,

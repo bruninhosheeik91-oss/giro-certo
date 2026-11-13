@@ -1,6 +1,6 @@
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'expired' | 'canceled';
 
-export type SubscriptionAccessReason = 'owner' | 'trial' | 'subscription' | 'essential';
+export type SubscriptionAccessReason = 'owner' | 'trial' | 'subscription' | 'essential' | 'free' | 'blocked';
 
 export interface SubscriptionAccess {
   tier: 'essential' | 'pro';

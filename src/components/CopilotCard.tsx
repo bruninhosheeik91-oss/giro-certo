@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { Crown, LockKeyhole, Power, Radar } from 'lucide-react';
+import { LockKeyhole, Power, Radar } from 'lucide-react';
 import { useCopilot } from '../hooks/useCopilot';
 import { CopilotCriteriaEditor } from './CopilotCriteriaEditor';
 import { CopilotLogPanel } from './CopilotLogPanel';
 
-interface CopilotCardProps {
-  onRequestUpgrade: () => void;
-}
-
 const timeFormat = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) => {
+export const CopilotCard: React.FC = () => {
   const { native, hasProAccess, loading, granted, enabled, diagnostic, minRating, onShift, openSettings, toggle, turnOff, setMinRating } =
     useCopilot();
 
@@ -30,12 +26,9 @@ export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) =>
     return (
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
         <div className="flex items-center gap-2 text-sm font-bold text-amber-300">
-          <LockKeyhole className="h-4 w-4" /> Copiloto Giro Certo (Pro)
+          <LockKeyhole className="h-4 w-4" /> Copiloto Giro Certo
         </div>
-        <p className="text-xs text-slate-400">Cartão colorido em cada oferta da Uber, 99 e inDrive dizendo se compensa.</p>
-        <button type="button" onClick={onRequestUpgrade} className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950">
-          <Crown className="h-3.5 w-3.5" /> Conhecer o Pro
-        </button>
+        <p className="text-xs text-slate-400">Seu acesso está suspenso. Fale com o suporte: suporte@domnex.tech</p>
       </div>
     );
   }
