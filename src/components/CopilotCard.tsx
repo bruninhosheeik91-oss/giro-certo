@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Crown, LockKeyhole, Power, Radar } from 'lucide-react';
 import { useCopilot } from '../hooks/useCopilot';
 import { CopilotCriteriaEditor } from './CopilotCriteriaEditor';
@@ -13,6 +13,8 @@ const timeFormat = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '
 export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) => {
   const { native, hasProAccess, loading, granted, enabled, diagnostic, minRating, onShift, openSettings, toggle, turnOff, setMinRating } =
     useCopilot();
+
+  const [consentOpen, setConsentOpen] = useState(false);
 
   if (loading) return null;
 
@@ -61,7 +63,7 @@ export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) =>
           <p className="text-xs text-slate-400">
             Toque abaixo, entre em <b>Apps instalados → Copiloto Giro Certo</b> e ative. Ele lê só a Uber, 99 e inDrive.
           </p>
-          <button type="button" onClick={() => void openSettings()} className="w-full rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-on-accent">
+          <button type="button" onClick={() => setConsentOpen(true)} className="w-full rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-on-accent">
             Ativar Copiloto nas configurações
           </button>
         </>
@@ -73,6 +75,26 @@ export const CopilotCard: React.FC<CopilotCardProps> = ({ onRequestUpgrade }) =>
           <button type="button" onClick={() => void turnOff()} className="flex items-center gap-1 rounded-lg bg-red-600/90 px-3 py-2.5 text-xs font-bold text-white">
             <Power className="h-3.5 w-3.5" /> Desligar
           </button>
+        </div>
+      )}
+
+      {consentOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="copiloto-consentimento">
+          <div className="w-full max-w-md space-y-3 rounded-[24px] border border-slate-800 bg-slate-900 p-5 text-sm text-slate-300">
+            <h3 id="copiloto-consentimento" className="text-lg font-bold text-white">Antes de ativar o Copiloto</h3>
+            <p>O Copiloto usa o <b>serviço de acessibilidade do Android</b> para ler a tela de ofertas da <b>Uber Driver, 99 Motorista e inDrive</b> — e somente desses apps.</p>
+            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-400">
+              <li>Lê valor, distância, tempo e nota da oferta para mostrar se a corrida compensa.</li>
+              <li>Tudo é processado no seu celular. Nada do que aparece na tela é enviado para nossos servidores.</li>
+              <li>Não aceita, recusa nem toca em nada por você, e não lê bancos, mensagens ou outros apps.</li>
+              <li>Funciona só durante a jornada e se desliga sozinho ao encerrar o turno.</li>
+            </ul>
+            <p className="text-xs text-slate-400">Você pode desativar quando quiser em Configurações → Acessibilidade.</p>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onClick={() => setConsentOpen(false)} className="h-11 rounded-xl border border-slate-700 text-sm font-semibold text-white">Agora não</button>
+              <button type="button" onClick={() => { setConsentOpen(false); void openSettings(); }} className="h-11 rounded-xl bg-blue-600 text-sm font-bold text-on-accent">Concordo e ativar</button>
+            </div>
+          </div>
         </div>
       )}
 
