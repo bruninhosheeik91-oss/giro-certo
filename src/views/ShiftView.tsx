@@ -458,12 +458,21 @@ export const ShiftView: React.FC = () => {
                     <span><b className="font-semibold text-white">{s.totalKm.toLocaleString('pt-BR')}</b> km</span>
                     <span><b className="font-semibold text-white">{formatBRL(perHour)}</b>/h</span>
                     <span>pausas <b className="font-semibold text-white">{formatPauses(s.totalPauseMinutes || 0)}</b></span>
+                    {s.status === 'completed' && (
+                      <button
+                        type="button"
+                        onClick={() => setClosedShift(s)}
+                        className="ml-auto rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-300"
+                      >
+                        Fechamento
+                      </button>
+                    )}
                     {deleteConfirmId !== s.id && (
                       <button
                         type="button"
                         onClick={() => setDeleteConfirmId(s.id)}
                         aria-label={`Excluir jornada de ${formatDisplayDate(s.date)}`}
-                        className="-mr-2 ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 active:bg-slate-800"
+                        className="-mr-2 flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 active:bg-slate-800"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
